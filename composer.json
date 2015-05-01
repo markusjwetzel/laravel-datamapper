@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "MJWetzel\\LaravelDataMapper\\": "src/"
+            "Wetzel\\Datamapper\\": "src/"
         }
     },
     "extra": {
