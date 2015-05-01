@@ -35,7 +35,7 @@ We will map all classes to a database table by using annotations. Annotations ar
 ```php
 <?php
 
-use Markusjwetzel\LaravelDataMapper\Mapping AS ORM;
+use Markusjwetzel\LaravelDataMapper\Mapping as ORM;
 
 /**
  * @ORM\Entity
