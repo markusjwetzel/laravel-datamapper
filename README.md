@@ -96,7 +96,9 @@ In addition to define a table for the query with `$em->table('users')`, you can 
 #### Example #2: Insert, update and delete a record
 
 `$em->object($user)->insert();`
+
 `$em->object($user)->update();`
+
 `$em->object($user)->delete();`
 
 #### Example #3: Eager Loading
