@@ -21,7 +21,7 @@ Then you have to run `composer update` to install the package. Once this is comp
 If you want to use a facade for the entity manager, you can create an alias in the aliases array of `config/app.php`:
 
 ```
-'EntityManager' => 'Wetzel\DataMapper\EntityManagerFacade'
+'Entity' => 'Wetzel\DataMapper\Facades\Entity'
 ```
 
 Run php artisan vendor:publish to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
@@ -71,7 +71,7 @@ Furthermore you can use a `--timestamps:false` flag if you do not want a timesta
 
 ### Entity Manager
 
-As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the entity manager by using the `EntityManager` facade or by using method injection:
+As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the entity manager by using the `Entity` facade or by using method injection:
 
 ```php
 <?php
