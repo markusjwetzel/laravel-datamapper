@@ -1,8 +1,6 @@
 # Laravel Data Mapper
 
-```
-**Important:** The first version of the Laravel Data Mapper is actually in development and will be published as soon as possible.
-```
+`**Important:** The first version of the Laravel Data Mapper is actually in development and will be published as soon as possible.`
 
 An easy to use data mapper for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD). In general the Laravel Data Mapper is an extension to the Laravel Query Builder. You can build queries by using all of the query builder methods and in addition you can pass plain old PHP objects (popo's) to the builder and also return popo's from the builder.
 
@@ -69,9 +67,9 @@ Once you have defined the annotations, you can run `php artisan schema:create`. 
 
 You can set a `--generate_migrations` flag on create or update command. If so, this package will generate laravel migration files for all the database tables and save them to the default migrations directory (e. g. `database/migrations`).
 
-### Query Builder
+### Entity Manager
 
-As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the data mapper by using the `EntityManager` facade or by using method injection:
+As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the entity manager by using the `EntityManager` facade or by using method injection:
 
 ```php
 <?php
@@ -103,11 +101,22 @@ In addition to define a table for the query with `$em->table('users')`, you can 
 
 `$em->object($user)->delete();`
 
+Hint: Relational objects are not inserted or updated.
+
 #### Example #3: Eager Loading
 
-`$user = $em->class('Entity\User')->with('User.comments')->get();`
+`$users = $em->class('Entity\User')->with('User.comments')->get();`
 
 You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('User.comments.likes')`
+
+#### Example #4: Versioning
+
+If an entity has the `@ORM\Versionable` annotation, you can use the versioning methods:
+
+`$users = $em->class('Entity\User')->allVersions();`
+`$users = $em->class('Entity\User')->where('id',$id)->version(1);`
+
+Hint: `get()` returns always the latest version.
 
 ## Support
 
