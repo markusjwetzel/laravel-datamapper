@@ -1,8 +1,8 @@
 {
-    "name": "laravel/data-mapper",
+    "name": "markusjwetzel/laravel-datamapper",
     "description": "An easy to use data mapper for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD).",
     "keywords": ["laravel","orm","mapper","datamapper","query","querybuilder","entity", "repository"],
-    "homepage": "http://github.com/markusjwetzel/laravel-data-mapper",
+    "homepage": "http://github.com/markusjwetzel/laravel-datamapper",
     "license": "MIT",
     "authors": [
         {
@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\DataMapper\\": "src/"
+            "MJWetzel\\LaravelDataMapper\\": "src/"
         }
     },
     "minimum-stability": "dev",
