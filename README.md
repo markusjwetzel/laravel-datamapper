@@ -67,6 +67,8 @@ Once you have defined the annotations, you can run `php artisan datamapper:gener
 
 You can combine this command with all the migrate commands by adding the `--migrate` flag (e. g. `--migrate:refresh`). If you set the `--migrate` flag, you can also set the `--seed` flag to migrate and seed the database.
 
+Furthermore you can use a `--timestamps:false` flag if you do not want a timestamp prefix in the migration files.
+
 ### Entity Manager
 
 As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the entity manager by using the `EntityManager` facade or by using method injection:
