@@ -9,7 +9,7 @@ An easy to use data mapper for Laravel 5 that fits perfectly to the approach of 
 Laravel Data Mapper is distributed as a composer package. So you first have to add the package to your `composer.json` file:
 
 ```
-"markusjwetzel/laravel-datamapper": "1.0.0-dev"
+"markusjwetzel/laravel-datamapper": "~1.0-dev"
 ```
 
 Then you have to run `composer update` to install the package. Once this is completed, you have to add the service provider to the providers array in `config/app.php`:
