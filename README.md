@@ -65,7 +65,7 @@ For a full documentation on all annotations see the wiki.
 
 Once you have defined the annotations, you can run `php artisan schema:create`. This command will walk through all registered classes and will populate the database based on the defined annotations. You can also run `php artisan schema:drop` or `php artisan schema:update` to drop all database tables or update the database based on the annotations.
 
-You can set a `--generate_migrations` flag on create or update command. If so, this package will generate laravel migration files for all the database tables and save them to the default migrations directory (e. g. `database/migrations`).
+You can set a `--generate_migrations` flag on create or update command. If so, this package will generate laravel migration files for all the database tables and save them to the default migrations directory (e. g. `database/migrations`). Furthermore there is a `--seed` flag for create and update command to seed the database with the Laravel seeds.
 
 ### Entity Manager
 
