@@ -114,6 +114,7 @@ You can use the `with()` method the same way as you use it with Eloquent objects
 If an entity has the `@ORM\Versionable` annotation, you can use the versioning methods:
 
 `$users = $em->class('Entity\User')->where('id',$id)->allVersions();`
+
 `$users = $em->class('Entity\User')->where('id',$id)->getVersion(1);`
 
 Hint: `get()` returns always the latest version.
