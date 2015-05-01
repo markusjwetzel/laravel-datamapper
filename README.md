@@ -123,6 +123,12 @@ If an entity has the `@ORM\Versionable` annotation, you can use the versioning m
 
 Hint: `get()` returns always the latest version.
 
+#### Example #5: SoftDeleting Plugin
+
+If an entity has the `@ORM\Softdeleteable` annotation, you can use the soft deleting methods from Eloquent, e. g.:
+
+$users = $em->class('Entity\User')->withTrashed()->all();
+
 ## Support
 
 Bugs and feature requests are tracked on [GitHub](https://github.com/markusjwetzel/laravel-data-mapper/issues)
