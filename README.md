@@ -15,13 +15,13 @@ Laravel Data Mapper is distributed as a composer package. So you first have to a
 Then you have to run `composer update` to install the package. Once this is completed, you have to add the service provider to the providers array in `config/app.php`:
 
 ```
-'Wetzel\Datamapper\LaravelDataMapperServiceProvider'
+'Wetzel\DataMapper\LaravelDataMapperServiceProvider'
 ```
 
 If you want to use a facade for the entity manager, you can create an alias in the aliases array of `config/app.php`:
 
 ```
-'EntityManager' => 'Wetzel\Datamapper\EntityManagerFacade'
+'EntityManager' => 'Wetzel\DataMapper\EntityManagerFacade'
 ```
 
 Run php artisan vendor:publish to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
@@ -35,7 +35,7 @@ We will map all classes to a database table by using annotations. Annotations ar
 ```php
 <?php
 
-use Wetzel\Datamapper\Mapping as ORM;
+use Wetzel\DataMapper\Mapping as ORM;
 
 /**
  * @ORM\Entity
@@ -74,7 +74,7 @@ As already mentioned the Laravel Data Mapper is an extension of the Laravel Quer
 ```php
 <?php
 
-use Wetzel\Datamapper\EntityManager;
+use Wetzel\DataMapper\EntityManager;
 
 class UserRepository {
 
