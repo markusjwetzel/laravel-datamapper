@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Wetzel\\Datamapper\\": "src/"
+            "Wetzel\\DataMapper\\": "src/"
         }
     },
     "extra": {
