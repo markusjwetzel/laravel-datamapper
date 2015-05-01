@@ -127,7 +127,7 @@ Hint: `get()` returns always the latest version.
 
 If an entity has the `@ORM\Softdeleteable` annotation, you can use the soft deleting methods from Eloquent, e. g.:
 
-$users = $em->class('Entity\User')->withTrashed()->all();
+`$users = $em->class('Entity\User')->withTrashed()->all();`
 
 ## Support
 
