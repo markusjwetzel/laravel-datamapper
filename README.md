@@ -89,9 +89,11 @@ class UserRepository {
 
 In addition to define a table for the query with `$em->table('users')`, you can pass an entity class or an entity object to select a table (e. g. `$em->class('Entity\User')` or `$em->object($user)`).
 
-#### Example #1: Get a User object by ID
+#### Example #1: Get one or many User objects
 
-`$user = $em->class('Entity\User')->where('id',$id)->get();`
+`$user = $em->class('Entity\User')->where('id',$id)->get();` (returns a User object)
+
+`$users = $em->class('Entity\User')->all();` (returns an ArrayCollection of User objects)
 
 #### Example #2: Insert, update and delete a record
 
@@ -115,7 +117,7 @@ If an entity has the `@ORM\Versionable` annotation, you can use the versioning m
 
 `$users = $em->class('Entity\User')->where('id',$id)->allVersions();`
 
-`$users = $em->class('Entity\User')->where('id',$id)->getVersion(1);`
+`$user = $em->class('Entity\User')->where('id',$id)->getVersion(1);`
 
 Hint: `get()` returns always the latest version.
 
