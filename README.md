@@ -113,7 +113,7 @@ Hint: Relational objects are not inserted or updated.
 
 You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('User.comments.likes')`
 
-#### Example #4: Versioning
+#### Example #4: Versioning Plugin
 
 If an entity has the `@ORM\Versionable` annotation, you can use the versioning methods:
 
