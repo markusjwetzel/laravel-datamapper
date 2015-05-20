@@ -99,11 +99,11 @@ In addition to define a table for the query with `$em->table('users')`, you can 
 
 #### Example #2: Insert, update and delete a record
 
-`$em->object($user)->insert();`
+`$em->insert($user);`
 
-`$em->object($user)->update();`
+`$em->update($user);`
 
-`$em->object($user)->delete();`
+`$em->delete($user);`
 
 Hint: Relational objects are not inserted or updated.
 
