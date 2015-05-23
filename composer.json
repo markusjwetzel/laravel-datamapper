@@ -15,7 +15,8 @@
         "illuminate/console": "~5.0",
         "illuminate/filesystem": "~5.0",
         "illuminate/database": "5.*",
-        "doctrine/annotations": "~1.0"
+        "doctrine/annotations": "~1.2",
+        "doctrine/dbal": "~2.5"
     },
     "autoload": {
         "psr-4": {
