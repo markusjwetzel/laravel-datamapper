@@ -4,12 +4,8 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class MorphMany implements Annotation
+final class MorphMany extends Relation implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
 
     /**
      * @var string

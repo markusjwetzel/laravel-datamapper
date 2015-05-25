@@ -3,6 +3,9 @@
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Visitor\DropSchemaSqlCollector;
+use Wetzel\DataMapper\Metadata\Definitions\Class as ClassDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Column as ColumnDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Relation as RelationDefinition;
 
 class Builder {
 
@@ -15,8 +18,8 @@ class Builder {
         // integers
         'bigInteger' => ['type' => 'bigint'],
         'smallInteger' => ['type' => 'smallint'],
-        'increments' => ['type' => 'integer', 'primary' => true, 'options' => ['autoincrement' => true, 'unsigned' => true]],
-        'bigIncrements' => ['type' => 'bigint', 'primary' => true, 'options' => ['autoincrement' => true, 'unsigned' => true]],
+        'increments' => ['type' => 'integer', 'primary' => true, 'unsigned' => true, 'options' => ['autoincrement' => true]],
+        'bigIncrements' => ['type' => 'bigint', 'primary' => true, 'unsigned' => true, 'options' => ['autoincrement' => true]],
         // chars
         'char' => ['type' => 'string', 'options' => ['fixed' => true]],
         // texts
@@ -126,7 +129,7 @@ class Builder {
      * @param array $metadataArray
      * @return array
      */
-    public function createSchema($metadataArray)
+    public function createSchema(array $metadataArray)
     {
         $schema = $this->getSchemaFromMetadata($metadataArray);
 
@@ -144,7 +147,7 @@ class Builder {
      * @param boolean $saveMode
      * @return array
      */
-    public function updateSchema($metadataArray, $saveMode=false)
+    public function updateSchema(array $metadataArray, $saveMode=false)
     {
         $fromSchema = $this->schemaManager->createSchema();
         $toSchema = $this->getSchemaFromMetadata($metadataArray);
@@ -169,7 +172,7 @@ class Builder {
      * @param array $metadataArray
      * @return array
      */
-    public function dropSchema($metadataArray)
+    public function dropSchema(array $metadataArray)
     {
         $visitor = new DropSchemaSqlCollector($this->platform);
 
@@ -259,7 +262,7 @@ class Builder {
      * @param array $metadataArray
      * @return \Doctrine\DBAL\Schema\Schema
      */
-    protected function getSchemaFromMetadata(array $metadataArray)
+    public function getSchemaFromMetadata(array $metadataArray)
     {
         $metadataSchemaConfig = $this->schemaManager->createSchemaConfig();
         $schema = new Schema([], [], $metadataSchemaConfig);
@@ -275,10 +278,10 @@ class Builder {
      * Generates a table from metadata.
      *
      * @param table \Doctrine\DBAL\Schema\Schema
-     * @param string $metadata
+     * @param \Wetzel\DataMapper\Metadata\Definitions\Class $metadata
      * @return \Doctrine\DBAL\Schema\Table
      */
-    protected function generateTableFromMetadata($schema, $metadata)
+    protected function generateTableFromMetadata($schema, ClassDefinition $metadata)
     {
         $primaryKeys = [];
         $uniqueIndexes = [];
@@ -302,6 +305,13 @@ class Builder {
                 $indexes[] = $name;
         }
 
+        foreach($metadata['relations'] as $name => $relationMetadata) {
+            // create pivot table for many to many relations
+            if ($metadata['relations']['type'] == 'hasMany') {
+                $this->generatePivotTableFromMetadata($schema, $name, $relationMetadata);
+            }
+        }
+
         // add primary keys, unique indexes and indexes
         if ( ! empty($primaryKeys))
             $table->setPrimaryKey($primaryKeys);
@@ -314,19 +324,44 @@ class Builder {
     }
 
     /**
+     * Generates a table from metadata.
+     *
+     * @param table \Doctrine\DBAL\Schema\Schema
+     * @param name $name
+     * @param \Wetzel\DataMapper\Metadata\Definitions\Relation $relationMetadata
+     * @return \Doctrine\DBAL\Schema\Table
+     */
+    protected function generatePivotTableFromMetadata($schema, $name, RelationDefinition $relationMetadata)
+    {
+        // todo
+    }
+
+    /**
      * Get the doctrine column type.
      *
-     * @param array $columnMetadata
+     * @param \Wetzel\DataMapper\Metadata\Definitions\Column $columnMetadata
      * @return array
      */
-    protected function getDoctrineColumnAliases($columnMetadata)
+    protected function getDoctrineColumnAliases(ColumnDefinition $columnMetadata)
     {
         if (in_array($columnMetadata['type'], $this->aliases)) {
-            $columnMetadata['type'] = $this->aliases[$columnMetadata['type']]['type'];
-            if ($this->aliases[$columnMetadata['type']]['primary']) {
-                $columnMetadata['primary'] = $this->aliases[$columnMetadata['type']]['primary'];
+            $index = $columnMetadata['type'];
+
+            // update primary key
+            if ( ! empty($this->aliases[$index]['primary'])) {
+                $columnMetadata['primary'] = $this->aliases[$index]['primary'];
             }
-            $columnMetadata['options'] = array_merge($columnMetadata['options'], $this->aliases[$columnMetadata['type']]['options']);
+
+            // update unsigned
+            if ( ! empty($this->aliases[$index]['unsigned'])) {
+                $columnMetadata['unsigned'] = $this->aliases[$index]['unsigned'];
+            }
+
+            // update options
+            $columnMetadata['options'] = array_merge($columnMetadata['options'], $this->aliases[$index]['options']);
+
+            // update type
+            $columnMetadata['type'] = $this->aliases[$index]['type'];
         }
 
         return $columnMetadata;
@@ -335,17 +370,29 @@ class Builder {
     /**
      * Get the doctrine column options.
      *
-     * @param array $columnMetadata
+     * @param \Wetzel\DataMapper\Metadata\Definitions\Column $columnMetadata
      * @return array
      */
-    protected function getDoctrineColumnOptions($columnMetadata)
+    protected function getDoctrineColumnOptions(ColumnDefinition $columnMetadata)
     {
+        $options = $columnMetadata['options'];
+
         // alias for nullable option
-        if (isset($columnMetadata['options']['nullable'])) {
-            $columnMetadata['options']['notnull'] = ! $columnMetadata['options']['nullable'];
+        if ( ! empty($columnMetadata['nullable'])) {
+            $options['notnull'] = ! $columnMetadata['nullable'];
         }
 
-        return $columnMetadata;
+        // alias for default option
+        if ( ! empty($columnMetadata['default'])) {
+            $options['default'] = $columnMetadata['default'];
+        }
+
+        // alias for unsigned option
+        if ( ! empty($columnMetadata['unsigned'])) {
+            $options['unsigned'] = $columnMetadata['unsigned'];
+        }
+
+        return $options;
     }
 
     /**

@@ -4,18 +4,8 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class MorphToMany implements Annotation
+final class BelongsToMany extends Relation implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
-
-    /**
-     * @var string
-     */
-    public $name;
-
     /**
      * @var string
      */
@@ -32,7 +22,7 @@ final class MorphToMany implements Annotation
     public $otherKey = null;
 
     /**
-     * @var integer
+     * @var string
      */
-    public $inverse = false;
+    public $relation = null;
 }

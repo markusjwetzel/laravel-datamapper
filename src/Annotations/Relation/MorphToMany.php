@@ -4,13 +4,8 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class MorphOne implements Annotation
+final class MorphToMany extends Relation implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
-
     /**
      * @var string
      */
@@ -19,15 +14,20 @@ final class MorphOne implements Annotation
     /**
      * @var string
      */
-    public $type = null;
+    public $table = null;
 
     /**
      * @var string
      */
-    public $id = null;
+    public $foreignKey = null;
 
     /**
      * @var string
      */
-    public $localKey = null;
+    public $otherKey = null;
+
+    /**
+     * @var integer
+     */
+    public $inverse = false;
 }

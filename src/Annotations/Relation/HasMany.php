@@ -4,13 +4,8 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class BelongsTo implements Annotation
+final class HasMany extends Relation implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
-
     /**
      * @var string
      */
@@ -19,10 +14,5 @@ final class BelongsTo implements Annotation
     /**
      * @var string
      */
-    public $otherKey = null;
-
-    /**
-     * @var string
-     */
-    public $relation = null;
+    public $localKey = null;
 }

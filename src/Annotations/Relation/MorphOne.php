@@ -4,17 +4,23 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class HasMany implements Annotation
+final class MorphOne extends Relation implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
 
     /**
      * @var string
      */
-    public $foreignKey = null;
+    public $name;
+
+    /**
+     * @var string
+     */
+    public $type = null;
+
+    /**
+     * @var string
+     */
+    public $id = null;
 
     /**
      * @var string

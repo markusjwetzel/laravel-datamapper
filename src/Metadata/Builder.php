@@ -1,5 +1,11 @@
 <?php namespace Wetzel\DataMapper\Metadata;
 
+use Wetzel\DataMapper\Metadata\Definitions\Class as ClassDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Attribute as AttributeDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Column as ColumnDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Embedded as EmbeddedDefinition;
+use Wetzel\DataMapper\Metadata\Definitions\Relation as RelationDefinition;
+
 class Builder {
     
     /**
@@ -58,14 +64,14 @@ class Builder {
     }
 
     /**
-     * Get all tablenames of a database.
+     * Parses a class.
      *
-     * @param  string  $table
+     * @param  string  $class
      * @return void
      */
     public function parseEntity($class) {
-        $reader = new SimpleAnnotationReader();
-        $reflectionClass = new ReflectionClass('Examunity\LaravelDataMapper\AnnotationDemo');
+
+        $reflectionClass = new ReflectionClass($class);
 
         // scan class annotations
         $classAnnotations = $this->reader->getClassAnnotations($reflectionClass);
@@ -75,32 +81,34 @@ class Builder {
             return false;
         }
 
+        // init class metadata
+        $this->metadata = new ClassDefinition;
+
         // scan property annotations
         foreach($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
             $propertyAnnotations = $reader->getPropertyAnnotations($reflectionProperty);
 
             foreach($propertyAnnotations as $annotation) {
-
-                // embedded
+                // property is embedded class
                 elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\Embedded) {
                     $this->parseEmbedded($annotation);
                 }
 
-                // column
-                if ($annotation instanceof \Wetzel\DataMapper\Annotations\Attribute) {
-                    $this->parseAttribute($name, $annotation);
+                // property is attribute
+                if (strpos(get_class($annotation), 'Wetzel\DataMapper\Annotations\Attribute') !== false) {
+                    $attributes = $this->parseAttribute($attributes, $name);
+                    $this->parseColumn($name, $annotation);
                 }
 
-                // relationship
-                elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\Relation) {
+                // property is relationship
+                elseif (strpos(get_class($annotation), 'Wetzel\DataMapper\Annotations\Relation') !== false) {
                     $this->parseRelation($name, $annotation);
                 }
             }
         }
 
         foreach($classAnnotations as $annotation) {
-
             // table name
             if ($annotation instanceof \Wetzel\DataMapper\Annotations\Table) {
                 $this->metadata['table'] = $annotation['value'];
@@ -120,18 +128,17 @@ class Builder {
             elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\Revisions) {
                 $this->metadata['revisions'] = true;
             }
-
         }
     }
 
     /**
-     * Get all tablenames of a database.
+     * Parses an embedded class.
      *
      * @param  string  $table
      * @return void
      */
-    public function parseEmbedded($name, $annotation) {
-        $reflectionClass = new ReflectionClass('Examunity\LaravelDataMapper\AnnotationDemo');
+    public function parseEmbeddedClass($name, $annotation) {
+        $reflectionClass = new ReflectionClass($annotation['value']);
 
         // scan class annotations
         $classAnnotations = $this->reader->getClassAnnotations($reflectionClass);
@@ -145,147 +152,77 @@ class Builder {
         foreach($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
             $propertyAnnotations = $reader->getPropertyAnnotations($reflectionProperty);
+            
+            $attributes = new AttributesDefinition;
 
             foreach($propertyAnnotations as $annotation) {
-
-                // column
+                // property is attribute
                 if ($annotation instanceof \Wetzel\DataMapper\Annotations\Attribute) {
-                    $this->parseAttribute($name, $annotation);
+                    $attributes = $this->parseAttribute($attributes, $name);
+                    $this->parseColumn($name, $annotation);
                 }
-
             }
 
+            $this->metadata['embeddeds'][] = new EmbeddedClassDefinition([
+                'name' => $name,
+                'embeddedClass' => $annotation['value'],
+                'attributes' => $attributes,
+            ]);
         }
     }
 
     /**
-     * Get all tablenames of a database.
+     * Parses an attribute.
      *
+     * @param  \Wetzel\DataMapper\Metadata\Definitions\Attributes  $attributes
      * @param  string  $table
-     * @return void
+     * @return \Wetzel\DataMapper\Metadata\Definitions\Attributes
      */
-    protected function parseAttribute($name, $annotation) {
-        if (in_array($annotation['value'], $this->attributeTypes) {
-
-            $options = [];
-
-            // scale & decimal option for decimal and double
-            if (in_array($annotation['value'], ['decimal','double'])) {
-                $options = [
-                    $annotation['precision'],
-                    $annotation['scale'],
-                ];
-            }
-
-            // values option for enum
-            elseif (in_array($annotation['value'], ['enum'])) {
-                $options = [
-                    $annotation['values'],
-                ];
-            }
-
-            // length option for char and string
-            elseif (in_array($annotation['value'], ['char','string']) && isset($annotation['length'])) {
-                $options = [
-                    $annotation['length'],
-                ];
-            }
-            
-            $this->metadata['attributes'][$name] = [
-                'type' => $annotation['value'],
-                'options' => $options,
-                'nullable' => $annotation['nullable'],
-                'default' => $annotation['default'],
-                'unsigned' => $annotation['unsigned'],
-                'primary' => $annotation['primary'],
-                'unique' => $annotation['unique'],
-                'index' => $annotation['index'],
-        }
+    protected function parseAttribute($attributes, $name)
+    {
+        // add attribute
+        return $attributes[] = $name;
     }
 
     /**
-     * Get all tablenames of a database.
+     * Parses a column.
      *
      * @param  string  $table
      * @return void
      */
-    protected function parseRelation($name, $annotation) {
-        if ($annotation instanceof \Wetzel\DataMapper\Annotations\BelongsTo) {
-            $relation = [
-                $annotation['related'],
-                $annotation['foreignKey'],
-                $annotation['otherKey'],
-                $annotation['relation'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\BelongsToMany) {
-            $relation = [
-                $annotation['related'],
-                $annotation['table'],
-                $annotation['foreignKey'],
-                $annotation['otherKey'],
-                $annotation['relation'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\HasMany) {
-            $relation = [
-                $annotation['related'],
-                $annotation['foreignKey'],
-                $annotation['localKey'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\HasManyThrough) {
-            $relation = [
-                $annotation['related'],
-                $annotation['through'],
-                $annotation['firstKey'],
-                $annotation['secondKey'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\HasOne) {
-            $relation = [
-                $annotation['related'],
-                $annotation['foreignKey'],
-                $annotation['localKey'],
-            ];
+    protected function parseColumn($name, $annotation)
+    {
+        // add column
+        $this->metadata['columns'][] = new ColumnDefinition([
+            'name' => $annotation['value'],
+            'type' => $name,
+            'nullable' => $annotation['nullable'],
+            'default' => $annotation['default'],
+            'unsigned' => $annotation['unsigned'],
+            'primary' => $annotation['primary'],
+            'unique' => $annotation['unique'],
+            'index' => $annotation['index'],
+            'options' => array_except($annotation, ['value', 'nullable', 'default', 'unsigned', 'primary', 'unique', 'index'],
+        ]);
+    }
 
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\MorphMany) {
-            $relation = [
-                $annotation['related'],
-                $annotation['name'],
-                $annotation['type'],
-                $annotation['id'],
-                $annotation['localKey'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\MorphOne) {
-            $relation = [
-                $annotation['related'],
-                $annotation['name'],
-                $annotation['type'],
-                $annotation['id'],
-                $annotation['localKey'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\MorphTo) {
-            $relation = [
-                $annotation['related'],
-                $annotation['type'],
-                $annotation['id'],
-            ];
-        }
-        elseif ($annotation instanceof \Wetzel\DataMapper\Annotations\MorphToMany) {
-            $relation = [
-                $annotation['related'],
-                $annotation['table'],
-                $annotation['foreignKey'],
-                $annotation['otherKey'],
-                $annotation['reverse'],
-            ];
-        }
+    /**
+     * Parses a relationship.
+     *
+     * @param  string  $table
+     * @return void
+     */
+    protected function parseRelation($name, $annotation)
+    {
+        // add relation
+        $this->metadata['relations'][] = new RelationDefinition([
+            'name' => $name,
+            'related' => $annotation['value'],
+            'options' => array_except($annotation, ['value'],
+        ]);
 
-        $this->metadata['relations'][$name] = $relation;
+        // create pivots
+        if ($name == )
     }
 
 }

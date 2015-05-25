@@ -3,6 +3,46 @@
 class EntityManager {
 
     /**
+     * Set an entity class.
+     * 
+     * @param string $class
+     * @return Eloquent
+     */
+    public function class($class) {
+
+    }
+
+    /**
+     * Create an entity object.
+     * 
+     * @param Entity $object
+     * @return void
+     */
+    public function create($object) {
+
+    }
+
+    /**
+     * Update an entity object.
+     * 
+     * @param Entity $object
+     * @return void
+     */
+    public function update($object) {
+
+    }
+
+    /**
+     * Delete an entity object.
+     * 
+     * @param Entity $object
+     * @return void
+     */
+    public function delete($object) {
+
+    }
+
+    /**
      * Convert plain old php object to model.
      *
      * @return string

@@ -4,20 +4,20 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class HasOne implements Annotation
+final class HasManyThrough extends Relation implements Annotation
 {
     /**
      * @var string
      */
-    public $value;
+    public $through;
 
     /**
      * @var string
      */
-    public $foreignKey = null;
+    public $firstKey = null;
 
     /**
      * @var string
      */
-    public $localKey = null;
+    public $secondKey = null;
 }

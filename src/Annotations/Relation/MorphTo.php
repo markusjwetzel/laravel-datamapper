@@ -4,7 +4,7 @@
  * @Annotation
  * @Target("PROPERTY")
  */
-final class MorphTo implements Annotation
+final class MorphTo extends Relation implements Annotation
 {
     /**
      * @var string
