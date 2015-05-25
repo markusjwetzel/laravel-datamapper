@@ -1,0 +1,9 @@
+    /**
+     * {{name}} relation.
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\{{ucfirst_type}}
+     */
+    public function {{name}}()
+    {
+        return $this->{{type}}({{related}},{{options}});
+    }

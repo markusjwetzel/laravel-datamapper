@@ -1,0 +1,96 @@
+<?php namespace {{namespace}};
+
+use Wetzel\DataMapper\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class {{class}} extends Model {
+
+    {{softDeletes}}
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = {{table}};
+
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = {{primaryKey}};
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = {{incrementing}};
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = {{timestamps}};
+
+    /**
+     * The model's attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [{{attributes}}];
+
+    /**
+     * The embedded objects.
+     *
+     * @var array
+     */
+    protected $embeddeds = [{{embeddeds}}];
+
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [{{hidden}}];
+
+    /**
+     * The attributes that should be visible in arrays.
+     *
+     * @var array
+     */
+    protected $visible = [{{visible}}];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [{{appends}}];
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [{{fillable}}];
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [{{dates}}];
+
+    /**
+     * The relationships that should be touched on save.
+     *
+     * @var array
+     */
+    protected $touches = [{{touches}}];
+
+    {{relations}}
+
+}
