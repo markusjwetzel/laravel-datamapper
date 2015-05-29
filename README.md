@@ -133,7 +133,7 @@ If an entity has the `@ORM\Softdeleteable` annotation, you can use the soft dele
 
 ## Support
 
-Bugs and feature requests are tracked on [GitHub](https://github.com/markusjwetzel/laravel-data-mapper/issues).
+Bugs and feature requests are tracked on [GitHub](https://github.com/markusjwetzel/laravel-datamapper/issues).
 
 ## License
 
