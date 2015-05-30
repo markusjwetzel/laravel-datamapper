@@ -1,8 +1,8 @@
-<?php namespace Wetzel\DataMapper;
+<?php namespace Wetzel\Datamapper;
 
 use Illuminate\Support\ServiceProvider;
 
-class DataMapperServiceProvider extends ServiceProvider {
+class DatamapperServiceProvider extends ServiceProvider {
 
     /**
      * Register the application services.

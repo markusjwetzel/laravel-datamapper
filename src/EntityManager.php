@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper;
+<?php namespace Wetzel\Datamapper;
 
 class EntityManager {
 

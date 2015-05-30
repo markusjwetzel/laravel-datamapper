@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Support;
+<?php namespace Wetzel\Datamapper\Support;
 
 use Illuminate\Contracts\Support\Arrayable;
 

@@ -1,7 +1,7 @@
-<?php namespace Wetzel\DataMapper\Support\Facades;
+<?php namespace Wetzel\Datamapper\Support\Facades;
 
 /**
- * @see \Wetzel\DataMapper\EntityManager
+ * @see \Wetzel\Datamapper\EntityManager
  */
 class EntityManager extends Facade {
 

@@ -4,6 +4,6 @@
  * @Annotation
  * @Target("CLASS")
  */
-final class SoftDeletes implements Annotation
+final class Versioning implements Annotation
 {
 }

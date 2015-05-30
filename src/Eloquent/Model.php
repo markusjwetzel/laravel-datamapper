@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Eloquent;
+<?php namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use ReflectionClass;

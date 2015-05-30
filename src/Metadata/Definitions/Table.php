@@ -1,6 +1,6 @@
 <?php namespace Wetzel\Datamapper\Metadata\Definitions;
 
-class Relation extends Definition {
+class Table extends Definition {
     
     /**
      * Valid keys.
@@ -9,10 +9,7 @@ class Relation extends Definition {
      */
     $keys = [
         'name' => null,
-        'type' => null,
-        'relatedClass' => null,
-        'pivotTable' => null;
-        'options' => [],
+        'columns' => [],
     ];
 
 }

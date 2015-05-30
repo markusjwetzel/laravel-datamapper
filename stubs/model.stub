@@ -1,6 +1,6 @@
 <?php namespace {{namespace}};
 
-use Wetzel\DataMapper\Eloquent\Model;
+use Wetzel\Datamapper\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class {{class}} extends Model {

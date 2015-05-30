@@ -1,4 +1,4 @@
-<?php namespace Wetzel/DataMapper/Mapping;
+<?php namespace Wetzel/Datamapper/Annotations;
 
 /**
  * @Annotation
@@ -10,9 +10,4 @@ final class Embedded implements Annotation
      * @var string
      */
     public $class;
-    
-    /**
-     * @var string
-     */
-    public $columnPrefix;
 }

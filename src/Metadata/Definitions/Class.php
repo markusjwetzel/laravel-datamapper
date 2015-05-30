@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Metadata\Definitions;
+<?php namespace Wetzel\Datamapper\Metadata\Definitions;
 
 class Class extends Definition {
     
@@ -8,12 +8,13 @@ class Class extends Definition {
      * @var array
      */
     $keys = [
+        'class' => null,
         'table' => null,
         'timestamps' => false,
         'softdeletes' => false,
         'versionable' => false,
         'columns' => [],
-        'attributes' => new Attributes,
+        'attributes' => [],
         'embeddeds' => [],
         'relations' => [],
     ];

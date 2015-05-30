@@ -1,9 +1,9 @@
-<?php namespace Wetzel\DataMapper\Metadata\Definitions;
+<?php namespace Wetzel\Datamapper\Metadata\Definitions;
 
 use ArrayObject;
 use UnexpectedValueException;
 
-class Definition extends ArrayObject {
+abstract class Definition extends ArrayObject {
     
     /**
      * Constructor merges default array with input array.

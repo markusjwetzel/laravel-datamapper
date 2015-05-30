@@ -1,4 +1,4 @@
-<?php namespace Wetzel/DataMapper/Mapping;
+<?php namespace Wetzel/Datamapper/Annotations;
 
 /**
  * @Annotation
@@ -9,5 +9,5 @@ final class Table implements Annotation
     /**
      * @var string
      */
-    public $value;
+    public $name;
 }

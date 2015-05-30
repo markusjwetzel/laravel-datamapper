@@ -1,4 +1,4 @@
-<?php namespace Wetzel/DataMapper/Mapping;
+<?php namespace Wetzel/Datamapper/Annotations/Relation;
 
 /**
  * @Annotation
@@ -6,6 +6,11 @@
  */
 final class MorphTo extends Relation implements Annotation
 {
+    /**
+     * @var string
+     */
+    public $related = null;
+
     /**
      * @var string
      */

@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Metadata\Definitions;
+<?php namespace Wetzel\Datamapper\Metadata\Definitions;
 
 class Column extends Definition {
     

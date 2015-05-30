@@ -1,11 +1,11 @@
-<?php namespace Wetzel\DataMapper\Database;
+<?php namespace Wetzel\Datamapper\Schema;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Visitor\DropSchemaSqlCollector;
-use Wetzel\DataMapper\Metadata\Definitions\Class as ClassDefinition;
-use Wetzel\DataMapper\Metadata\Definitions\Column as ColumnDefinition;
-use Wetzel\DataMapper\Metadata\Definitions\Relation as RelationDefinition;
+use Wetzel\Datamapper\Metadata\Definitions\Class as ClassDefinition;
+use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
+use Wetzel\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
 
 class Builder {
 
@@ -35,7 +35,7 @@ class Builder {
      *
      * @var array
      */
-    protected $supported = [
+    /*protected $supported = [
         'bigIncrements' => 1,
         'bigInteger' => 1,
         'binary' => 1,
@@ -60,34 +60,34 @@ class Builder {
         'text' => 1,
         'time' => 1,
         'timestamp' => 1,
-    ];
+    ];*/
 
     /**
      * Doctrine DBAL unsupported types.
      *
      * @var array
      */
-    protected $unsupportedByDoctrine = [
+    /*protected $unsupportedByDoctrine = [
         'tinyInteger',
         'mediumInteger',
         'enum',
         'double',
         'json',
         'jsonb',
-    ];
+    ];*/
 
     /**
      * Laravel Schema Builder unsupported types.
      *
      * @var array
      */
-    protected $unsupportedByLaravel = [
+    /*protected $unsupportedByLaravel = [
         'blob',
         'datetimetz',
         'array',
         'json_array',
         'object',
-    ];
+    ];*/
 
     /**
      * The database connection instance.
@@ -127,27 +127,31 @@ class Builder {
      * Creates all tables.
      *
      * @param array $metadataArray
-     * @return array
+     * @param boolean $sql
+     * @return void|array
      */
-    public function createSchema(array $metadataArray)
+    public function create(array $metadataArray, $sql=false)
     {
         $schema = $this->getSchemaFromMetadata($metadataArray);
 
         $statements = $schema->toSql($this->platform);
 
-        $this->build($statements);
-
-        return $statements;
+        if ( ! $sql) {
+            $this->build($statements);
+        } else {
+            return $statements;
+        }
     }
 
     /**
      * Updates all tables.
      *
      * @param array $metadataArray
+     * @param boolean $sql
      * @param boolean $saveMode
-     * @return array
+     * @return void|array
      */
-    public function updateSchema(array $metadataArray, $saveMode=false)
+    public function update(array $metadataArray, $sql=false, $saveMode=false)
     {
         $fromSchema = $this->schemaManager->createSchema();
         $toSchema = $this->getSchemaFromMetadata($metadataArray);
@@ -161,18 +165,21 @@ class Builder {
             $statements = $schemaDiff->toSql($this->platform);
         }
 
-        $this->build($statements);
-
-        return $statements;
+        if ( ! $sql) {
+            $this->build($statements);
+        } else {
+            return $statements;
+        }
     }
 
     /**
      * Drops all tables.
      *
      * @param array $metadataArray
-     * @return array
+     * @param boolean $sql
+     * @return void|array
      */
-    public function dropSchema(array $metadataArray)
+    public function drop(array $metadataArray, $sql=false)
     {
         $visitor = new DropSchemaSqlCollector($this->platform);
 
@@ -180,7 +187,7 @@ class Builder {
 
         $fullSchema = $this->schemaManager->createSchema();
 
-        foreach ($fullSchema->getTables() AS $table) {
+        foreach ($fullSchema->getTables() as $table) {
             if ($schema->hasTable($table->getName())) {
                 $visitor->acceptTable($table);
             }
@@ -188,59 +195,12 @@ class Builder {
 
         $statements = $visitor->getQueries();
 
-        $this->build($statements);
-
-        return $statements;
-    }
-
-    /**
-     * Creates a table from metadata.
-     *
-     * @param array $metadata
-     * @return boolean
-     */
-    /*public function createTable($metadata)
-    {
-        $table = $this->generateTableSchema($metadata);
-
-        $statements = (array) $this->schemaManager->getDatabasePlatform()->getCreateTableSQL($table);
-
-        $this->build($statements);
-    }*/
-
-    /**
-     * Compares table columns with metadata and updates a table.
-     *
-     * @param array $metadata
-     * @return string
-     */
-    /*public function updateTable($metadata)
-    {
-        $newTable = $this->generateTableSchema($metadata);
-
-        $oldTable = $schema->listTableDetails($this->connection->getTablePrefix().$metadata['table']);
-
-        $tableDiff = (new Comparator)->diffTable($newTable, $oldTable);
-
-        if ($tableDiff !== false)
-        {
-            $statements = (array) $this->schemaManager->getDatabasePlatform()->getAlterTableSQL($tableDiff);
-
+        if ( ! $sql) {
             $this->build($statements);
+        } else {
+            return $statements;
         }
-    }*/
-
-    /**
-     * Drops a table.
-     *
-     * @return string
-     */
-    /*public function dropTable($metadata)
-    {
-        $statement = $this->schemaManager->getDatabasePlatform()->getTruncateTableSQL($this->connection->getTablePrefix().$metadata['table']);
-
-        $this->build([$statement]);
-    }*/
+    }
 
     /**
      * Execute the statements against the database.
@@ -268,7 +228,14 @@ class Builder {
         $schema = new Schema([], [], $metadataSchemaConfig);
 
         foreach ($metadataArray as $metadata) {
-            $this->generateTableFromMetadata($schema, $metadata);
+            $this->generateTableFromMetadata($schema, $metadata['table']);
+
+            foreach($metadata['relations'] as $relationMetadata) {
+                // create pivot table for many to many relations
+                if ( ! empty($relationMetadata['pivotTable'])) {
+                    $this->generateTableFromMetadata($schema, $relationMetadata['pivotTable']);
+                }
+            }
         }
 
         return $schema;
@@ -278,38 +245,31 @@ class Builder {
      * Generates a table from metadata.
      *
      * @param table \Doctrine\DBAL\Schema\Schema
-     * @param \Wetzel\DataMapper\Metadata\Definitions\Class $metadata
-     * @return \Doctrine\DBAL\Schema\Table
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $metadata
+     * @return void
      */
-    protected function generateTableFromMetadata($schema, ClassDefinition $metadata)
+    protected function generateTableFromMetadata($schema, TableDefinition $tableMetadata)
     {
         $primaryKeys = [];
         $uniqueIndexes = [];
         $indexes = [];
 
-        $table = $schema->createTable($this->connection->getTablePrefix().$metadata['table']);
+        $table = $schema->createTable($this->connection->getTablePrefix().$tableMetadata['name']);
 
-        foreach($metadata['columns'] as $name => $columnMetadata) {
+        foreach($tableMetadata['columns'] as $columnMetadata) {
             $columnMetadata = $this->getDoctrineColumnAliases($columnMetadata);
 
             // add column
             $options = $this->getDoctrineColumnOptions($columnMetadata);
-            $table->addColumn($name, $columnMetadata['type'], $options);
+            $table->addColumn($columnMetadata['name'], $columnMetadata['type'], $options);
 
             // add primary keys, unique indexes and indexes
             if ( ! empty($columnMetadata['primary']))
-                $primaryKeys[] = $name;
+                $primaryKeys[] = $columnMetadata['name'];
             if ( ! empty($columnMetadata['unique']))
-                $uniqueIndexes[] = $name;
+                $uniqueIndexes[] = $columnMetadata['name'];
             if ( ! empty($columnMetadata['index']))
-                $indexes[] = $name;
-        }
-
-        foreach($metadata['relations'] as $name => $relationMetadata) {
-            // create pivot table for many to many relations
-            if ($metadata['relations']['type'] == 'hasMany') {
-                $this->generatePivotTableFromMetadata($schema, $name, $relationMetadata);
-            }
+                $indexes[] = $columnMetadata['name'];
         }
 
         // add primary keys, unique indexes and indexes
@@ -319,27 +279,12 @@ class Builder {
             $table->addUniqueIndex($uniqueIndexes);
         if ( ! empty($indexes))
             $table->addIndex($indexes);
-
-        return $table;
-    }
-
-    /**
-     * Generates a table from metadata.
-     *
-     * @param table \Doctrine\DBAL\Schema\Schema
-     * @param name $name
-     * @param \Wetzel\DataMapper\Metadata\Definitions\Relation $relationMetadata
-     * @return \Doctrine\DBAL\Schema\Table
-     */
-    protected function generatePivotTableFromMetadata($schema, $name, RelationDefinition $relationMetadata)
-    {
-        // todo
     }
 
     /**
      * Get the doctrine column type.
      *
-     * @param \Wetzel\DataMapper\Metadata\Definitions\Column $columnMetadata
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Column $columnMetadata
      * @return array
      */
     protected function getDoctrineColumnAliases(ColumnDefinition $columnMetadata)
@@ -370,7 +315,7 @@ class Builder {
     /**
      * Get the doctrine column options.
      *
-     * @param \Wetzel\DataMapper\Metadata\Definitions\Column $columnMetadata
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Column $columnMetadata
      * @return array
      */
     protected function getDoctrineColumnOptions(ColumnDefinition $columnMetadata)
@@ -394,25 +339,5 @@ class Builder {
 
         return $options;
     }
-
-    /**
-     * Get all tablenames of a database.
-     *
-     * @param string $table
-     * @return void
-     */
-    /*protected function getTableNames() {
-        return $this->connection->select($this->grammar->compileTableExists());
-    }*/
-
-    /**
-     * Get all columnnames of a table.
-     *
-     * @param string $table
-     * @return void
-     */
-    /*protected function getColumnNames($table) {
-        return $this->schemaManager->getColumnListing($table);
-    }*/
 
 }

@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Eloquent;
+<?php namespace Wetzel\Datamapper\Eloquent;
 
 class Generator {
 
@@ -37,7 +37,7 @@ class Generator {
         $stub = $this->stub;
 
         $this->replaceSoftDeletes($stub, $metadata['softDeletes']);
-        $this->replaceTable($stub, $metadata['table']);
+        $this->replaceTable($stub, $metadata['table']['name']);
         $this->replacePrimaryKey($stub, $metadata['primarykey']);
         $this->replaceIncrementing($stub, $metadata['incrementing']);
         $this->replaceTimestamps($stub, $metadata['timestamps']);
@@ -224,9 +224,11 @@ class Generator {
         foreach($relations as $relation) {
             $relationStub = $this->relationStub;
 
+            $options = implode(",",array_merge($relation['related'], $relation['options']));
+            // todo: merge by relation
+
             str_replace('{{name}}', $relation['name'], $relationStub);
-            str_replace('{{related}}', $relation['related'], $relationStub);
-            str_replace('{{options}}', $relation['options'], $relationStub);
+            str_replace('{{options}}', $options, $relationStub);
             str_replace('{{ucfirst_type}}', ucfirst($relation['type']), $relationStub);
             str_replace('{{type}}', $relation['type'], $relationStub);
 

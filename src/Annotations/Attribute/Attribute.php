@@ -1,17 +1,7 @@
-<?php namespace Wetzel/DataMapper/Annotations/Attribute;
+<?php namespace Wetzel/Datamapper/Annotations/Attribute;
 
 abstract class Attribute implements Annotation
 {
-    /**
-     * @var string
-     */
-    public $value;
-
-    /**
-     * @var string
-     */
-    public $name;
-
     /**
      * @var boolean
      */

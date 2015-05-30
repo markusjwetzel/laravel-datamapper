@@ -1,6 +1,6 @@
-<?php namespace Wetzel\DataMapper\Support\Traits;
+<?php namespace Wetzel\Datamapper\Support\Traits;
 
-use Wetzel\DataMapper\Annotations as ORM;
+use Wetzel\Datamapper\Annotations as ORM;
 use Carbon\Carbon;
 
 trait Timestamps {

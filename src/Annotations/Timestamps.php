@@ -1,4 +1,4 @@
-<?php namespace Wetzel/DataMapper/Mapping;
+<?php namespace Wetzel/Datamapper/Annotations;
 
 /**
  * @Annotation

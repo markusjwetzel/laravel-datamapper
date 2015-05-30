@@ -5,5 +5,5 @@
      */
     public function {{name}}()
     {
-        return $this->{{type}}({{related}},{{options}});
+        return $this->{{type}}({{options}});
     }

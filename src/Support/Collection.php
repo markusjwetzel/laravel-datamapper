@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper;
+<?php namespace Wetzel\Datamapper;
 
 use Illuminate\Support\Collection as BaseCollection;
 

@@ -1,4 +1,4 @@
-<?php namespace Wetzel\DataMapper\Metadata\Definitions;
+<?php namespace Wetzel\Datamapper\Metadata\Definitions;
 
 class EmbeddedClass extends Definition {
     
@@ -10,7 +10,7 @@ class EmbeddedClass extends Definition {
     $keys = [
         'name' => null,
         'embeddedClass' => null,
-        'attributes' => new Attributes,
+        'attributes' => [],
     ];
 
 }
