@@ -3,9 +3,10 @@
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-use Illuminate\Filesystem\Filesystem;
-use Wetzel\Datamapper\Metadata\Builder;
-use Wetzel\Datamapper\Schema\Builder;
+
+use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
+use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
+use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
 use UnexpectedValueException;
 
 class SchemaUpdateCommand extends Command {
@@ -15,14 +16,14 @@ class SchemaUpdateCommand extends Command {
      *
      * @var string
      */
-    protected $name = 'schema:create';
+    protected $name = 'schema:update';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create database tables from annotations.';
+    protected $description = 'Update database tables from annotations.';
 
     /**
      * The metadata builder instance.
@@ -39,19 +40,26 @@ class SchemaUpdateCommand extends Command {
     protected $schema;
 
     /**
+     * The schema builder instance.
+     *
+     * @var \Wetzel\Datamapper\Eloquent\Generator
+     */
+    protected $modelGenerator;
+
+    /**
      * Create a new migration install command instance.
      *
-     * @param  \Illuminate\Database\Migrations\MigrationCreator  $creator
-     * @param  \Illuminate\Foundation\Composer  $composer
+     * @param  \Wetzel\Datamapper\Metadata\Builder $metadata
+     * @param  \Wetzel\Datamapper\Schema\Builder $schema
      * @return void
      */
-    public function __construct(Metadata $metadata, Schema $schema, Filesystem $files)
+    public function __construct(MetadataBuilder $metadata, SchemaBuilder $schema, ModelGenerator $models)
     {
         parent::__construct();
 
         $this->metadata = $metadata;
         $this->schema = $schema;
-        $this->files = $files;
+        $this->models = $models;
     }
 
     /**
@@ -63,7 +71,7 @@ class SchemaUpdateCommand extends Command {
     {
         $class = $this->argument('class');
         
-        $this->createSchema($class);
+        $this->updateSchema($class);
     }
 
     /**
@@ -74,8 +82,9 @@ class SchemaUpdateCommand extends Command {
      * @param  bool    $create
      * @return string
      */
-    protected function createSchema($class)
+    protected function updateSchema($class)
     {
+        // set classes
         if ($class) {
             if (class_exists($class)) {
                 $classes = [$class];
@@ -83,17 +92,23 @@ class SchemaUpdateCommand extends Command {
                 throw new UnexpectedValueException('Classname is not valid.');
             }
         } else {
-            $classes = get_declared_classes();
+            $classes = $this->metadata->getClassesFromNamespace();
         }
+
+        // get metadata
+        $metadata = $this->metadata->getMetadata($classes);
+
+        // generate eloquent models
+        $this->models->generate($metadata);
 
         if ($this->option('sql')) {
             $this->info('Outputting queries:');
-            $sql = $this->schema->create($this->metadata->getMetadata($classes), true);
+            $sql = $this->schema->update($metadata, true);
             $this->info(implode(';' . PHP_EOL, $sql));
         } else {
-            $this->info('Creating database schema...');
-            $this->schema->create($this->metadata->getMetadata($classes));
-            $this->info('Schema has been created!');
+            $this->info('Updating database schema...');
+            $this->schema->update($metadata);
+            $this->info('Schema has been updated!');
         }
     }
 

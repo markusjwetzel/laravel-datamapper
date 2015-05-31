@@ -7,7 +7,7 @@ class Table extends Definition {
      * 
      * @var array
      */
-    $keys = [
+    protected $keys = [
         'name' => null,
         'columns' => [],
     ];

@@ -4,8 +4,8 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-use Wetzel\Datamapper\Metadata\Builder;
-use Wetzel\Datamapper\Schema\Builder;
+use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
+use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
 use UnexpectedValueException;
 
 class SchemaCreateCommand extends Command {
@@ -41,11 +41,11 @@ class SchemaCreateCommand extends Command {
     /**
      * Create a new migration install command instance.
      *
-     * @param  \Illuminate\Database\Migrations\MigrationCreator  $creator
-     * @param  \Illuminate\Foundation\Composer  $composer
+     * @param  \Wetzel\Datamapper\Metadata\Builder $metadata
+     * @param  \Wetzel\Datamapper\Schema\Builder $schema
      * @return void
      */
-    public function __construct(Metadata $metadata, Schema $schema)
+    public function __construct(MetadataBuilder $metadata, SchemaBuilder $schema)
     {
         parent::__construct();
 

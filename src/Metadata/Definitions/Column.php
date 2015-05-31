@@ -7,7 +7,7 @@ class Column extends Definition {
      * 
      * @var array
      */
-    $keys = [
+    protected $keys = [
         'name' => null,
         'type' => null,
         'primary' => false,

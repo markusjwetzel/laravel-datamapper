@@ -7,7 +7,7 @@ class EmbeddedClass extends Definition {
      * 
      * @var array
      */
-    $keys = [
+    protected $keys = [
         'name' => null,
         'embeddedClass' => null,
         'attributes' => [],

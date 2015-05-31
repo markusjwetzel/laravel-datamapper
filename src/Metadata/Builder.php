@@ -1,11 +1,13 @@
 <?php namespace Wetzel\Datamapper\Metadata;
 
+use ReflectionClass;
 use InvalidArgumentException;
-use Doctrine\Common\Annotations\AnnotationReader;
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Filesystem\ClassFinder;
 
-use Wetzel\Datamapper\Metadata\Definitions\Class as ClassDefinition;
+use Doctrine\Common\Annotations\AnnotationReader;
+
+use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Attribute as AttributeDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass as EmbeddedClassDefinition;
@@ -63,10 +65,11 @@ class Builder {
     /**
      * Create a new Eloquent query builder instance.
      *
-     * @param  \AnnotationReader  $reader
+     * @param  \Doctrine\Common\Annotations\AnnotationReader  $reader
+     * @param  \Illuminate\Filesystem\ClassFinder  $finder
      * @return void
      */
-    public function __construct(AnnotationReader $reader, Finder $finder)
+    public function __construct(AnnotationReader $reader, ClassFinder $finder)
     {
         $this->reader = $reader;
         $this->finder = $finder;
@@ -97,7 +100,7 @@ class Builder {
     }
 
     /**
-     * Gets all classes for a namespace.
+     * Get all classes for a namespace.
      *
      * @param string namespace
      * @return array
@@ -134,7 +137,7 @@ class Builder {
     }
 
     /**
-     * Parses an entity class.
+     * Parse an entity class.
      *
      * @param array $class
      * @return array
@@ -147,14 +150,17 @@ class Builder {
         $classAnnotations = $this->reader->getClassAnnotations($reflectionClass);
 
         // init class metadata
-        $metadata = new ClassDefinition([
-            'class' => get_class($class);
+        $metadata = new EntityDefinition([
+            'class' => $class,
+            'table' => new TableDefinition([
+                'name' => $this->getTablenameFromClass($class)
+            ])
         ]);
 
         foreach($classAnnotations as $annotation) {
             // table name
             if ($annotation instanceof \Wetzel\Datamapper\Annotations\Table) {
-                $metadata['table']['name'] = $annotation['value'];
+                $metadata['table']['name'] = $annotation->name;
             }
 
             // timestamps
@@ -176,16 +182,16 @@ class Builder {
         // scan property annotations
         foreach($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
-            $propertyAnnotations = $reader->getPropertyAnnotations($reflectionProperty);
+            $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
 
             foreach($propertyAnnotations as $annotation) {
                 // property is embedded class
-                elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
+                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
                     $metadata['embeddeds'][$name] = $this->parseEmbedded($name, $annotation, $metadata);
                 }
 
                 // property is attribute
-                if ($this->stripNamespace($annotation, 'Wetzel\Datamapper\Annotations\Attribute')) {
+                elseif ($this->stripNamespace($annotation, 'Wetzel\Datamapper\Annotations\Attribute')) {
                     $metadata['attributes'][$name] = $this->parseAttribute($name, $annotation);
                     $metadata['table']['columns'][$name] = $this->parseColumn($name, $annotation);
                 }
@@ -201,7 +207,7 @@ class Builder {
     }
 
     /**
-     * Parses an embedded class.
+     * Parse an embedded class.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -209,14 +215,14 @@ class Builder {
      * @return \Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass
      */
     public function parseEmbeddedClass($name, $annotation, &$metadata) {
-        $reflectionClass = new ReflectionClass($annotation['class']);
+        $reflectionClass = new ReflectionClass($annotation->class);
 
         // scan class annotations
         $classAnnotations = $this->reader->getClassAnnotations($reflectionClass);
 
         // check if class is embedded class
         if ( ! $this->reader->getClassAnnotation($reflectionClass, '\Wetzel\Datamapper\Annotations\Embedded')) {
-            throw new InvalidArgumentException('Embedded class '.$annotation['class'].' has no @Embedded annotation.');
+            throw new InvalidArgumentException('Embedded class '.$annotation->class.' has no @Embedded annotation.');
         }
 
         // scan property annotations
@@ -236,14 +242,14 @@ class Builder {
 
             return new EmbeddedClassDefinition([
                 'name' => $name,
-                'embeddedClass' => $annotation['class'],
+                'embeddedClass' => $annotation->class,
                 'attributes' => $attributes,
             ]);
         }
     }
 
     /**
-     * Parses an attribute.
+     * Parse an attribute.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -258,7 +264,7 @@ class Builder {
     }
 
     /**
-     * Parses a column.
+     * Parse a column.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -272,18 +278,18 @@ class Builder {
         return new ColumnDefinition([
             'name' => $name,
             'type' => $type,
-            'nullable' => $annotation['nullable'],
-            'default' => $annotation['default'],
-            'unsigned' => $annotation['unsigned'],
-            'primary' => $annotation['primary'],
-            'unique' => $annotation['unique'],
-            'index' => $annotation['index'],
-            'options' => array_except($annotation, ['nullable', 'default', 'unsigned', 'primary', 'unique', 'index'],
+            'nullable' => $annotation->nullable,
+            'default' => $annotation->default,
+            'unsigned' => $annotation->unsigned,
+            'primary' => $annotation->primary,
+            'unique' => $annotation->unique,
+            'index' => $annotation->index,
+            'options' => $this->generateOptionsArray(['scale','precision','length'], $annotation)
         ]);
     }
 
     /**
-     * Parses a relationship.
+     * Parse a relationship.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -316,14 +322,14 @@ class Builder {
         return new RelationDefinition([
             'name' => $name,
             'type' => $type,
-            'related' => $annotation['related'],
+            'related' => $annotation->related,
             'pivotTable' => $pivotTable,
-            'options' => array_except($annotation, ['related'],
+            'options' => $this->generateOptionsArray(['name','type','table','through','foreignKey','otherKey','localKey','firstKey','secondKey','inverse','id','relation'], $annotation)
         ]);
     }
 
     /**
-     * Generates extra columns for a belongsTo relation.
+     * Generate extra columns for a belongsTo relation.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -332,20 +338,19 @@ class Builder {
      */
     protected function generateBelongsToColumns($name, $annotation, &$metadata)
     {
-        $name = ( ! empty($annotation['otherKey']))
-            ? $annotation['otherKey']
-            : $this->getClassWithoutNamespace($annotation['related'], true).'_id';
+        $name = ( ! empty($annotation->otherKey))
+            ? $annotation->otherKey
+            : $this->getClassWithoutNamespace($annotation->related, true).'_id';
 
         $this->metadata['table']['columns'][$name] = new ColumnDefinition([
             'name' => $name,
             'type' => 'integer',
-            'nullable' => $annotation['nullable'],
             'unsigned' => true,
         ]);
     }
 
     /**
-     * Generates extra columns for a morphTo relation.
+     * Generate extra columns for a morphTo relation.
      *
      * @param array $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -354,34 +359,32 @@ class Builder {
      */
     protected function generateMorphToColumns($name, $annotation, &$metadata)
     {
-        $morphName = ( ! empty($annotation['name']))
-            ? $annotation['name']
+        $morphName = ( ! empty($annotation->name))
+            ? $annotation->name
             : $name;
 
-        $morphId = ( ! empty($annotation['id']))
-            ? $annotation['id']
+        $morphId = ( ! empty($annotation->id))
+            ? $annotation->id
             : $morphName.'_id';
 
-        $morphType = ( ! empty($annotation['type']))
-            ? $annotation['type']
+        $morphType = ( ! empty($annotation->type))
+            ? $annotation->type
             : $morphName.'_type';
 
         $metadata['table']['columns'][$morphId] = new ColumnDefinition([
             'name' => $morphId,
             'type' => 'integer',
-            'nullable' => $annotation['nullable'],
             'unsigned' => true,
         ]);
 
         $metadata['table']['columns'][$morphType] = new ColumnDefinition([
             'name' => $morphType,
             'type' => 'string',
-            'nullable' => $annotation['nullable'],
         ]);
     }
     
     /**
-     * Generates pivot table for a belongsToMany relation.
+     * Generate pivot table for a belongsToMany relation.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
@@ -390,17 +393,17 @@ class Builder {
      */
     protected function generateBelongsToManyPivotTable($name, $annotation, &$metadata)
     {
-        $tableName = ( ! empty($annotation['table']))
-            ? $annotation['table']
-            : $this->metadata['table'].'_'.$this->getClassWithoutNamespace($annotation['related'], true).'_pivot';
+        $tableName = ( ! empty($annotation->table))
+            ? $annotation->table
+            : $this->metadata['table'].'_'.$this->getClassWithoutNamespace($annotation->related, true).'_pivot';
 
-        $foreignKey = ( ! empty($annotation['foreignKey'])
-            ? $annotation['foreignKey']
+        $foreignKey = ( ! empty($annotation->foreignKey))
+            ? $annotation->foreignKey
             : $this->getClassWithoutNamespace($metadata['class'], true).'_id';
 
-        $otherKey = ( ! empty($annotation['otherKey'])
-            ? $annotation['otherKey']
-            : $this->getClassWithoutNamespace($annotation['related'], true).'_id';
+        $otherKey = ( ! empty($annotation->otherKey))
+            ? $annotation->otherKey
+            : $this->getClassWithoutNamespace($annotation->related, true).'_id';
 
         return new TableDefinition([
             'name' => $tableName,
@@ -408,13 +411,11 @@ class Builder {
                 $foreignKey => new ColumnDefinition([
                     'name' => $foreignKey,
                     'type' => 'integer',
-                    'nullable' => $annotation['nullable'],
                     'unsigned' => true,
                 ]),
                 $otherKey => new ColumnDefinition([
                     'name' => $otherKey,
                     'type' => 'integer',
-                    'nullable' => $annotation['nullable'],
                     'unsigned' => true,
                 ]),
             ]
@@ -422,29 +423,29 @@ class Builder {
     }
     
     /**
-     * Generates pivot table for a morphToMany relation.
+     * Generate pivot table for a morphToMany relation.
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $metadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\Table
      */
-    protected function generateBelongsToManyPivotTable($name, $annotation, &$metadata)
+    protected function generateMorphToManyPivotTable($name, $annotation, &$metadata)
     {
-        $morphName = ( ! empty($annotation['name']))
-            ? $annotation['name']
+        $morphName = ( ! empty($annotation->name))
+            ? $annotation->name
             : $name;
 
-        $tableName = ( ! empty($annotation['table']))
-            ? $annotation['table']
+        $tableName = ( ! empty($annotation->table))
+            ? $annotation->table
             : $this->metadata['table'].'_'.$morphName.'_pivot';
 
-        $foreignKey = ( ! empty($annotation['foreignKey']))
-            ? $annotation['foreignKey']
+        $foreignKey = ( ! empty($annotation->foreignKey))
+            ? $annotation->foreignKey
             : $this->getClassWithoutNamespace($metadata['class'], true).'_id';
 
-        $morphId = ( ! empty($annotation['otherKey']))
-            ? $annotation['otherKey']
+        $morphId = ( ! empty($annotation->otherKey))
+            ? $annotation->otherKey
             : $morphName.'_id';
 
         $morphType = $morphName.'_type';
@@ -455,26 +456,41 @@ class Builder {
                 $foreignKey => new ColumnDefinition([
                     'name' => $foreignKey,
                     'type' => 'integer',
-                    'nullable' => $annotation['nullable'],
                     'unsigned' => true,
                 ]),
                 $morphId => new ColumnDefinition([
                     'name' => $morphId,
                     'type' => 'integer',
-                    'nullable' => $annotation['nullable'],
                     'unsigned' => true,
                 ]),
                 $morphType => new ColumnDefinition([
                     'name' => $morphType,
                     'type' => 'string',
-                    'nullable' => $annotation['nullable'],
                 ]),
             ]
         ]);
     }
 
     /**
-     * Gets class name.
+     * Generate an options array.
+     *
+     * @param array $keys
+     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @return array
+     */
+    protected function generateOptionsArray($keys, $annotation)
+    {
+        $options = [];
+
+        foreach($keys as $key) {
+            if (isset($annotation->{$key})) $options[$key] = $annotation->{$key};
+        }
+
+        return $options;
+    }
+
+    /**
+     * Strip given namespace from class.
      *
      * @param string|object $class
      * @param string $namespace
@@ -492,7 +508,27 @@ class Builder {
     }
 
     /**
-     * Gets class name.
+     * Get table name.
+     *
+     * @param string $class
+     * @return string
+     */
+    protected function getTablenameFromClass($class)
+    {
+        $className = array_slice(explode('/',str_replace('\\', '/', $class)), 2);
+
+        // delete last entry if entry is equal to the next to last entry
+        if (count($className) >= 2 && end($className) == prev($className)) {
+            array_pop($className);
+        }
+
+        $classBasename = array_pop($className);
+
+        return strtolower(implode('_',array_merge($className, preg_split('/(?<=\\w)(?=[A-Z])/', $classBasename))));
+    }
+
+    /**
+     * Get class name.
      *
      * @param string|object $class
      * @param boolean $lcfirst
@@ -501,8 +537,10 @@ class Builder {
     protected function getClassWithoutNamespace($class, $lcfirst=false)
     {
         $class = (is_object($class)) ? get_class($class) : $class;
+        
+        $items = explode('\\', $class);
 
-        $class = array_pop(explode('\\', $class));
+        $class = array_pop($items);
 
         if ($lcfirst) {
             return lcfirst($class);

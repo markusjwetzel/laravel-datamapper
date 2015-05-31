@@ -7,7 +7,7 @@ class Attribute extends Definition {
      * 
      * @var array
      */
-    $keys = [
+    protected $keys = [
         'name' => null,
     ];
 

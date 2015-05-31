@@ -3,26 +3,26 @@
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-use Illuminate\Filesystem\Filesystem;
-use Wetzel\Datamapper\Metadata\Builder;
-use Wetzel\Datamapper\Schema\Builder;
+
+use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
+use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
 use UnexpectedValueException;
 
-class SchemaUpdateCommand extends Command {
+class SchemaDropCommand extends Command {
 
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'schema:create';
+    protected $name = 'schema:drop';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create database tables from annotations.';
+    protected $description = 'Drop database tables from annotations.';
 
     /**
      * The metadata builder instance.
@@ -41,17 +41,16 @@ class SchemaUpdateCommand extends Command {
     /**
      * Create a new migration install command instance.
      *
-     * @param  \Illuminate\Database\Migrations\MigrationCreator  $creator
-     * @param  \Illuminate\Foundation\Composer  $composer
+     * @param  \Wetzel\Datamapper\Metadata\Builder $metadata
+     * @param  \Wetzel\Datamapper\Schema\Builder $schema
      * @return void
      */
-    public function __construct(Metadata $metadata, Schema $schema, Filesystem $files)
+    public function __construct(MetadataBuilder $metadata, SchemaBuilder $schema)
     {
         parent::__construct();
 
         $this->metadata = $metadata;
         $this->schema = $schema;
-        $this->files = $files;
     }
 
     /**
@@ -63,7 +62,7 @@ class SchemaUpdateCommand extends Command {
     {
         $class = $this->argument('class');
         
-        $this->createSchema($class);
+        $this->dropSchema($class);
     }
 
     /**
@@ -74,8 +73,9 @@ class SchemaUpdateCommand extends Command {
      * @param  bool    $create
      * @return string
      */
-    protected function createSchema($class)
+    protected function dropSchema($class)
     {
+        // set classes
         if ($class) {
             if (class_exists($class)) {
                 $classes = [$class];
@@ -83,17 +83,17 @@ class SchemaUpdateCommand extends Command {
                 throw new UnexpectedValueException('Classname is not valid.');
             }
         } else {
-            $classes = get_declared_classes();
+            $classes = $this->metadata->getClassesFromNamespace();
         }
 
         if ($this->option('sql')) {
             $this->info('Outputting queries:');
-            $sql = $this->schema->create($this->metadata->getMetadata($classes), true);
+            $sql = $this->schema->drop($this->metadata->getMetadata($classes), true);
             $this->info(implode(';' . PHP_EOL, $sql));
         } else {
-            $this->info('Creating database schema...');
-            $this->schema->create($this->metadata->getMetadata($classes));
-            $this->info('Schema has been created!');
+            $this->info('Dropping database schema...');
+            $this->schema->drop($this->metadata->getMetadata($classes));
+            $this->info('Schema has been dropped!');
         }
     }
 

@@ -1,6 +1,17 @@
 <?php namespace Wetzel\Datamapper;
 
 use Illuminate\Support\ServiceProvider;
+use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
+use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
+use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
+
+use Doctrine\Common\Annotations\AnnotationReader;
+
+use Wetzel\Datamapper\Metadata\AnnotationLoader;
+use Illuminate\Filesystem\ClassFinder;
+use Wetzel\Datamapper\Console\SchemaCreateCommand;
+use Wetzel\Datamapper\Console\SchemaUpdateCommand;
+use Wetzel\Datamapper\Console\SchemaDropCommand;
 
 class DatamapperServiceProvider extends ServiceProvider {
 
@@ -13,110 +24,148 @@ class DatamapperServiceProvider extends ServiceProvider {
     {
         $this->registerConfig();
 
-        $this->registerEngineResolverExtensions();
+        $this->registerAnnotations();
 
-        $this->registerFileExtensions();
+        $this->registerMetadataBuilder();
+
+        $this->registerSchemaBuilder();
+
+        $this->registerModelGenerator();
+
+        $this->registerCommands();
     }
 
     /**
-     * Register the view engine resolver extension.
+     * Register the config.
      *
      * @return void
      */
     protected function registerConfig()
     {
-        $configPath = __DIR__ . '/../config/handlebars.php';
+        $configPath = __DIR__ . '/../config/datamapper.php';
 
-        $this->mergeConfigFrom($configPath, 'handlebars');
+        $this->mergeConfigFrom($configPath, 'datamapper');
 
-        $this->publishes([$configPath => config_path('handlebars.php')], 'config');
+        $this->publishes([$configPath => config_path('datamapper.php')], 'config');
     }
 
     /**
-     * Register the view engine resolver extension.
+     * Registers all annotation classes
      *
      * @return void
      */
-    protected function registerEngineResolverExtensions()
-    {
-        $this->app->extend('view.engine.resolver', function($resolver, $app)
-        {
-            $this->registerBladeEngine($resolver);
-
-            $this->registerHandlebarsEngine($resolver);
-
-            return $resolver;
-        });
-    }
-
-    /**
-     * Register the Blade engine implementation.
-     *
-     * @param  \Illuminate\View\Engines\EngineResolver  $resolver
-     * @return void
-     */
-    public function registerBladeEngine($resolver)
+    public function registerAnnotations()
     {
         $app = $this->app;
 
-        // The Compiler engine requires an instance of the CompilerInterface, which in
-        // this case will be the Blade compiler, so we'll first create the compiler
-        // instance to pass into the engine so it can compile the views properly.
-        $app->singleton('blade.compiler', function($app)
-        {
-            $cache = $app['config']['view.compiled'];
+        $loader = new AnnotationLoader($app['files']);
 
-            return new BladeCompiler($app['files'], $cache);
-        });
+        $loader->registerAll();
     }
 
     /**
-     * Register the mustache engine implementation.
+     * Register the metadata builder implementation.
      *
-     * @param  \Illuminate\View\Engines\EngineResolver  $resolver
      * @return void
      */
-    public function registerHandlebarsEngine($resolver)
+    protected function registerMetadataBuilder()
     {
         $app = $this->app;
 
-        // The Compiler engine requires an instance of the CompilerInterface, which in
-        // this case will be the Handlebars compiler, so we'll first create the compiler
-        // instance to pass into the engine so it can compile the views properly.
-        $app->singleton('handlebars.lightncandy', function($app)
-        {
-            return new LightnCandy;
-        });
+        $app->singleton('datamapper.metadata', function($app) {
+            $reader = new AnnotationReader;
 
-        $app->singleton('handlebars.compiler', function($app)
-        {
-            $cache = $app['config']['view.compiled'];
+            $finder = new ClassFinder;
 
-            return new HandlebarsCompiler($app['files'], $app['handlebars.lightncandy'], $cache);
-        });
-
-        $resolver->register('handlebars', function() use ($app)
-        {
-            return new HandlebarsEngine($app['handlebars.compiler']);
+            return new MetadataBuilder($reader, $finder);
         });
     }
 
     /**
-     * Register the file extensions.
+     * Register the scehma builder implementation.
      *
      * @return void
      */
-    protected function registerFileExtensions()
+    protected function registerSchemaBuilder()
     {
-        $this->app->extend('view', function($env, $app)
-        {
-            $fileexts = $app['config']['handlebars.fileext'];
+        $app = $this->app;
 
-            foreach($fileexts as $fileext) {
-                $env->addExtension(trim($fileext, '.'), 'handlebars');
-            }
+        $app->singleton('datamapper.schema', function($app) {
+            $connection = $app['db']->connection();
 
-            return $env;
+            return new SchemaBuilder($connection);
+        });
+    }
+
+    /**
+     * Register the scehma builder implementation.
+     *
+     * @return void
+     */
+    protected function registerModelGenerator()
+    {
+        $app = $this->app;
+
+        $app->singleton('datamapper.modelgenerator', function($app) {
+            return new ModelGenerator($app['files']);
+        });
+    }
+
+    /**
+     * Register all of the migration commands.
+     *
+     * @return void
+     */
+    protected function registerCommands()
+    {
+        // create singletons of each command
+        $commands = array('Create', 'Update', 'Drop');
+
+        foreach ($commands as $command) {
+            $this->{'registerSchema'.$command.'Command'}();
+        }
+
+        // register commands
+        $this->commands(
+            'command.schema.create',
+            'command.schema.update',
+            'command.schema.drop'
+        );
+    }
+
+    /**
+     * Register the "schema:create" command.
+     *
+     * @return void
+     */
+    protected function registerSchemaCreateCommand()
+    {
+        $this->app->singleton('command.schema.create', function($app) {
+            return new SchemaCreateCommand($app['datamapper.metadata'], $app['datamapper.schema'], $app['datamapper.modelgenerator']);
+        });
+    }
+
+    /**
+     * Register the "schema:update" command.
+     *
+     * @return void
+     */
+    protected function registerSchemaUpdateCommand()
+    {
+        $this->app->singleton('command.schema.update', function($app) {
+            return new SchemaUpdateCommand($app['datamapper.metadata'], $app['datamapper.schema'], $app['datamapper.modelgenerator']);
+        });
+    }
+
+    /**
+     * Register the "schema:drop" command.
+     *
+     * @return void
+     */
+    protected function registerSchemaDropCommand()
+    {
+        $this->app->singleton('command.schema.drop', function($app) {
+            return new SchemaDropCommand($app['datamapper.metadata'], $app['datamapper.schema'], $app['datamapper.modelgenerator']);
         });
     }
 
@@ -127,7 +176,7 @@ class DatamapperServiceProvider extends ServiceProvider {
      */
     public function provides()
     {
-        return ['handlebars'];
+        return ['datamapper'];
     }
 
 }

@@ -1,11 +1,13 @@
 <?php namespace Wetzel\Datamapper\Schema;
 
+use Illuminate\Database\Connection;
+
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Visitor\DropSchemaSqlCollector;
-use Wetzel\Datamapper\Metadata\Definitions\Class as ClassDefinition;
+
 use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
+use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
 
 class Builder {
 
@@ -120,11 +122,11 @@ class Builder {
     {
         $this->connection = $connection;
         $this->schemaManager = $connection->getDoctrineSchemaManager();
-        $this->platform = $connection->getDatabasePlatform();
+        $this->platform = $this->schemaManager->getDatabasePlatform();
     }
 
     /**
-     * Creates all tables.
+     * Create all tables.
      *
      * @param array $metadataArray
      * @param boolean $sql
@@ -144,7 +146,7 @@ class Builder {
     }
 
     /**
-     * Updates all tables.
+     * Update all tables.
      *
      * @param array $metadataArray
      * @param boolean $sql
@@ -173,7 +175,7 @@ class Builder {
     }
 
     /**
-     * Drops all tables.
+     * Drop all tables.
      *
      * @param array $metadataArray
      * @param boolean $sql
@@ -217,7 +219,7 @@ class Builder {
     }
 
     /**
-     * Creates schema instance from metadata
+     * Create schema instance from metadata
      *
      * @param array $metadataArray
      * @return \Doctrine\DBAL\Schema\Schema
@@ -242,10 +244,10 @@ class Builder {
     }
 
     /**
-     * Generates a table from metadata.
+     * Generate a table from metadata.
      *
      * @param table \Doctrine\DBAL\Schema\Schema
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $metadata
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Table $tableMetadata
      * @return void
      */
     protected function generateTableFromMetadata($schema, TableDefinition $tableMetadata)

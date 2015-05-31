@@ -1,4 +1,6 @@
-<?php namespace Wetzel/Datamapper/Annotations/Relation;
+<?php namespace Wetzel\Datamapper\Annotations\Relation;
+
+use Wetzel\Datamapper\Annotations\Annotation;
 
 abstract class Relation implements Annotation
 {

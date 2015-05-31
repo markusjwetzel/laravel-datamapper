@@ -1,4 +1,6 @@
-<?php namespace Wetzel/Datamapper/Annotations/Attribute;
+<?php namespace Wetzel\Datamapper\Annotations\Attribute;
+
+use Wetzel\Datamapper\Annotations\Annotation;
 
 abstract class Attribute implements Annotation
 {

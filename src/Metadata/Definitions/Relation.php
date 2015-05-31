@@ -7,7 +7,7 @@ class Relation extends Definition {
      * 
      * @var array
      */
-    $keys = [
+    protected $keys = [
         'name' => null,
         'type' => null,
         'relatedClass' => null,

@@ -4,6 +4,8 @@ use ArrayObject;
 use UnexpectedValueException;
 
 abstract class Definition extends ArrayObject {
+
+    protected $keys;
     
     /**
      * Constructor merges default array with input array.
@@ -11,8 +13,11 @@ abstract class Definition extends ArrayObject {
      * @param array $array
      * @return void
      */
-    public function __construct(array $array) {
-        $this = array_merge($keys, $array);
+    public function __construct(array $array=[])
+    {
+        foreach($this->keys as $name => $value) {
+            $this[$name] = (isset($array[$name])) ? $array[$name] : $value;
+        }
     }
     
     /**
@@ -24,10 +29,10 @@ abstract class Definition extends ArrayObject {
      */
     public function offsetSet($key, $newval)
     {
-        if ($def = in_array($key, $this->keys)) {
+        if ($def = in_array($key, array_keys($this->keys))) {
             parent::offsetSet($key, $newval);
         } else {
-            throw new UnexpectedValueException('Index is not defined in metadata definition.');
+            throw new UnexpectedValueException($key.' is not defined in metadata definition.');
         }
     }
 
