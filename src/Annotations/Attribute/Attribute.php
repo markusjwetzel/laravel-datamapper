@@ -28,9 +28,4 @@ abstract class Attribute implements Annotation
      * @var string
      */
     public $default = null;
-
-    /**
-     * @var boolean
-     */
-    public $unsigned = false;
 }

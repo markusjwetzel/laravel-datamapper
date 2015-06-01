@@ -14,6 +14,12 @@ class Generator {
     protected $files;
 
     /**
+     * Path to model storage directory.
+     * @var array
+     */
+    protected $path;
+
+    /**
      * Model stubs.
      * @var array
      */
@@ -23,11 +29,13 @@ class Generator {
      * Constructor.
      *
      * @param \Illuminate\Filesystem\Filesystem $files
+     * @param string $storagePath
      * @return void
      */
-    public function __construct(Filesystem $files)
+    public function __construct(Filesystem $files, $storagePath)
     {
         $this->files = $files;
+        $this->path = $storagePath . '/framework';
 
         $this->stubs['model'] = $this->files->get(__DIR__ . '/../../stubs/model.stub');
         $this->stubs['relation'] = $this->files->get(__DIR__ . '/../../stubs/model-relation.stub');
@@ -37,67 +45,104 @@ class Generator {
      * Generate model from metadata.
      *
      * @param array $metadataArray
-     * @return string
+     * @return void
      */
     public function generate($metadataArray)
     {
+        // clean or make (if not exists) model storage directory
+        if ($this->files->exists($this->path . '/entities')) {
+            $this->files->cleanDirectory($this->path . '/entities');
+        } else {
+            $this->files->makeDirectory($this->path . '/entities');
+        }
+
+        // create models
         foreach($metadataArray as $metadata) {
             $this->generateModel($metadata);
         }
+
+        // create json file for metadata
+        $contents = json_encode($metadataArray, JSON_PRETTY_PRINT);
+        $this->files->put($this->path . '/entities.json', $contents);
     }
 
     /**
      * Generate model from metadata.
      *
      * @param array $metadata
-     * @return string
+     * @return void
      */
     public function generateModel($metadata)
     {
         $stub = $this->stubs['model'];
 
-        //$this->replaceSoftDeletes($metadata['softDeletes'], $stub);
+        $classname = md5($metadata['class']);
+
+        // header
+        $this->replaceNamespace('Wetzel\Datamapper\Cache', $stub);
+        $this->replaceClass('Entity' . $classname, $stub);
+
+        // softDeletes
+        $this->replaceSoftDeletes($metadata['softDeletes'], $stub);
+
+        // table name
         $this->replaceTable($metadata['table']['name'], $stub);
-        //$this->replacePrimaryKey($metadata['primarykey'], $stub);
-        //$this->replaceIncrementing($metadata['incrementing'], $stub);
+
+        // primary key
+        $primaryKey = 'id';
+        $incrementing = true;
+        foreach($metadata['table']['columns'] as $column) {
+            if ( ! empty($column['primary'])) {
+                $primaryKey = $column['primary'];
+                $incrementing = ( ! empty($column['options']['autoIncrement']));
+            }
+        }
+        $this->replacePrimaryKey($primaryKey, $stub);
+        $this->replaceIncrementing($incrementing, $stub);
+
+        // timestamps
         $this->replaceTimestamps($metadata['timestamps'], $stub);
-        $this->replaceAttributes($metadata['attributes'], $stub);
-        $this->replaceEmbeddeds($metadata['embeddeds'], $stub);
-        //$this->replaceHidden($metadata['hidden'], $stub);
-        //$this->replaceVisible($metadata['visible'], $stub);
-        //$this->replaceAppends($metadata['appends'], $stub);
-        //$this->replaceFillable($metadata['fillable'], $stub);
-        //$this->replaceDates($metadata['dates'], $stub);
-        //$this->replaceTouches($metadata['touches'], $stub);
+
+        // misc
+        $this->replaceHidden($metadata['hidden'], $stub);
+        $this->replaceVisible($metadata['visible'], $stub);
+        $this->replaceFillable($metadata['fillable'], $stub);
+        $this->replaceGuarded($metadata['guarded'], $stub);
+
+        $this->replaceTouches($metadata['touches'], $stub);
+        
+        // relations
         $this->replaceRelations($metadata['relations'], $stub);
 
-        //$this->files->put($path, $this->buildClass($name));
-        
-        dd($stub);
-
-        return $stub;
+        $this->files->put($this->path . '/entities/' . $classname, $stub);
     }
 
     /**
      * Replace the namespace for the given stub.
      *
-     * @param  string  $class
+     * @param  string  $name
      * @param  string  $stub
      * @return void
      */
-    protected function replaceNamespace($class, &$stub)
+    protected function replaceNamespace($name, &$stub)
     {
-        $stub = str_replace(
-            '{{namespace}}', $this->getNamespace($name), $stub
-        );
+        $stub = str_replace('{{namespace}}', $name, $stub);
+    }
 
-        $stub = str_replace(
-            '{{rootNamespace}}', $this->getAppNamespace(), $stub
-        );
+    /**
+     * Replace the classname for the given stub.
+     *
+     * @param  string  $name
+     * @param  string  $stub
+     * @return void
+     */
+    protected function replaceClass($name, &$stub)
+    {
+        $stub = str_replace('{{class}}', $name, $stub);
     }
     
     /**
-     * Replaces soft deletes.
+     * Replace soft deletes.
      *
      * @param boolean $option
      * @param string $stub
@@ -105,11 +150,11 @@ class Generator {
      */
     protected function replaceSoftDeletes($option, &$stub)
     {
-        $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' : '' , $stub);
+        $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '' , $stub);
     }
     
     /**
-     * Replaces table name.
+     * Replace table name.
      * 
      * @param boolean $name
      * @param string $stub
@@ -121,7 +166,7 @@ class Generator {
     }
     
     /**
-     * Replaces primary key.
+     * Replace primary key.
      * 
      * @param string $name
      * @param string $stub
@@ -129,11 +174,12 @@ class Generator {
      */
     protected function replacePrimaryKey($name, &$stub)
     {
-        $stub = str_replace('{{primarykey}}', "'".$name."'", $stub);
+
+        $stub = str_replace('{{primaryKey}}', "'".$name."'", $stub);
     }
     
     /**
-     * Replaces incrementing.
+     * Replace incrementing.
      * 
      * @param boolean $option
      * @param string $stub
@@ -145,7 +191,7 @@ class Generator {
     }
     
     /**
-     * Replaces timestamps.
+     * Replace timestamps.
      * 
      * @param boolean $option
      * @param string $stub
@@ -157,31 +203,7 @@ class Generator {
     }
     
     /**
-     * Replaces attributes.
-     * 
-     * @param array $attributes
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceAttributes($attributes, &$stub)
-    {
-        //$stub = str_replace('{{attributes}}', $option ? 'true' : 'false', $stub);
-    }
-    
-    /**
-     * Replaces embeddeds.
-     * 
-     * @param array $embeddeds
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceEmbeddeds($embeddeds, &$stub)
-    {
-        //$stub = str_replace('{{embeddeds}}', $option ? 'true' : 'false', $stub);
-    }
-    
-    /**
-     * Replaces hidden.
+     * Replace hidden.
      * 
      * @param array $hidden
      * @param string $stub
@@ -189,11 +211,11 @@ class Generator {
      */
     protected function replaceHidden($hidden, &$stub)
     {
-        //$stub = str_replace('{{hidden}}', $option ? 'true' : 'false', $stub);
+        $stub = str_replace('{{hidden}}', $this->getArrayAsText($hidden), $stub);
     }
     
     /**
-     * Replaces visible.
+     * Replace visible.
      * 
      * @param array $visible
      * @param string $stub
@@ -201,23 +223,11 @@ class Generator {
      */
     protected function replaceVisible($visible, &$stub)
     {
-        //$stub = str_replace('{{visible}}', $option ? 'true' : 'false', $stub);
+        $stub = str_replace('{{visible}}', $this->getArrayAsText($visible), $stub);
     }
     
     /**
-     * Replaces appends.
-     * 
-     * @param array $appends
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceAppends($appends, &$stub)
-    {
-        //$stub = str_replace('{{appends}}', $option ? 'true' : 'false', $stub);
-    }
-    
-    /**
-     * Replaces fillable.
+     * Replace fillable.
      * 
      * @param array $fillable
      * @param string $stub
@@ -225,23 +235,23 @@ class Generator {
      */
     protected function replaceFillable($fillable, &$stub)
     {
-        //$stub = str_replace('{{fillable}}', $option ? 'true' : 'false', $stub);
+        $stub = str_replace('{{fillable}}', $this->getArrayAsText($fillable), $stub);
     }
     
     /**
-     * Replaces dates.
+     * Replace guarded.
      * 
-     * @param array $dates
+     * @param array $guarded
      * @param string $stub
      * @return void
      */
-    protected function replaceDates($dates, &$stub)
+    protected function replaceGuarded($guarded, &$stub)
     {
-        //$stub = str_replace('{{dates}}', $option ? 'true' : 'false', $stub);
+        $stub = str_replace('{{guarded}}', $this->getArrayAsText($guarded), $stub);
     }
     
     /**
-     * Replaces touches.
+     * Replace touches.
      * 
      * @param array $touches
      * @param string $stub
@@ -249,11 +259,11 @@ class Generator {
      */
     protected function replaceTouches($touches, &$stub)
     {
-        //str_replace('{{touches}}', $option ? 'true' : 'false', $stub);
+        $stub = str_replace('{{touches}}', $this->getArrayAsText($touches), $stub);
     }
     
     /**
-     * Replaces relations.
+     * Replace relations.
      * 
      * @param array $relations
      * @param string $stub
@@ -261,49 +271,38 @@ class Generator {
      */
     protected function replaceRelations($relations, &$stub)
     {
-        $relations = [];
+        $textRelations = [];
 
         foreach($relations as $relation) {
             $relationStub = $this->stubs['relation'];
 
-            $options = implode(",",array_merge($relation['related'], $relation['options']));
-            // todo: merge by relation
+            $options = "'" . implode("','",array_merge([$relation['relatedClass']], $relation['options'])) . "'";
+            // todo: merge by relation, so that the order does not matter
 
             $relationStub = str_replace('{{name}}', $relation['name'], $relationStub);
             $relationStub = str_replace('{{options}}', $options, $relationStub);
             $relationStub = str_replace('{{ucfirst_type}}', ucfirst($relation['type']), $relationStub);
             $relationStub = str_replace('{{type}}', $relation['type'], $relationStub);
 
-            $relations[] = $relationStub;
+            $textRelations[] = $relationStub;
         }
 
-        $stub = str_replace('{{relations}}', implode(PHP_EOL . PHP_EOL, $relations), $stub);
+        $stub = str_replace('{{relations}}', implode(PHP_EOL . PHP_EOL, $textRelations), $stub);
     }
 
     /**
-     * Get the full namespace name for a given class.
+     * Get an array in text format.
      *
-     * @param  string  $name
+     * @param array $array
      * @return string
      */
-    protected function getNamespace($name)
+    protected function getArrayAsText($array)
     {
-        return trim(implode('\\', array_slice(explode('\\', $name), 0, -1)), '\\');
-    }
+        $text = var_export($array, true);
 
-    /**
-     * Get class name.
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function getClassname($class)
-    {
-        $items = explode('\\', $class);
-
-        $class = array_pop($items);
-
-        return $class;
+        $text = preg_replace('/[ ]{2}/', "    ", $text);
+        $text = preg_replace("/\=\>[ \n    ]+array[ ]+\(/", '=> array(', $text);
+        return $text = preg_replace("/\n/", "\n    ", $text);
     }
 
 }

@@ -11,7 +11,7 @@ class Relation extends Definition {
         'name' => null,
         'type' => null,
         'relatedClass' => null,
-        'pivotTable' => null;
+        'pivotTable' => null,
         'options' => [],
     ];
 

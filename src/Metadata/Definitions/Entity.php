@@ -10,9 +10,17 @@ class Entity extends Definition {
     protected $keys = [
         'class' => null,
         'table' => null,
+        
+        'softDeletes' => false,
         'timestamps' => false,
-        'softdeletes' => false,
         'versionable' => false,
+
+        'hidden' => [],
+        'visible' => [],
+        'fillable' => [],
+        'guarded' => [],
+        'touches' => [],
+
         'columns' => [],
         'attributes' => [],
         'embeddeds' => [],

@@ -8,4 +8,13 @@ use Wetzel\Datamapper\Annotations\Annotation;
  */
 final class Integer extends Attribute implements Annotation
 {
+    /**
+     * @var boolean
+     */
+    public $autoIncrement = false;
+
+    /**
+     * @var boolean
+     */
+    public $unsigned = false;
 }

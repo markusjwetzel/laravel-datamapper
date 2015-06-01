@@ -33,6 +33,8 @@ class DatamapperServiceProvider extends ServiceProvider {
         $this->registerModelGenerator();
 
         $this->registerCommands();
+
+        $this->loadEloquentModels();
     }
 
     /**
@@ -107,7 +109,7 @@ class DatamapperServiceProvider extends ServiceProvider {
         $app = $this->app;
 
         $app->singleton('datamapper.modelgenerator', function($app) {
-            return new ModelGenerator($app['files']);
+            return new ModelGenerator($app['files'], $app['path.storage']);
         });
     }
 
@@ -167,6 +169,20 @@ class DatamapperServiceProvider extends ServiceProvider {
         $this->app->singleton('command.schema.drop', function($app) {
             return new SchemaDropCommand($app['datamapper.metadata'], $app['datamapper.schema'], $app['datamapper.modelgenerator']);
         });
+    }
+
+    /**
+     * Load the compiled eloquent entity models.
+     *
+     * @return void
+     */
+    protected function loadEloquentModels()
+    {
+        $files = $this->app['files']->files($this->app['path.storage'] . '/framework/entities');
+        
+        foreach($files as $file) {
+            require $file;
+        }
     }
 
     /**

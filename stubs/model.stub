@@ -5,92 +5,32 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class {{class}} extends Model {
 
-    {{softDeletes}}
+    {{softDeletes}}protected $table = {{table}};
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = {{table}};
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
     protected $primaryKey = {{primaryKey}};
 
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
     public $incrementing = {{incrementing}};
 
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
     public $timestamps = {{timestamps}};
 
-    /**
-     * The model's attributes.
-     *
-     * @var array
-     */
-    protected $attributes = [{{attributes}}];
+    protected $hidden = {{hidden}};
 
-    /**
-     * The embedded objects.
-     *
-     * @var array
-     */
-    protected $embeddeds = [{{embeddeds}}];
+    protected $visible = {{visible}};
 
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [{{hidden}}];
+    protected $fillable = {{fillable}};
 
-    /**
-     * The attributes that should be visible in arrays.
-     *
-     * @var array
-     */
-    protected $visible = [{{visible}}];
+    protected $guarded = {{guarded}};
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = [{{appends}}];
+    //protected $dates = {{dates}};
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [{{fillable}}];
+    protected $touches = {{touches}};
 
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = [{{dates}}];
+    //protected $casts = {{casts}};
 
-    /**
-     * The relationships that should be touched on save.
-     *
-     * @var array
-     */
-    protected $touches = [{{touches}}];
+    //protected $with = {{with}};
 
-    {{relations}}
+    //protected $morphClass = {{morphClass}};
+
+{{relations}}
 
 }

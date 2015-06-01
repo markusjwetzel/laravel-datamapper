@@ -153,13 +153,18 @@ class Builder {
         $metadata = new EntityDefinition([
             'class' => $class,
             'table' => new TableDefinition([
-                'name' => $this->getTablenameFromClass($class)
-            ])
+                'name' => $this->getTablenameFromClass($class),
+            ]),
         ]);
 
         foreach($classAnnotations as $annotation) {
+            // softdeletes
+            if ($annotation instanceof \Wetzel\Datamapper\Annotations\SoftDeletes) {
+                $metadata['softDeletes'] = true;
+            }
+
             // table name
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Table) {
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Table) {
                 $metadata['table']['name'] = $annotation->name;
             }
 
@@ -168,14 +173,34 @@ class Builder {
                 $metadata['timestamps'] = true;
             }
 
-            // softdeletes
-            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\SoftDeletes) {
-                $metadata['softdeletes'] = true;
+            // versioned
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Versionable) {
+                $metadata['versionable'] = true;
             }
 
-            // versioned
-            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Revisions) {
-                $metadata['revisions'] = true;
+            // hidden
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Hidden) {
+                $metadata['hidden'] = $annotation->attributes;
+            }
+
+            // visible
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Visible) {
+                $metadata['visible'] = $annotation->attributes;
+            }
+
+            // fillable
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Fillable) {
+                $metadata['fillable'] = $annotation->attributes;
+            }
+
+            // guarded
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Guarded) {
+                $metadata['guarded'] = $annotation->attributes;
+            }
+
+            // touches
+            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Touches) {
+                $metadata['touches'] = $annotation->relations;
             }
         }
 
@@ -187,7 +212,7 @@ class Builder {
             foreach($propertyAnnotations as $annotation) {
                 // property is embedded class
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
-                    $metadata['embeddeds'][$name] = $this->parseEmbedded($name, $annotation, $metadata);
+                    $metadata['embeddeds'][$name] = $this->parseEmbeddedClass($name, $annotation, $metadata);
                 }
 
                 // property is attribute
@@ -214,35 +239,38 @@ class Builder {
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $metadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass
      */
-    public function parseEmbeddedClass($name, $annotation, &$metadata) {
-        $reflectionClass = new ReflectionClass($annotation->class);
+    public function parseEmbeddedClass($name, $annotation, &$metadata)
+    {
+        $embeddedClass = $annotation->class;
+        $embeddedName = $name;
+        $reflectionClass = new ReflectionClass($embeddedClass);
 
         // scan class annotations
         $classAnnotations = $this->reader->getClassAnnotations($reflectionClass);
 
         // check if class is embedded class
-        if ( ! $this->reader->getClassAnnotation($reflectionClass, '\Wetzel\Datamapper\Annotations\Embedded')) {
-            throw new InvalidArgumentException('Embedded class '.$annotation->class.' has no @Embedded annotation.');
+        if ( ! $this->reader->getClassAnnotation($reflectionClass, 'Wetzel\Datamapper\Annotations\Embeddable')) {
+            throw new InvalidArgumentException('Embedded class '.$embeddedClass.' has no @Embeddable annotation.');
         }
 
         // scan property annotations
         foreach($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
-            $propertyAnnotations = $reader->getPropertyAnnotations($reflectionProperty);
+            $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
             
             $attributes = [];
 
             foreach($propertyAnnotations as $annotation) {
                 // property is attribute
-                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Attribute) {
+                if ($this->stripNamespace($annotation, 'Wetzel\Datamapper\Annotations\Attribute')) {
                     $attributes[$name] = $this->parseAttribute($name, $annotation);
                     $metadata['table']['columns'][$name] = $this->parseColumn($name, $annotation);
                 }
             }
 
             return new EmbeddedClassDefinition([
-                'name' => $name,
-                'embeddedClass' => $annotation->class,
+                'name' => $embeddedName,
+                'embeddedClass' => $embeddedClass,
                 'attributes' => $attributes,
             ]);
         }
@@ -280,11 +308,10 @@ class Builder {
             'type' => $type,
             'nullable' => $annotation->nullable,
             'default' => $annotation->default,
-            'unsigned' => $annotation->unsigned,
             'primary' => $annotation->primary,
             'unique' => $annotation->unique,
             'index' => $annotation->index,
-            'options' => $this->generateOptionsArray(['scale','precision','length'], $annotation)
+            'options' => $this->generateOptionsArray(['scale','precision','length','unsigned','autoIncrement'], $annotation)
         ]);
     }
 
@@ -322,7 +349,7 @@ class Builder {
         return new RelationDefinition([
             'name' => $name,
             'type' => $type,
-            'related' => $annotation->related,
+            'relatedClass' => $annotation->related,
             'pivotTable' => $pivotTable,
             'options' => $this->generateOptionsArray(['name','type','table','through','foreignKey','otherKey','localKey','firstKey','secondKey','inverse','id','relation'], $annotation)
         ]);
@@ -342,7 +369,7 @@ class Builder {
             ? $annotation->otherKey
             : $this->getClassWithoutNamespace($annotation->related, true).'_id';
 
-        $this->metadata['table']['columns'][$name] = new ColumnDefinition([
+        $metadata['table']['columns'][$name] = new ColumnDefinition([
             'name' => $name,
             'type' => 'integer',
             'unsigned' => true,

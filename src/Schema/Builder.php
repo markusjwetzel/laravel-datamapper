@@ -20,8 +20,8 @@ class Builder {
         // integers
         'bigInteger' => ['type' => 'bigint'],
         'smallInteger' => ['type' => 'smallint'],
-        'increments' => ['type' => 'integer', 'primary' => true, 'unsigned' => true, 'options' => ['autoincrement' => true]],
-        'bigIncrements' => ['type' => 'bigint', 'primary' => true, 'unsigned' => true, 'options' => ['autoincrement' => true]],
+        'increments' => ['type' => 'integer', 'primary' => true, 'options' => ['unsigned' => true, 'autoIncrement' => true]],
+        'bigIncrements' => ['type' => 'bigint', 'primary' => true, 'options' => ['unsigned' => true, 'autoIncrement' => true]],
         // chars
         'char' => ['type' => 'string', 'options' => ['fixed' => true]],
         // texts
@@ -300,8 +300,8 @@ class Builder {
             }
 
             // update unsigned
-            if ( ! empty($this->aliases[$index]['unsigned'])) {
-                $columnMetadata['unsigned'] = $this->aliases[$index]['unsigned'];
+            if ( ! empty($this->aliases[$index]['options']['unsigned'])) {
+                $columnMetadata['unsigned'] = $this->aliases[$index]['options']['unsigned'];
             }
 
             // update options
@@ -335,8 +335,13 @@ class Builder {
         }
 
         // alias for unsigned option
-        if ( ! empty($columnMetadata['unsigned'])) {
-            $options['unsigned'] = $columnMetadata['unsigned'];
+        if ( ! empty($columnMetadata['options']['unsigned'])) {
+            $options['unsigned'] = $columnMetadata['options']['unsigned'];
+        }
+
+        // alias for autoincrement option
+        if ( ! empty($columnMetadata['options']['autoIncrement'])) {
+            $options['autoincrement'] = $columnMetadata['options']['autoIncrement'];
         }
 
         return $options;
