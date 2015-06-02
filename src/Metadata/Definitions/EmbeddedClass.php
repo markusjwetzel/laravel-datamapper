@@ -9,7 +9,7 @@ class EmbeddedClass extends Definition {
      */
     protected $keys = [
         'name' => null,
-        'embeddedClass' => null,
+        'class' => null,
         'attributes' => [],
     ];
 

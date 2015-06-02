@@ -45,15 +45,19 @@ class Generator {
      * Generate model from metadata.
      *
      * @param array $metadataArray
+     * @param boolean $saveMode
      * @return void
      */
-    public function generate($metadataArray)
+    public function generate($metadataArray, $saveMode=false)
     {
         // clean or make (if not exists) model storage directory
-        if ($this->files->exists($this->path . '/entities')) {
-            $this->files->cleanDirectory($this->path . '/entities');
-        } else {
+        if ( ! $this->files->exists($this->path . '/entities')) {
             $this->files->makeDirectory($this->path . '/entities');
+        }
+
+        // clear existing models if save mode is off
+        if ( ! $saveMode) {
+            $this->clean();
         }
 
         // create models
@@ -64,6 +68,18 @@ class Generator {
         // create json file for metadata
         $contents = json_encode($metadataArray, JSON_PRETTY_PRINT);
         $this->files->put($this->path . '/entities.json', $contents);
+    }
+
+    /**
+     * Clean model directory.
+     *
+     * @return void
+     */
+    public function clean()
+    {
+        if ($this->files->exists($this->path . '/entities')) {
+            $this->files->cleanDirectory($this->path . '/entities');
+        }
     }
 
     /**
@@ -81,6 +97,7 @@ class Generator {
         // header
         $this->replaceNamespace('Wetzel\Datamapper\Cache', $stub);
         $this->replaceClass('Entity' . $classname, $stub);
+        $this->replaceMappedClass($metadata['class'], $stub);
 
         // softDeletes
         $this->replaceSoftDeletes($metadata['softDeletes'], $stub);
@@ -89,14 +106,7 @@ class Generator {
         $this->replaceTable($metadata['table']['name'], $stub);
 
         // primary key
-        $primaryKey = 'id';
-        $incrementing = true;
-        foreach($metadata['table']['columns'] as $column) {
-            if ( ! empty($column['primary'])) {
-                $primaryKey = $column['primary'];
-                $incrementing = ( ! empty($column['options']['autoIncrement']));
-            }
-        }
+        list($primaryKey, $incrementing) = $this->getPrimaryKey($metadata);
         $this->replacePrimaryKey($primaryKey, $stub);
         $this->replaceIncrementing($incrementing, $stub);
 
@@ -106,15 +116,82 @@ class Generator {
         // misc
         $this->replaceHidden($metadata['hidden'], $stub);
         $this->replaceVisible($metadata['visible'], $stub);
-        $this->replaceFillable($metadata['fillable'], $stub);
-        $this->replaceGuarded($metadata['guarded'], $stub);
-
         $this->replaceTouches($metadata['touches'], $stub);
+
+        // mapping data
+        $mapping = $this->generateMappingData($metadata);
+        $this->replaceMapping($mapping, $stub);
         
         // relations
         $this->replaceRelations($metadata['relations'], $stub);
 
         $this->files->put($this->path . '/entities/' . $classname, $stub);
+    }
+
+    /**
+     * Get primary key and auto increment value.
+     *
+     * @param  array  $metadata
+     * @return array
+     */
+    protected function getPrimaryKey($metadata)
+    {
+        $primaryKey = 'id';
+        $incrementing = true;
+
+        foreach($metadata['table']['columns'] as $column) {
+            if ( ! empty($column['primary'])) {
+                $primaryKey = $column['primary'];
+                $incrementing = ( ! empty($column['options']['autoIncrement']));
+            }
+        }
+
+        return [$primaryKey, $incrementing];
+    }
+
+    /**
+     * Generate mapping array.
+     *
+     * @param  array  $metadata
+     * @return array
+     */
+    protected function generateMappingData($metadata)
+    {
+        $attributes = [];
+        foreach($metadata['attributes'] as $attributeMetadata) {
+            $attributes[] = $attributeMetadata['name'];
+        }
+
+        $embeddeds = [];
+        foreach($metadata['embeddeds'] as $embeddedMetadata) {
+            $embedded = [];
+            $embedded['class'] = $embeddedMetadata['class'];
+            $embeddedAttributes = [];
+            foreach($embeddedMetadata['attributes'] as $attributeMetadata) {
+                $embeddedAttributes[] = $attributeMetadata['name'];
+            }
+            $embedded['attributes'] = $embeddedAttributes;
+            $embeddeds[$embeddedMetadata['name']] = $embedded;
+        }
+
+        $relations = [];
+        foreach($metadata['relations'] as $relationMetadata) {
+            $relation = [];
+            if ( ! empty($relationMetadata['relatedClass'])) {
+                $relation['relatedClass'] = $relationMetadata['relatedClass'];
+                $relation['mappedRelatedClass'] = 'Wetzel\Datamapper\Cache\Entity' . md5($relationMetadata['relatedClass']);
+            } else {
+                $relation['relatedClass'] = null;
+                $relation['mappedRelatedClass'] = null;
+            }
+            $relations[$relationMetadata['name']] = $relation;
+        }
+
+        return [
+            'attributes' => $attributes,
+            'embeddeds' => $embeddeds,
+            'relations' => $relations,
+        ];
     }
 
     /**
@@ -139,6 +216,18 @@ class Generator {
     protected function replaceClass($name, &$stub)
     {
         $stub = str_replace('{{class}}', $name, $stub);
+    }
+
+    /**
+     * Replace the classname for the given stub.
+     *
+     * @param  string  $name
+     * @param  string  $stub
+     * @return void
+     */
+    protected function replaceMappedClass($name, &$stub)
+    {
+        $stub = str_replace('{{mappedClass}}', $name, $stub);
     }
     
     /**
@@ -227,30 +316,6 @@ class Generator {
     }
     
     /**
-     * Replace fillable.
-     * 
-     * @param array $fillable
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceFillable($fillable, &$stub)
-    {
-        $stub = str_replace('{{fillable}}', $this->getArrayAsText($fillable), $stub);
-    }
-    
-    /**
-     * Replace guarded.
-     * 
-     * @param array $guarded
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceGuarded($guarded, &$stub)
-    {
-        $stub = str_replace('{{guarded}}', $this->getArrayAsText($guarded), $stub);
-    }
-    
-    /**
      * Replace touches.
      * 
      * @param array $touches
@@ -260,6 +325,18 @@ class Generator {
     protected function replaceTouches($touches, &$stub)
     {
         $stub = str_replace('{{touches}}', $this->getArrayAsText($touches), $stub);
+    }
+    
+    /**
+     * Replace mapping.
+     * 
+     * @param array $mapping
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceMapping($mapping, &$stub)
+    {
+        $stub = str_replace('{{mapping}}', $this->getArrayAsText($mapping), $stub);
     }
     
     /**
@@ -276,7 +353,7 @@ class Generator {
         foreach($relations as $relation) {
             $relationStub = $this->stubs['relation'];
 
-            $options = "'" . implode("','",array_merge([$relation['relatedClass']], $relation['options'])) . "'";
+            $options = "'" . implode("','",array_merge(['Entity' . md5($relation['relatedClass'])], $relation['options'])) . "'";
             // todo: merge by relation, so that the order does not matter
 
             $relationStub = str_replace('{{name}}', $relation['name'], $relationStub);

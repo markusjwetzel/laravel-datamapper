@@ -33,65 +33,6 @@ class Builder {
     ];
 
     /**
-     * Doctrine DBAL supported Laravel Schema Builder types.
-     *
-     * @var array
-     */
-    /*protected $supported = [
-        'bigIncrements' => 1,
-        'bigInteger' => 1,
-        'binary' => 1,
-        'boolean' => 1,
-        'char' => 1,
-        'date' => 1,
-        'dateTime' => 1,
-        'decimal' => 1,
-        'double' => 0,
-        'enum' => 0,
-        'float' => 1,
-        'increments' => 1,
-        'integer' => 1,
-        'json' => 0,
-        'jsonb' => 0,
-        'longText' => 1,
-        'mediumInteger' => 0,
-        'mediumText' => 1,
-        'smallInteger' => 1,
-        'tinyInteger' => 0,
-        'string' => 1,
-        'text' => 1,
-        'time' => 1,
-        'timestamp' => 1,
-    ];*/
-
-    /**
-     * Doctrine DBAL unsupported types.
-     *
-     * @var array
-     */
-    /*protected $unsupportedByDoctrine = [
-        'tinyInteger',
-        'mediumInteger',
-        'enum',
-        'double',
-        'json',
-        'jsonb',
-    ];*/
-
-    /**
-     * Laravel Schema Builder unsupported types.
-     *
-     * @var array
-     */
-    /*protected $unsupportedByLaravel = [
-        'blob',
-        'datetimetz',
-        'array',
-        'json_array',
-        'object',
-    ];*/
-
-    /**
      * The database connection instance.
      *
      * @var \Illuminate\Database\Connection
@@ -129,31 +70,27 @@ class Builder {
      * Create all tables.
      *
      * @param array $metadataArray
-     * @param boolean $sql
-     * @return void|array
+     * @return array
      */
-    public function create(array $metadataArray, $sql=false)
+    public function create(array $metadataArray)
     {
         $schema = $this->getSchemaFromMetadata($metadataArray);
 
         $statements = $schema->toSql($this->platform);
 
-        if ( ! $sql) {
-            $this->build($statements);
-        } else {
-            return $statements;
-        }
+        $this->build($statements);
+
+        return $statements;
     }
 
     /**
      * Update all tables.
      *
      * @param array $metadataArray
-     * @param boolean $sql
      * @param boolean $saveMode
-     * @return void|array
+     * @return array
      */
-    public function update(array $metadataArray, $sql=false, $saveMode=false)
+    public function update(array $metadataArray, $saveMode=false)
     {
         $fromSchema = $this->schemaManager->createSchema();
         $toSchema = $this->getSchemaFromMetadata($metadataArray);
@@ -167,21 +104,18 @@ class Builder {
             $statements = $schemaDiff->toSql($this->platform);
         }
 
-        if ( ! $sql) {
-            $this->build($statements);
-        } else {
-            return $statements;
-        }
+        $this->build($statements);
+
+        return $statements;
     }
 
     /**
      * Drop all tables.
      *
      * @param array $metadataArray
-     * @param boolean $sql
-     * @return void|array
+     * @return array
      */
-    public function drop(array $metadataArray, $sql=false)
+    public function drop(array $metadataArray)
     {
         $visitor = new DropSchemaSqlCollector($this->platform);
 
@@ -197,11 +131,9 @@ class Builder {
 
         $statements = $visitor->getQueries();
 
-        if ( ! $sql) {
-            $this->build($statements);
-        } else {
-            return $statements;
-        }
+        $this->build($statements);
+
+        return $statements;
     }
 
     /**

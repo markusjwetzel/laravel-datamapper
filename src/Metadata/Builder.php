@@ -2,6 +2,7 @@
 
 use ReflectionClass;
 use InvalidArgumentException;
+use DomainException;
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Filesystem\ClassFinder;
 
@@ -17,36 +18,6 @@ use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
 class Builder {
 
     use AppNamespaceDetectorTrait;
-    
-    /**
-     * All attribute types supported by Laravel.
-     *
-     * @var array
-     */
-    /*protected $attributeTypes = [
-        'bigInteger',
-        'binary',
-        'boolean',
-        'char',
-        'date',
-        'dateTime',
-        'decimal',
-        'double',
-        'enum',
-        'float',
-        'integer',
-        'json',
-        'jsonb',
-        'longText',
-        'mediumInteger',
-        'mediumText',
-        'smallInteger',
-        'tinyInteger',
-        'string',
-        'text',
-        'time',
-        'timestamp'
-    ];*/
 
     /**
      * The annotation reader instance.
@@ -81,7 +52,7 @@ class Builder {
      * @param array $classes
      * @return array
      */
-    public function getMetadata($classes)
+    public function build($classes)
     {
         $metadataArray = [];
 
@@ -96,7 +67,47 @@ class Builder {
             }
         }
 
+        $this->validate($metadataArray);
+
         return $metadataArray;
+    }
+
+    /**
+     * Validate generated metadata.
+     *
+     * @param array $metadataArray
+     * @return void
+     */
+    protected function validate($metadataArray)
+    {
+        // check if all tables have exactly one primary key
+        foreach($metadataArray as $metadata) {
+            $countPrimaryKeys = $this->countPrimaryKeys($metadata['table']['columns']);
+            if ($countPrimaryKeys == 0) {
+                throw new DomainException('No primary key defined in class ' . $metadata['class'] . '.');
+            } elseif ($countPrimaryKeys > 1) {
+                throw new DomainException('No composite primary keys allowed for class ' . $metadata['class'] . '.');
+            }
+        }
+    }
+
+    /**
+     * Count primary keys in metadata columns.
+     *
+     * @param array $columns column metadata
+     * @return array
+     */
+    protected function countPrimaryKeys($columns)
+    {
+        $count = 0;
+
+        foreach($columns as $column) {
+            if ( ! empty($column['primary'])) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -188,16 +199,6 @@ class Builder {
                 $metadata['visible'] = $annotation->attributes;
             }
 
-            // fillable
-            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Fillable) {
-                $metadata['fillable'] = $annotation->attributes;
-            }
-
-            // guarded
-            elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Guarded) {
-                $metadata['guarded'] = $annotation->attributes;
-            }
-
             // touches
             elseif ($annotation instanceof \Wetzel\Datamapper\Annotations\Touches) {
                 $metadata['touches'] = $annotation->relations;
@@ -239,7 +240,7 @@ class Builder {
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $metadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass
      */
-    public function parseEmbeddedClass($name, $annotation, &$metadata)
+    protected function parseEmbeddedClass($name, $annotation, &$metadata)
     {
         $embeddedClass = $annotation->class;
         $embeddedName = $name;
@@ -270,7 +271,7 @@ class Builder {
 
             return new EmbeddedClassDefinition([
                 'name' => $embeddedName,
-                'embeddedClass' => $embeddedClass,
+                'class' => $embeddedClass,
                 'attributes' => $attributes,
             ]);
         }

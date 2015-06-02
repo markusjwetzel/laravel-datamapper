@@ -5,7 +5,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class {{class}} extends Model {
 
-    {{softDeletes}}protected $table = {{table}};
+    {{softDeletes}}protected $class = {{mappedClass}};
+
+    protected $mapping = {{mapping}};
+
+    protected $table = {{table}};
 
     protected $primaryKey = {{primaryKey}};
 
@@ -16,10 +20,6 @@ class {{class}} extends Model {
     protected $hidden = {{hidden}};
 
     protected $visible = {{visible}};
-
-    protected $fillable = {{fillable}};
-
-    protected $guarded = {{guarded}};
 
     //protected $dates = {{dates}};
 

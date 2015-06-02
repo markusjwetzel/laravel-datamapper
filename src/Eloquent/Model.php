@@ -6,6 +6,34 @@ use ReflectionClass;
 class Model extends EloquentModel {
 
     /**
+     * Mapped class of this model.
+     *
+     * @var array
+     */
+    protected $class;
+
+    /**
+     * The mapping data for this model.
+     *
+     * @var array
+     */
+    protected $mapping;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = array('*');
+
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = array();
+
+    /**
      * Convert model to plain old php object.
      *
      * @return string

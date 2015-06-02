@@ -4,11 +4,9 @@ use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
-use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
-use UnexpectedValueException;
+use Wetzel\Datamapper\Console\SchemaCommand;
 
-class SchemaDropCommand extends Command {
+class SchemaDropCommand extends SchemaCommand {
 
     /**
      * The console command name.
@@ -22,36 +20,7 @@ class SchemaDropCommand extends Command {
      *
      * @var string
      */
-    protected $description = 'Drop database tables from annotations.';
-
-    /**
-     * The metadata builder instance.
-     *
-     * @var \Wetzel\Datamapper\Metadata\Builder
-     */
-    protected $metadata;
-
-    /**
-     * The schema builder instance.
-     *
-     * @var \Wetzel\Datamapper\Schema\Builder
-     */
-    protected $schema;
-
-    /**
-     * Create a new migration install command instance.
-     *
-     * @param  \Wetzel\Datamapper\Metadata\Builder $metadata
-     * @param  \Wetzel\Datamapper\Schema\Builder $schema
-     * @return void
-     */
-    public function __construct(MetadataBuilder $metadata, SchemaBuilder $schema)
-    {
-        parent::__construct();
-
-        $this->metadata = $metadata;
-        $this->schema = $schema;
-    }
+    protected $description = 'Drop database tables.';
 
     /**
      * Execute the console command.
@@ -60,40 +29,23 @@ class SchemaDropCommand extends Command {
      */
     public function fire()
     {
-        $class = $this->argument('class');
-        
-        $this->dropSchema($class);
-    }
+        // get classes
+        $classes = $this->getClasses();
 
-    /**
-     * Write the migration file to disk.
-     *
-     * @param  string  $name
-     * @param  string  $table
-     * @param  bool    $create
-     * @return string
-     */
-    protected function dropSchema($class)
-    {
-        // set classes
-        if ($class) {
-            if (class_exists($class)) {
-                $classes = [$class];
-            } else {
-                throw new UnexpectedValueException('Classname is not valid.');
-            }
-        } else {
-            $classes = $this->metadata->getClassesFromNamespace();
-        }
+        // build metadata
+        $metadataArray = $this->metadata->build($classes);
 
+        // clean generated eloquent models
+        $this->models->clean();
+
+        // build schema
+        $statements = $this->schema->drop($metadataArray);
+
+        $this->info('Schema dropped successfully!');
+
+        // output SQL queries
         if ($this->option('sql')) {
-            $this->info('Outputting queries:');
-            $sql = $this->schema->drop($this->metadata->getMetadata($classes), true);
-            $this->info(implode(';' . PHP_EOL, $sql));
-        } else {
-            $this->info('Dropping database schema...');
-            $this->schema->drop($this->metadata->getMetadata($classes));
-            $this->info('Schema has been dropped!');
+            $this->outputQueries($statements);
         }
     }
 
