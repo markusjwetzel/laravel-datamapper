@@ -44,7 +44,7 @@ class SchemaDropCommand extends SchemaCommand {
         $this->info('Schema dropped successfully!');
 
         // output SQL queries
-        if ($this->option('sql')) {
+        if ($this->option('dump-sql')) {
             $this->outputQueries($statements);
         }
     }
@@ -69,7 +69,7 @@ class SchemaDropCommand extends SchemaCommand {
     protected function getOptions()
     {
         return array(
-            array('sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
+            array('dump-sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
         );
     }
 

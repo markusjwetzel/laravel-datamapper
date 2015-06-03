@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use ReflectionClass;
+use Closure;
 
 class Model extends EloquentModel {
 
@@ -34,66 +35,152 @@ class Model extends EloquentModel {
     protected $guarded = array();
 
     /**
+     * Create a new Eloquent Collection instance.
+     *
+     * @param  array  $models
+     * @return \Wetzel\Datamapper\Eloquent\Collection
+     */
+    public function newCollection(array $models = array())
+    {
+        return new Collection($models);
+    }
+
+    /**
+     * Get a new query builder for the model's table.
+     *
+     * @return \Wetzel\Datamapper\Eloquent\Builder
+     */
+    public function newDatamapperQuery()
+    {
+        $builder = $this->newDatamapperQueryWithoutScopes();
+
+        return $this->applyGlobalScopes($builder);
+    }
+
+    /**
+     * Get a new query builder that doesn't have any global scopes.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder|static
+     */
+    public function newDatamapperQueryWithoutScopes()
+    {
+        $builder = $this->newDatamapperEloquentBuilder(
+            $this->newBaseQueryBuilder()
+        );
+
+        // Once we have the query builders, we will set the model instances so the
+        // builder can easily access any information it may need from the model
+        // while it is constructing and executing various queries against it.
+        return $builder->setModel($this)->with($this->with);
+    }
+
+    /**
+     * Create a new Eloquent query builder for the model.
+     *
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return \Wetzel\Datamapper\Eloquent\Builder|static
+     */
+    public function newDatamapperEloquentBuilder($query)
+    {
+        return new Builder($query);
+    }
+
+    /**
+     * Convert model to plain old php object.
+     *
+     * @return object
+     */
+    public function toObject()
+    {
+        // directly set private properties if entity extends the datamapper entity class (fast!)
+        if (is_subclass_of($this->class, 'Wetzel\Datamapper\Support\Entity')) {
+            $class = $this->class;
+            
+            return $class::newFromModel($this);
+        }
+
+        // set private properties via reflection (slow!)
+        else {
+            $reflectionClass = new ReflectionClass($this->class);
+
+            $object = $reflectionClass->newInstanceWithoutConstructor();
+
+            // attributes
+            foreach($this->mapping['attributes'] as $attribute) {
+                $this->setProperty($reflectionClass, $object, $attribute, $this->attributes[$attribute]);
+            }
+
+            // embeddeds
+            foreach($this->mapping['embeddeds'] as $name => $embedded) {
+                $embeddedReflectionClass = new ReflectionClass($embedded['class']);
+
+                $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
+                foreach($embedded['attributes'] as $attribute) {
+                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$attribute]);
+                }
+
+                $this->setProperty($reflectionClass, $object, $name, $embeddedObject);
+            }
+
+            // relations
+            foreach($this->mapping['relations'] as $name => $relation) {
+                $relationObject = ( ! empty($this->relations[$name]))
+                    ? $this->relations[$name]->toObject()
+                    : null;
+
+                $this->setProperty($reflectionClass, $object, $name, $relationObject);
+            }
+
+            return $object;
+        }
+    }
+
+    /**
+     * Convert model to plain old php object.
+     *
+     * @param \ReflectionClass $reflectionClass
+     * @param object $object
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    protected function setProperty(&$reflectionClass, $object, $name, $value)
+    {
+        $property = $reflectionClass->getProperty($name);
+        $property->setAccessible(true);
+        $property->setValue($object, $value);
+    }
+
+    /**
      * Convert model to plain old php object.
      *
      * @return string
      */
-    public function toObject()
+    public function newFromObject($object)
     {
-        $reflectionClass = new ReflectionClass($this->class);
+        $model = $this->newInstance(array(), true);
 
-        $object = $reflectionClass->newInstanceWithoutConstructor();
-
-        foreach($reflectionClass->getProperties() as $reflectionProperty) {
-            $name = $reflectionProperty->getName();
-
-            // convert attributes
-            if (in_array($name, $this->attributes)) {
-                $value = $this->attributes[$name];
-            }
-
-            // convert embeddeds
-            elseif (in_array($name, $this->embeddeds)) {
-                $value = $this->getEmbeddedObject($this->embeddeds[$name]);
-            }
-
-            // convert relations
-            elseif (method_exists($this, $name)) {
-                // todo
-                $value = $this->getRelationObject($this->embeddeds[$name]);
-            }
-
-            // property not found
-            else {
-                // todo
-                throw Exception;
-            }
-
-            $reflectionProperty->setValue($object, $value);
+        // attributes
+        foreach($this->mapping['attributes'] as $attribute) {
+            $model->setAttribute($reflectionClass->getProperty($attribute)->getValue($object));
         }
-    }
 
-
-    /**
-     * Create an instance of an embedded object.
-     *
-     * @param string $class
-     * @return object
-     */
-    protected function getEmbeddedObject($class) {
-        $reflectionClass = new ReflectionClass($class);
-
-        $object = $reflectionClass->newInstanceWithoutConstructor();
-
-        foreach($reflectionClass->getProperties() as $reflectionProperty) {
-            $name = $reflectionProperty->getName();
-
-            if (in_array($name, $this->attributes)) {
-                $reflectionProperty->setValue($object, $this->attributes[$name]);
+        // embeddeds
+        foreach($this->mapping['embeddeds'] as $embedded) {
+            foreach($this->embedded['attributes'] as $attribute) {
+                $model->setAttribute($reflectionClass->getProperty($attribute)->getValue($object));
             }
         }
 
-        return $object;
+        // relations
+        foreach($this->mapping['relations'] as $name => $relation) {
+            // TODO: $relationObject = $this->
+            //$reflectionClass->getProperty($name)->setValue($object, $attribute);
+        }
+
+        $model->setConnection($connection ?: $this->connection);
+
+        return $model;
     }
 
     /**
@@ -116,6 +203,16 @@ class Model extends EloquentModel {
         }
 
         return $object;
+    }
+
+    /**
+     * Get the mapping data.
+     *
+     * @return array
+     */
+    public function getMapping()
+    {
+        return $this->mapping;
     }
 
     /**

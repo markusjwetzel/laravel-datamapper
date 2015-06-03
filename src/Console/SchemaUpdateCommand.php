@@ -52,7 +52,7 @@ class SchemaUpdateCommand extends SchemaCommand {
         $this->info(PHP_EOL . 'Schema updated successfully!');
 
         // output SQL queries
-        if ($this->option('sql')) {
+        if ($this->option('dump-sql')) {
             $this->outputQueries($statements);
         }
     }
@@ -77,7 +77,7 @@ class SchemaUpdateCommand extends SchemaCommand {
     protected function getOptions()
     {
         return array(
-            array('sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
+            array('dump-sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
             array('save-mode', null, InputOption::VALUE_NONE, 'Doctrine DBAL save mode for updating.'),
         );
     }

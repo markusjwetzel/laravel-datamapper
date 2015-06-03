@@ -52,7 +52,7 @@ class SchemaCreateCommand extends SchemaCommand {
         $this->info(PHP_EOL . 'Schema created successfully!');
 
         // output SQL queries
-        if ($this->option('sql')) {
+        if ($this->option('dump-sql')) {
             $this->outputQueries($statements);
         }
     }
@@ -77,7 +77,7 @@ class SchemaCreateCommand extends SchemaCommand {
     protected function getOptions()
     {
         return array(
-            array('sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
+            array('dump-sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
         );
     }
 

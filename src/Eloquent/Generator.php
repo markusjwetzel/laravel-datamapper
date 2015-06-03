@@ -141,7 +141,7 @@ class Generator {
 
         foreach($metadata['table']['columns'] as $column) {
             if ( ! empty($column['primary'])) {
-                $primaryKey = $column['primary'];
+                $primaryKey = $column['name'];
                 $incrementing = ( ! empty($column['options']['autoIncrement']));
             }
         }
@@ -227,7 +227,7 @@ class Generator {
      */
     protected function replaceMappedClass($name, &$stub)
     {
-        $stub = str_replace('{{mappedClass}}', $name, $stub);
+        $stub = str_replace('{{mappedClass}}', "'".$name."'", $stub);
     }
     
     /**
@@ -353,7 +353,12 @@ class Generator {
         foreach($relations as $relation) {
             $relationStub = $this->stubs['relation'];
 
-            $options = "'" . implode("','",array_merge(['Entity' . md5($relation['relatedClass'])], $relation['options'])) . "'";
+            if ($relation['relatedClass']) {
+                $relatedClass = '\Wetzel\Datamapper\Cache\Entity' . md5($relation['relatedClass']);
+                $options = "'" . implode("','", array_merge([$relatedClass], $relation['options'])) . "'";
+            } else {
+                $options = "'" . implode("','", $relation['options']) . "'";
+            }
             // todo: merge by relation, so that the order does not matter
 
             $relationStub = str_replace('{{name}}', $relation['name'], $relationStub);

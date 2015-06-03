@@ -8,8 +8,11 @@ class EntityManager {
      * @param string $class
      * @return Eloquent
      */
-    public function class($class) {
+    public function set($class)
+    {
+        $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
 
+        return (new $model)->newDatamapperQuery();
     }
 
     /**
@@ -18,7 +21,8 @@ class EntityManager {
      * @param Entity $object
      * @return void
      */
-    public function create($object) {
+    public function create($object)
+    {
 
     }
 
@@ -28,7 +32,8 @@ class EntityManager {
      * @param Entity $object
      * @return void
      */
-    public function update($object) {
+    public function update($object)
+    {
 
     }
 
@@ -38,7 +43,8 @@ class EntityManager {
      * @param Entity $object
      * @return void
      */
-    public function delete($object) {
+    public function delete($object)
+    {
 
     }
 
