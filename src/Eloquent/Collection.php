@@ -7,25 +7,34 @@ class Collection extends BaseCollection {
     /**
      * Convert models to plain old php objects.
      *
-     * @return void
+     * @return \Wetzel\Datamapper\Eloquent\Collection
      */
-    public function toObject()
+    public function toEntity()
     {
         foreach($this->items as $name => $item) {
-            $this->items[$name] = $item->toObject();
+            $this->items[$name] = $item->toEntity();
         }
+
+        return $this;
     }
 
     /**
      * Convert models to eloquent models.
      *
-     * @return void
+     * @param \Wetzel\Datamapper\Support\Entity $object
+     * @return \Wetzel\Datamapper\Eloquent\Collection
      */
-    public function toEloquent()
+    public static function newFromEntity($objects)
     {
-        foreach($this->items as $name => $item) {
-            $this->items[$name] = $item->toObject();
+        $models = new static;
+
+        foreach($objects->items as $name => $item) {
+            $class = get_class($item);
+
+            $models->items[$name] = $class::newFromEntity($item);
         }
+
+        return $models;
     }
 
 }

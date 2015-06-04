@@ -14,7 +14,7 @@ class Builder extends BaseBuilder {
     {
         $models = parent::get($columns);
 
-        $models->toObject();
+        $models->toEntity();
 
         return $models;
     }

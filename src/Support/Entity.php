@@ -17,10 +17,10 @@ abstract class Entity implements Arrayable, Jsonable {
     /**
      * Constructor to get an instance from an eloquent model object.
      *
-     * @param \Illuminate\Database\Eloquent\Model
-     * @return string
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return \Wetzel\Datamapper\Support\Entity
      */
-    public static function newFromModel(Model $model)
+    public static function newFromEloquentModel(Model $model)
     {
         $object = new static;
 
@@ -38,17 +38,60 @@ abstract class Entity implements Arrayable, Jsonable {
 
         // embeddeds
         foreach($dict['mapping']['embeddeds'] as $name => $embedded) {
-            $object->{$name} = $embedded['class']::newFromModel($model, $name);
+            $object->{$name} = $embedded['class']::newFromEloquentModel($model, $name);
         }
 
         // relations
         foreach($dict['mapping']['relations'] as $name => $relation) {
             $object->{$name} = ( ! empty($dict['relations'][$name]))
-                ? $dict['relations'][$name]->toObject()
+                ? $dict['relations'][$name]->toEntity()
                 : null;
         }
 
         return $object;
+    }
+
+    /**
+     * Constructor to convert an instance to an eloquent model object.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return \Wetzel\Datamapper\\Eloquent\Model
+     */
+    public function toEloquentModel(Model $model)
+    {
+        // get model data
+        $dict = [
+            'mapping' => $model->getMapping(),
+            'attributes' => $model->getAttributes(),
+            'relations' => $model->getRelations()
+        ];
+
+        // attributes
+        foreach($dict['mapping']['attributes'] as $attribute) {
+            $model->setAttribute($attribute, $this->{$attribute});
+        }
+
+        // embeddeds
+        foreach($dict['mapping']['embeddeds'] as $name => $embedded) {
+            $embeddedObject = $this->{$name};
+
+            $embeddedObject->toEloquentModel($model, $name);
+        }
+
+        // relations
+        foreach($dict['mapping']['relations'] as $name => $relation) {
+            $relationObject = $this->{$name};
+
+            if ( ! empty($relationObject)) {
+                $class = ($relationObject instanceof \Wetzel\Datamapper\Eloquent\Collection)
+                    ? '\Wetzel\Datamapper\Eloquent\Collection'
+                    : '\Wetzel\Datamapper\Eloquent\Model';
+
+                $model->setRelation($name, $class::newFromEntity($relationObject)); // or newFromEloquentModel??
+            }
+        }
+
+        return $model;
     }
     
     /**
@@ -80,6 +123,21 @@ abstract class Entity implements Arrayable, Jsonable {
         }
 
         return $array;
+    }
+
+    /**
+     * Handle dynamic method calls into the model.
+     *
+     * @param  string  $method
+     * @param  array   $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        // magical getter
+        if (isset($this->{$method}) || property_exists($this, $method)) {
+            return $this->{$method};
+        }
     }
 
 }

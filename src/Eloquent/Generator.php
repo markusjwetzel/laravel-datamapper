@@ -353,13 +353,26 @@ class Generator {
         foreach($relations as $relation) {
             $relationStub = $this->stubs['relation'];
 
-            if ($relation['relatedClass']) {
-                $relatedClass = '\Wetzel\Datamapper\Cache\Entity' . md5($relation['relatedClass']);
-                $options = "'" . implode("','", array_merge([$relatedClass], $relation['options'])) . "'";
-            } else {
-                $options = "'" . implode("','", $relation['options']) . "'";
+            // generate options array
+            $options = [];
+
+            if ($relation['type'] != 'morphTo') {
+                $options[] = "'".'\Wetzel\Datamapper\Cache\Entity' . md5($relation['relatedClass'])."'";
             }
-            // todo: merge by relation, so that the order does not matter
+
+            foreach($relation['options'] as $option) {
+                if ($option === null) {
+                    $options[] = 'null';
+                } elseif ($option === true) {
+                    $options[] = 'true';
+                } elseif ($option === false) {
+                    $options[] = 'false';
+                } else {
+                    $options[] = "'".$option."'";
+                }
+            }
+            
+            $options = implode(", ", $options);
 
             $relationStub = str_replace('{{name}}', $relation['name'], $relationStub);
             $relationStub = str_replace('{{options}}', $options, $relationStub);
