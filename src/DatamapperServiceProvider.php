@@ -1,6 +1,7 @@
 <?php namespace Wetzel\Datamapper;
 
 use Illuminate\Support\ServiceProvider;
+use Wetzel\Datamapper\Metadata\Validator as MetadataValidator;
 use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
 use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
 use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
@@ -79,7 +80,9 @@ class DatamapperServiceProvider extends ServiceProvider {
 
             $finder = new ClassFinder;
 
-            return new MetadataBuilder($reader, $finder);
+            $validator = new MetadataValidator;
+
+            return new MetadataBuilder($reader, $finder, $validator);
         });
     }
 

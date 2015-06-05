@@ -1,5 +1,8 @@
 <?php namespace Wetzel\Datamapper;
 
+use Wetzel\Datamapper\Eloquent\Model;
+use Exception;
+
 class EntityManager {
 
     /**
@@ -12,7 +15,11 @@ class EntityManager {
     {
         $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
 
-        return (new $model)->newDatamapperQuery();
+        if (class_exists($model)) {
+            return (new $model)->newDatamapperQuery();
+        } else {
+            throw new Exception('There is no cached Eloquent class for class "'.$class.'".');
+        }
     }
 
     /**
@@ -23,9 +30,7 @@ class EntityManager {
      */
     public function create($object)
     {
-        $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
-
-        dd($model::newFromEntity($object));
+        dd(Model::newFromEntity($object));
     }
 
     /**
@@ -36,11 +41,7 @@ class EntityManager {
      */
     public function update($object)
     {
-        $class = get_class($object);
-        dd($class);
-        $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
-
-        dd($model::newFromEntity($object));
+        dd(Model::newFromEntity($object));
     }
 
     /**

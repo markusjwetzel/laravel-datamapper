@@ -2,13 +2,12 @@
 
 use ReflectionClass;
 use InvalidArgumentException;
-use DomainException;
-use UnexpectedValueException;
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Filesystem\ClassFinder;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 
+use Wetzel\Datamapper\Metadata\Validator as MetadataValidator;
 use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Attribute as AttributeDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
@@ -19,31 +18,6 @@ use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
 class Builder {
 
     use AppNamespaceDetectorTrait;
-
-    /**
-     * List of valid attribute types.
-     *
-     * @var array
-     */
-    public $columnTypes = [
-        'bigIncrements', 'bigInteger', 'binary',
-        'boolean', 'char', 'date', 'dateTime',
-        'decimal', 'float', 'increments',
-        'integer', 'longText', 'mediumText',
-        'smallInteger', 'string', 'text',
-        'time'
-    ];
-
-    /**
-     * List of valid relation types.
-     *
-     * @var array
-     */
-    public $relationTypes = [
-        'belongsTo', 'belongsToMany', 'hasMany',
-        'hasManyThrough', 'hasOne', 'morphMany',
-        'morphOne', 'morphTo', 'morphToMany'
-    ];
 
     /**
      * The annotation reader instance.
@@ -60,16 +34,25 @@ class Builder {
     protected $finder;
 
     /**
-     * Create a new Eloquent query builder instance.
+     * The metadata validator instance.
+     *
+     * @var \Wetzel\Datamapper\Metadata\Validator
+     */
+    protected $validator;
+
+    /**
+     * Create a new metadata builder instance.
      *
      * @param  \Doctrine\Common\Annotations\AnnotationReader  $reader
      * @param  \Illuminate\Filesystem\ClassFinder  $finder
+     * @param  \Wetzel\Datamapper\Metadata\Validator  $validator
      * @return void
      */
-    public function __construct(AnnotationReader $reader, ClassFinder $finder)
+    public function __construct(AnnotationReader $reader, ClassFinder $finder, MetadataValidator $validator)
     {
         $this->reader = $reader;
         $this->finder = $finder;
+        $this->validator = $validator;
     }
 
     /**
@@ -93,47 +76,7 @@ class Builder {
             }
         }
 
-        $this->validate($metadataArray);
-
         return $metadataArray;
-    }
-
-    /**
-     * Validate generated metadata.
-     *
-     * @param array $metadataArray
-     * @return void
-     */
-    protected function validate($metadataArray)
-    {
-        // check if all tables have exactly one primary key
-        foreach($metadataArray as $metadata) {
-            $countPrimaryKeys = $this->countPrimaryKeys($metadata['table']['columns']);
-            if ($countPrimaryKeys == 0) {
-                throw new DomainException('No primary key defined in class ' . $metadata['class'] . '.');
-            } elseif ($countPrimaryKeys > 1) {
-                throw new DomainException('No composite primary keys allowed for class ' . $metadata['class'] . '.');
-            }
-        }
-    }
-
-    /**
-     * Count primary keys in metadata columns.
-     *
-     * @param array $columns column metadata
-     * @return array
-     */
-    protected function countPrimaryKeys($columns)
-    {
-        $count = 0;
-
-        foreach($columns as $column) {
-            if ( ! empty($column['primary'])) {
-                $count++;
-            }
-        }
-
-        return $count;
     }
 
     /**
@@ -262,6 +205,9 @@ class Builder {
             }
         }
 
+        // check primary key
+        $this->validator->validatePrimaryKey($metadata['table']);
+
         return $metadata;
     }
 
@@ -335,9 +281,7 @@ class Builder {
     protected function parseColumn($name, $annotation)
     {
         // check if column type is valid
-        if ( ! in_array($annotation->type, $this->columnTypes)) {
-            throw new UnexpectedValueException('Attribute type "'.$annotation->type.'" is not supported.');
-        }
+        $this->validator->validateColumnType($annotation->type);
 
         // add column
         return new ColumnDefinition([
@@ -393,9 +337,7 @@ class Builder {
     protected function parseRelation($name, $annotation, &$metadata)
     {
         // check if relation type is valid
-        if ( ! in_array($annotation->type, $this->relationTypes)) {
-            throw new UnexpectedValueException('Relation type "'.$annotation->type.'" is not supported.');
-        }
+        $this->validator->validateRelationType($annotation->type);
 
         // add columns for relationships
         if ($annotation->type == 'belongsTo') {
@@ -410,7 +352,7 @@ class Builder {
         if ($annotation->type == 'belongsToMany') {
             // create pivot table for belongsToMany
             $pivotTable = $this->generateBelongsToManyPivotTable($name, $annotation, $metadata);
-        } elseif ($annotation->type == 'morphToMany') {
+        } elseif ($annotation->type == 'morphedByMany' || $annotation->type == 'morphToMany') {
             // create pivot table for morphToMany
             $pivotTable = $this->generateMorphToManyPivotTable($name, $annotation, $metadata);
         } else {
@@ -449,14 +391,14 @@ class Builder {
         // belongsToMany relation
         if($annotation->type == 'belongsToMany') {
             $options['table'] = $this->generateTablename($annotation->table, $metadata['table'], $annotation->related);
-            $options['foreignKey'] = $annotation->foreignKey;
+            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $annotation->related);
             $options['otherKey'] = $annotation->otherKey;
             $options['relation'] = $annotation->relation;
         }
 
         // hasMany relation
         if($annotation->type == 'hasMany') {
-            $options['foreignKey'] = $annotation->foreignKey;
+            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $metadata['class']);
             $options['localKey'] = $annotation->localKey;
         }
 
@@ -471,6 +413,14 @@ class Builder {
         if($annotation->type == 'hasOne') {
             $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $metadata['class']);
             $options['localKey'] = $annotation->localKey;
+        }
+
+        // morphToMany relation
+        if($annotation->type == 'morphedByMany') {
+            $options['name'] = $annotation->name;
+            $options['table'] = $this->generatePivotTablename($annotation->table, $metadata['table'], null, $morphName);
+            $options['foreignKey'] = $annotation->foreignKey;
+            $options['otherKey'] = $annotation->otherKey;
         }
 
         // morphMany relation
@@ -497,7 +447,7 @@ class Builder {
         }
 
         // morphToMany relation
-        if($annotation->type == 'morphTo') {
+        if($annotation->type == 'morphToMany') {
             $options['name'] = $annotation->name;
             $options['table'] = $this->generatePivotTablename($annotation->table, $metadata['table'], null, $morphName);
             $options['foreignKey'] = $annotation->foreignKey;
