@@ -56,6 +56,25 @@ class Builder {
     }
 
     /**
+     * Get all classes for a namespace.
+     *
+     * @param string namespace
+     * @return array
+     */
+    public function getClassesFromNamespace($namespace=null)
+    {
+        if ( ! $namespace) {
+            $namespace = $this->getAppNamespace();
+        }
+
+        $path = str_replace('\\', '/', $this->stripNamespace($namespace, $this->getAppNamespace()));
+
+        $directory = app_path() . $path;
+
+        return $this->finder->findClasses($directory);
+    }
+
+    /**
      * Build metadata from all entity classes.
      *
      * @param array $classes
@@ -76,30 +95,13 @@ class Builder {
             }
         }
 
+        $this->validator->validatePivotTables($metadataArray);
+
         return $metadataArray;
     }
 
     /**
-     * Get all classes for a namespace.
-     *
-     * @param string namespace
-     * @return array
-     */
-    public function getClassesFromNamespace($namespace=null)
-    {
-        if ( ! $namespace) {
-            $namespace = $this->getAppNamespace();
-        }
-
-        $path = str_replace('\\', '/', $this->stripNamespace($namespace, $this->getAppNamespace()));
-
-        $directory = app_path() . $path;
-
-        return $this->finder->findClasses($directory);
-    }
-
-    /**
-     * Parses a class.
+     * Parse a class.
      *
      * @param array $annotations
      * @return array|null
@@ -383,23 +385,23 @@ class Builder {
 
         // belongsTo relation
         if($annotation->type == 'belongsTo') {
-            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $annotation->related);
-            $options['otherKey'] = $annotation->otherKey;
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->related);
+            $options['otherKey'] = $annotation->otherKey ?: 'id';
             $options['relation'] = $annotation->relation;
         }
 
         // belongsToMany relation
         if($annotation->type == 'belongsToMany') {
-            $options['table'] = $this->generateTablename($annotation->table, $metadata['table'], $annotation->related);
-            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $annotation->related);
-            $options['otherKey'] = $annotation->otherKey;
+            $options['table'] = $annotation->table ?: $this->generatePivotTablename($metadata['class'], $annotation->related, $annotation->inverse);
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->related);
+            $options['otherKey'] = $annotation->otherKey ?: $this->generateKey($metadata['class']);
             $options['relation'] = $annotation->relation;
         }
 
         // hasMany relation
         if($annotation->type == 'hasMany') {
-            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $metadata['class']);
-            $options['localKey'] = $annotation->localKey;
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($metadata['class']);
+            $options['localKey'] = $annotation->localKey ?: 'id';
         }
 
         // hasManyThrough relation
@@ -411,15 +413,15 @@ class Builder {
 
         // hasOne relation
         if($annotation->type == 'hasOne') {
-            $options['foreignKey'] = $this->generateKey($annotation->foreignKey, $metadata['class']);
-            $options['localKey'] = $annotation->localKey;
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($metadata['class']);
+            $options['localKey'] = $annotation->localKey ?: 'id';
         }
 
         // morphToMany relation
         if($annotation->type == 'morphedByMany') {
             $options['name'] = $annotation->name;
-            $options['table'] = $this->generatePivotTablename($annotation->table, $metadata['table'], null, $morphName);
-            $options['foreignKey'] = $annotation->foreignKey;
+            $options['table'] = $annotation->table ?: $this->generatePivotTablename($metadata['class'], $annotation->related, true, $annotation->name);
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->related);
             $options['otherKey'] = $annotation->otherKey;
         }
 
@@ -449,8 +451,8 @@ class Builder {
         // morphToMany relation
         if($annotation->type == 'morphToMany') {
             $options['name'] = $annotation->name;
-            $options['table'] = $this->generatePivotTablename($annotation->table, $metadata['table'], null, $morphName);
-            $options['foreignKey'] = $annotation->foreignKey;
+            $options['table'] = $annotation->table ?: $this->generatePivotTablename($metadata['class'], $annotation->related, $annotation->inverse, $annotation->name);
+            $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->related);
             $options['otherKey'] = $annotation->otherKey;
             $options['inverse'] = $annotation->inverse;
         }
@@ -468,7 +470,7 @@ class Builder {
      */
     protected function generateBelongsToColumns($name, $annotation, &$metadata)
     {
-        $otherKey = $this->generateKey($annotation->otherKey, $annotation->related);
+        $otherKey = $annotation->otherKey ?: $this->generateKey($annotation->related);
 
         $metadata['table']['columns'][$otherKey] = new ColumnDefinition([
             'name' => $otherKey,
@@ -521,11 +523,13 @@ class Builder {
      */
     protected function generateBelongsToManyPivotTable($name, $annotation, &$metadata)
     {
-        $tableName = $this->generatePivotTablename($annotation->table, $metadata['table']['name'], $annotation->related);
+        $tableName = ($annotation->table)
+            ? $annotation->table
+            : $this->generatePivotTablename($metadata['class'], $annotation->related, $annotation->inverse);
 
-        $foreignKey = $this->generateKey($annotation->foreignKey, $metadata['class']);
+        $foreignKey = $annotation->foreignKey ?: $this->generateKey($metadata['class']);
 
-        $otherKey = $this->generateKey($annotation->otherKey, $annotation->related);
+        $otherKey = $annotation->otherKey ?: $this->generateKey($annotation->related);
 
         return new TableDefinition([
             'name' => $tableName,
@@ -554,13 +558,17 @@ class Builder {
      */
     protected function generateMorphToManyPivotTable($name, $annotation, &$metadata)
     {
-        $morphName = ( ! empty($annotation->name))
-            ? $annotation->name
-            : $name;
+        if ($annotation->type == 'morphedByMany') {
+            $annotation->inverse = true;
+        }
 
-        $tableName = $this->generatePivotTablename($annotation->table, $metadata['table']['name'], null, $morphName);
+        $morphName = $annotation->name;
 
-        $foreignKey = $this->generateKey($annotation->foreignKey, $metadata['class']);
+        $tableName = ($annotation->table)
+            ? $annotation->table
+            : $this->generatePivotTablename($metadata['class'], $annotation->related, $annotation->inverse, $morphName);
+
+        $foreignKey = $annotation->foreignKey ?: $this->generateKey($metadata['class']);
 
         $morphId = ( ! empty($annotation->otherKey))
             ? $annotation->otherKey
@@ -592,15 +600,12 @@ class Builder {
     /**
      * Generate a database key based on given key and class.
      *
-     * @param string $key
      * @param string $class
      * @return string
      */
-    protected function generateKey($key, $class)
+    protected function generateKey($class)
     {
-        $generatedKey = ( ! empty($key))
-            ? $key
-            : $this->getClassWithoutNamespace($class, true).'_id';
+        $generatedKey = $this->getClassWithoutNamespace($class, true).'_id';
 
         // uncamelize
         $generatedKey = strtolower(implode('_',preg_split('/(?<=\\w)(?=[A-Z])/', $generatedKey)));
@@ -611,17 +616,25 @@ class Builder {
     /**
      * Generate the database tablename of a pivot table.
      *
-     * @param string $table
-     * @param string $prefix
-     * @param string $class
+     * @param string $class2
+     * @param string $class1
+     * @param boolean $inverse
      * @param string $morph
      * @return string
      */
-    protected function generatePivotTablename($table, $prefix, $class=null, $morph=null)
+    protected function generatePivotTablename($class1, $class2, $inverse, $morph=null)
     {
-        $generatedPivotTablename = ( ! empty($table))
-            ? $table
-            : $prefix.'_'.($morph ?: $this->getClassWithoutNamespace($class, true)).'_pivot';
+        $base = ( ! empty($inverse))
+            ? $this->generateTablename($class2, true)
+            : $this->generateTablename($class1, true);
+
+        $ending = ( ! empty($morph))
+            ? $morph
+            : ( ! empty($inverse))
+                ? $this->getClassWithoutNamespace($class1, true)
+                : $this->getClassWithoutNamespace($class2, true);
+
+        $generatedPivotTablename = $base . '_' . $ending . '_pivot';
 
         // uncamelize
         $generatedPivotTablename = strtolower(implode('_',preg_split('/(?<=\\w)(?=[A-Z])/', $generatedPivotTablename)));

@@ -77,7 +77,14 @@ class Validator {
     public function validatePrimaryKey(TableDefinition $tableMetadata)
     {
         // check if all tables have exactly one primary key
-        $countPrimaryKeys = $this->countPrimaryKeys($tableMetadata['columns']);
+        $countPrimaryKeys = 0;
+
+        foreach($tableMetadata['columns'] as $column) {
+            if ( ! empty($column['primary'])) {
+                $countPrimaryKeys++;
+            }
+        }
+
         if ($countPrimaryKeys == 0) {
             throw new DomainException('No primary key defined in class ' . $metadata['class'] . '.');
         } elseif ($countPrimaryKeys > 1) {
@@ -86,22 +93,45 @@ class Validator {
     }
 
     /**
-     * Count primary keys in metadata columns.
+     * Check if pivot tables of bi-directional relations are identically.
      *
-     * @param array $columns column metadata
-     * @return array
+     * @param array $metadataArray
+     * @return void
      */
-    protected function countPrimaryKeys($columns)
+    public function validatePivotTables($metadataArray)
     {
-        $count = 0;
+        $pivotTables = [];
+        foreach($metadataArray as $metadata) {
+            foreach($metadata['relations'] as $relationMetadata) {
+                if ( ! empty($relationMetadata['pivotTable'])) {
+                    $pivotTables[$metadata['class'].$relationMetadata['relatedClass']] = $relationMetadata;
 
-        foreach($columns as $column) {
-            if ( ! empty($column['primary'])) {
-                $count++;
+                    if (isset($pivotTables[$relationMetadata['relatedClass'].$metadata['class']])) {
+                        $relation1 = $pivotTables[$relationMetadata['relatedClass'].$metadata['class']];
+                        $relation2 = $relationMetadata;
+
+                        $error = null;
+
+                        // check name
+                        if ($relation1['pivotTable']['name'] != $relation2['pivotTable']['name']) {
+                            $error = 'Different table names (compared '.$relation1['pivotTable']['name'].' with '.$relation2['pivotTable']['name'].').';
+                        }
+
+                        // check name
+                        if ( ! empty(array_diff_key($relation1['pivotTable']['columns'], $relation2['pivotTable']['columns']))) {
+                            $columns1 = implode(', ', array_keys($relation1['pivotTable']['columns']));
+                            $columns2 = implode(', ', array_keys($relation2['pivotTable']['columns']));
+                            $error = 'Different column names (compared '.$columns1.' with '.$columns2.').';
+                        }
+
+                        if ($error) {
+                            throw new DomainException('Error synchronizing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['relatedClass'].'" and "'.$relation2['name'].'" in "'.$relation1['relatedClass'].'": '.$error);
+                        }
+                    }
+                }
+
             }
         }
-
-        return $count;
     }
 
 }

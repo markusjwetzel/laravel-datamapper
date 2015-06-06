@@ -160,14 +160,18 @@ class Builder {
     {
         $metadataSchemaConfig = $this->schemaManager->createSchemaConfig();
         $schema = new Schema([], [], $metadataSchemaConfig);
+        $pivotTables = [];
 
         foreach ($metadataArray as $metadata) {
             $this->generateTableFromMetadata($schema, $metadata['table']);
 
             foreach($metadata['relations'] as $relationMetadata) {
-                // create pivot table for many to many relations
                 if ( ! empty($relationMetadata['pivotTable'])) {
-                    $this->generateTableFromMetadata($schema, $relationMetadata['pivotTable']);
+                    $pivotTables[] = $metadata['class'].$relationMetadata['relatedClass'];
+                    // create pivot table for many to many relations
+                    if ( ! in_array($relationMetadata['relatedClass'].$metadata['class'], $pivotTables)) {
+                        $this->generateTableFromMetadata($schema, $relationMetadata['pivotTable']);
+                    }
                 }
             }
         }
