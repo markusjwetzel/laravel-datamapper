@@ -9,6 +9,7 @@ class Entity extends Definition {
      */
     protected $keys = [
         'class' => null,
+        'morphClass' => null,
         'table' => null,
         
         'softDeletes' => false,
@@ -17,9 +18,9 @@ class Entity extends Definition {
 
         'hidden' => [],
         'visible' => [],
-        'fillable' => [],
-        'guarded' => [],
+        
         'touches' => [],
+        'with' => [],
 
         'columns' => [],
         'attributes' => [],

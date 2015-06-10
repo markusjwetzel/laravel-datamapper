@@ -9,5 +9,5 @@ final class Touches implements Annotation
     /**
      * @var array
      */
-    public $relations;
+    public $value;
 }

@@ -1,26 +1,33 @@
 <?php namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Console\AppNamespaceDetectorTrait;
 
 class Generator {
 
-    use AppNamespaceDetectorTrait;
-
     /**
      * The filesystem instance.
+     * 
      * @var \Illuminate\Filesystem\Filesystem
      */
     protected $files;
 
     /**
      * Path to model storage directory.
+     * 
      * @var array
      */
     protected $path;
 
     /**
+     * Namespace of mapped models.
+     * 
+     * @var array
+     */
+    protected $namespace;
+
+    /**
      * Model stubs.
+     * 
      * @var array
      */
     protected $stubs;
@@ -35,10 +42,12 @@ class Generator {
     public function __construct(Filesystem $files, $storagePath)
     {
         $this->files = $files;
-        $this->path = $storagePath . '/framework';
+        $this->path = $storagePath . '/framework/entities';
+        $this->namespace = 'Wetzel\Datamapper\Cache';
 
         $this->stubs['model'] = $this->files->get(__DIR__ . '/../../stubs/model.stub');
         $this->stubs['relation'] = $this->files->get(__DIR__ . '/../../stubs/model-relation.stub');
+        $this->stubs['morph_extension'] = $this->files->get(__DIR__ . '/../../stubs/model-morph-extension.stub');
     }
 
     /**
@@ -51,8 +60,8 @@ class Generator {
     public function generate($metadataArray, $saveMode=false)
     {
         // clean or make (if not exists) model storage directory
-        if ( ! $this->files->exists($this->path . '/entities')) {
-            $this->files->makeDirectory($this->path . '/entities');
+        if ( ! $this->files->exists($this->path)) {
+            $this->files->makeDirectory($this->path);
         }
 
         // clear existing models if save mode is off
@@ -64,6 +73,9 @@ class Generator {
         foreach($metadataArray as $metadata) {
             $this->generateModel($metadata);
         }
+
+        // create .gitignore
+        $this->files->put($this->path . '/.gitignore', '*' . PHP_EOL . '!.gitignore');
 
         // create json file for metadata
         $contents = json_encode($metadataArray, JSON_PRETTY_PRINT);
@@ -77,8 +89,8 @@ class Generator {
      */
     public function clean()
     {
-        if ($this->files->exists($this->path . '/entities')) {
-            $this->files->cleanDirectory($this->path . '/entities');
+        if ($this->files->exists($this->path)) {
+            $this->files->cleanDirectory($this->path);
         }
     }
 
@@ -92,11 +104,9 @@ class Generator {
     {
         $stub = $this->stubs['model'];
 
-        $classname = md5($metadata['class']);
-
         // header
-        $this->replaceNamespace('Wetzel\Datamapper\Cache', $stub);
-        $this->replaceClass('Entity' . $classname, $stub);
+        $this->replaceNamespace($this->namespace, $stub);
+        $this->replaceClass(class_basename($this->getMappedClass($metadata['class'])), $stub);
         $this->replaceMappedClass($metadata['class'], $stub);
 
         // softDeletes
@@ -117,6 +127,8 @@ class Generator {
         $this->replaceHidden($metadata['hidden'], $stub);
         $this->replaceVisible($metadata['visible'], $stub);
         $this->replaceTouches($metadata['touches'], $stub);
+        $this->replaceWith($metadata['with'], $stub);
+        $this->replaceMorphClass($metadata['morphClass'], $stub);
 
         // mapping data
         $mapping = $this->generateMappingData($metadata);
@@ -125,7 +137,7 @@ class Generator {
         // relations
         $this->replaceRelations($metadata['relations'], $stub);
 
-        $this->files->put($this->path . '/entities/' . $classname, $stub);
+        $this->files->put($this->path . '/' . $this->getMappedClassHash($metadata['class']), $stub);
     }
 
     /**
@@ -177,12 +189,12 @@ class Generator {
         $relations = [];
         foreach($metadata['relations'] as $relationMetadata) {
             $relation = [];
-            if ( ! empty($relationMetadata['relatedClass'])) {
-                $relation['relatedClass'] = $relationMetadata['relatedClass'];
-                $relation['mappedRelatedClass'] = 'Wetzel\Datamapper\Cache\Entity' . md5($relationMetadata['relatedClass']);
+            if ( ! empty($relationMetadata['targetEntity'])) {
+                $relation['targetEntity'] = $relationMetadata['targetEntity'];
+                $relation['mappedTargetEntity'] = $this->getMappedClass($relationMetadata['targetEntity']);
             } else {
-                $relation['relatedClass'] = null;
-                $relation['mappedRelatedClass'] = null;
+                $relation['targetEntity'] = null;
+                $relation['mappedTargetEntity'] = null;
             }
             $relations[$relationMetadata['name']] = $relation;
         }
@@ -328,6 +340,30 @@ class Generator {
     }
     
     /**
+     * Replace with.
+     * 
+     * @param array $with
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceWith($with, &$stub)
+    {
+        $stub = str_replace('{{with}}', $this->getArrayAsText($with), $stub);
+    }
+
+    /**
+     * Replace the morph classname for the given stub.
+     *
+     * @param  string  $name
+     * @param  string  $stub
+     * @return void
+     */
+    protected function replaceMorphClass($name, &$stub)
+    {
+        $stub = str_replace('{{morphClass}}', "'".$name."'", $stub);
+    }
+    
+    /**
      * Replace mapping.
      * 
      * @param array $mapping
@@ -350,17 +386,17 @@ class Generator {
     {
         $textRelations = [];
 
-        foreach($relations as $relation) {
+        foreach($relations as $key => $relation) {
             $relationStub = $this->stubs['relation'];
 
             // generate options array
             $options = [];
 
             if ($relation['type'] != 'morphTo') {
-                $options[] = "'".'\Wetzel\Datamapper\Cache\Entity' . md5($relation['relatedClass'])."'";
+                $options[] = "'".$this->getMappedClass($relation['targetEntity'])."'";
             }
 
-            foreach($relation['options'] as $option) {
+            foreach($relation['options'] as $name => $option) {
                 if ($option === null) {
                     $options[] = 'null';
                 } elseif ($option === true) {
@@ -368,7 +404,11 @@ class Generator {
                 } elseif ($option === false) {
                     $options[] = 'false';
                 } else {
-                    $options[] = "'".$option."'";
+                    if ($name == 'throughEntity') {
+                        $options[] = "'".$this->getMappedClass($option)."'";
+                    } elseif ($name != 'morphableClasses') {
+                        $options[] = "'".$option."'";
+                    }
                 }
             }
             
@@ -380,9 +420,48 @@ class Generator {
             $relationStub = str_replace('{{type}}', $relation['type'], $relationStub);
 
             $textRelations[] = $relationStub;
+
+            if ($relation['type'] == 'morphTo'
+                || ($relation['type'] == 'morphToMany' && ! $relation['options']['inverse']))
+            {
+                $morphStub = $this->stubs['morph_extension'];
+
+                $morphableClasses = [];
+                foreach($relation['options']['morphableClasses'] as $key => $name) {
+                    $morphableClasses[$key] = $this->getMappedClass($name);
+                }
+
+                $morphStub = str_replace('{{name}}', $relation['name'], $morphStub);
+                $morphStub = str_replace('{{morphName}}', ucfirst($relation['options']['morphName']), $morphStub);
+                $morphStub = str_replace('{{types}}', $this->getArrayAsText($morphableClasses, 2), $morphStub);
+
+                $textRelations[] = $morphStub;
+            }
         }
 
         $stub = str_replace('{{relations}}', implode(PHP_EOL . PHP_EOL, $textRelations), $stub);
+    }
+
+    /**
+     * Get mapped class.
+     *
+     * @param string $class
+     * @return string
+     */
+    protected function getMappedClass($class)
+    {
+        return $this->namespace . '\Entity' . $this->getMappedClassHash($class);
+    }
+
+    /**
+     * Get mapped class hash.
+     *
+     * @param string $class
+     * @return string
+     */
+    protected function getMappedClassHash($class)
+    {
+        return md5($class);
     }
 
     /**
@@ -391,13 +470,18 @@ class Generator {
      * @param array $array
      * @return string
      */
-    protected function getArrayAsText($array)
+    protected function getArrayAsText($array, $intendBy=1)
     {
+        $intention = '';
+        for($i=0; $i<$intendBy; $i++) {
+            $intention .= '    ';
+        }
+
         $text = var_export($array, true);
 
-        $text = preg_replace('/[ ]{2}/', "    ", $text);
+        $text = preg_replace('/[ ]{2}/', '    ', $text);
         $text = preg_replace("/\=\>[ \n    ]+array[ ]+\(/", '=> array(', $text);
-        return $text = preg_replace("/\n/", "\n    ", $text);
+        return $text = preg_replace("/\n/", "\n".$intention, $text);
     }
 
 }

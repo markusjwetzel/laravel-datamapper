@@ -167,11 +167,12 @@ class Builder {
 
             foreach($metadata['relations'] as $relationMetadata) {
                 if ( ! empty($relationMetadata['pivotTable'])) {
-                    $pivotTables[] = $metadata['class'].$relationMetadata['relatedClass'];
                     // create pivot table for many to many relations
-                    if ( ! in_array($relationMetadata['relatedClass'].$metadata['class'], $pivotTables)) {
+                    if ( ! in_array($relationMetadata['pivotTable']['name'], $pivotTables)) {
                         $this->generateTableFromMetadata($schema, $relationMetadata['pivotTable']);
                     }
+
+                    $pivotTables[] = $relationMetadata['pivotTable']['name'];
                 }
             }
         }

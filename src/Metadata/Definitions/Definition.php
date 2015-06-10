@@ -15,8 +15,12 @@ abstract class Definition extends ArrayObject {
      */
     public function __construct(array $array=[])
     {
-        foreach($this->keys as $name => $value) {
-            $this[$name] = (isset($array[$name])) ? $array[$name] : $value;
+        if($diff = array_diff(array_keys($this->keys), array_keys($array))) {
+            throw new UnexpectedValueException('Missing value(s) '.implode(", ", $diff).' in metadata definition '.get_class($this).'.');
+        }
+
+        foreach($array as $name => $value) {
+            $this[$name] = $value;
         }
     }
     
@@ -32,7 +36,7 @@ abstract class Definition extends ArrayObject {
         if ($def = in_array($key, array_keys($this->keys))) {
             parent::offsetSet($key, $newval);
         } else {
-            throw new UnexpectedValueException($key.' is not defined in metadata definition.');
+            throw new UnexpectedValueException($key.' is not defined in metadata definition '.get_class($this).'.');
         }
     }
 

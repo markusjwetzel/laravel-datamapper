@@ -11,7 +11,7 @@ class EntityManager {
      * @param string $class
      * @return Eloquent
      */
-    public function set($class)
+    public function entity($class)
     {
         $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
 

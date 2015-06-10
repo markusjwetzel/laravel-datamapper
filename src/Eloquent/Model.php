@@ -232,25 +232,4 @@ class Model extends EloquentModel {
         return $this->mapping;
     }
 
-    /**
-     * Get the table associated with the model.
-     *
-     * @return string
-     */
-    public function getTable()
-    {
-        if (isset($this->table)) return $this->table;
-
-        $className = array_slice(explode('/',str_replace('\\', '/', get_class($this))), 2);
-
-        // delete last entry if entry is equal to the next to last entry
-        if (count($className) >= 2 && end($className) == prev($className)) {
-            array_pop($className);
-        }
-
-        $classBasename = array_pop($className);
-
-        return strtolower(implode('_',array_merge($className, preg_split('/(?<=\\w)(?=[A-Z])/', $classBasename))));
-    }
-
 }

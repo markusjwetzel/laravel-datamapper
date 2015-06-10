@@ -10,7 +10,7 @@ class Relation extends Definition {
     protected $keys = [
         'name' => null,
         'type' => null,
-        'relatedClass' => null,
+        'targetEntity' => null,
         'pivotTable' => null,
         'options' => [],
     ];

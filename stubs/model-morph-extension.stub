@@ -1,0 +1,16 @@
+    /**
+     * {{name}} relation morphClass extension.
+     * 
+     * @param string $type
+     * @return string
+     */
+    public function get{{morphName}}TypeAttribute($type)
+    {
+        $type = strtolower($type);
+
+        $types = {{types}};
+
+        $class = array_get($types, $type, $type);
+
+        return $class ?: null;
+    }

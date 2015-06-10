@@ -4,7 +4,7 @@
  * @Annotation
  * @Target("CLASS")
  */
-final class Hidden implements Annotation
+final class With implements Annotation
 {
     /**
      * @var array

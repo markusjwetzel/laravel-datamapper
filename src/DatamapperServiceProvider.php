@@ -82,7 +82,9 @@ class DatamapperServiceProvider extends ServiceProvider {
 
             $validator = new MetadataValidator;
 
-            return new MetadataBuilder($reader, $finder, $validator);
+            $config = $app['config']['datamapper'];
+
+            return new MetadataBuilder($reader, $finder, $validator, $config);
         });
     }
 
@@ -184,7 +186,9 @@ class DatamapperServiceProvider extends ServiceProvider {
         $files = $this->app['files']->files($this->app['path.storage'] . '/framework/entities');
         
         foreach($files as $file) {
-            require $file;
+            if ($this->app['files']->extension($file) == '') {
+                require $file;
+            }
         }
     }
 

@@ -15,7 +15,6 @@ class Column extends Definition {
         'unique' => false,
         'nullable' => false,
         'default' => null,
-        'unsigned' => false,
         'options' => [],
     ];
 

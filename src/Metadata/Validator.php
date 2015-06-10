@@ -104,10 +104,10 @@ class Validator {
         foreach($metadataArray as $metadata) {
             foreach($metadata['relations'] as $relationMetadata) {
                 if ( ! empty($relationMetadata['pivotTable'])) {
-                    $pivotTables[$metadata['class'].$relationMetadata['relatedClass']] = $relationMetadata;
+                    $pivotTables[$metadata['class'].$relationMetadata['targetEntity']] = $relationMetadata;
 
-                    if (isset($pivotTables[$relationMetadata['relatedClass'].$metadata['class']])) {
-                        $relation1 = $pivotTables[$relationMetadata['relatedClass'].$metadata['class']];
+                    if (isset($pivotTables[$relationMetadata['targetEntity'].$metadata['class']])) {
+                        $relation1 = $pivotTables[$relationMetadata['targetEntity'].$metadata['class']];
                         $relation2 = $relationMetadata;
 
                         $error = null;
@@ -125,7 +125,7 @@ class Validator {
                         }
 
                         if ($error) {
-                            throw new DomainException('Error synchronizing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['relatedClass'].'" and "'.$relation2['name'].'" in "'.$relation1['relatedClass'].'": '.$error);
+                            throw new DomainException('Error syncing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['targetEntity'].'" and "'.$relation2['name'].'" in "'.$relation1['targetEntity'].'": '.$error);
                         }
                     }
                 }

@@ -14,12 +14,12 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $related;
+    public $targetEntity;
 
     /**
      * @var string
      */
-    public $name;
+    public $morphName;
 
     /**
      * @var string
@@ -29,7 +29,7 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $through;
+    public $throughEntity;
 
     /**
      * @var string

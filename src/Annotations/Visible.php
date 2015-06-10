@@ -9,5 +9,5 @@ final class Visible implements Annotation
     /**
      * @var array
      */
-    public $attributes;
+    public $value;
 }
