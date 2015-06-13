@@ -37,12 +37,12 @@ class Model extends EloquentModel {
     /**
      * Create a new Eloquent Collection instance.
      *
-     * @param  array  $models
+     * @param  array  $eloquentModels
      * @return \Wetzel\Datamapper\Eloquent\Collection
      */
-    public function newCollection(array $models = array())
+    public function newCollection(array $eloquentModels = array())
     {
-        return new Collection($models);
+        return new Collection($eloquentModels);
     }
 
     /**
@@ -103,11 +103,11 @@ class Model extends EloquentModel {
         else {
             $reflectionClass = new ReflectionClass($this->class);
 
-            $object = $reflectionClass->newInstanceWithoutConstructor();
+            $entity = $reflectionClass->newInstanceWithoutConstructor();
 
             // attributes
             foreach($this->mapping['attributes'] as $attribute) {
-                $this->setProperty($reflectionClass, $object, $attribute, $this->attributes[$attribute]);
+                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$attribute]);
             }
 
             // embeddeds
@@ -119,7 +119,7 @@ class Model extends EloquentModel {
                     $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$attribute]);
                 }
 
-                $this->setProperty($reflectionClass, $object, $name, $embeddedObject);
+                $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
             }
 
             // relations
@@ -128,10 +128,10 @@ class Model extends EloquentModel {
                     ? $this->relations[$name]->toEntity()
                     : null;
 
-                $this->setProperty($reflectionClass, $object, $name, $relationObject);
+                $this->setProperty($reflectionClass, $entity, $name, $relationObject);
             }
 
-            return $object;
+            return $entity;
         }
     }
 
@@ -140,53 +140,53 @@ class Model extends EloquentModel {
      *
      * @return string
      */
-    public static function newFromEntity($object)
+    public static function newFromEntity($entity)
     {
-        $class = '\Wetzel\Datamapper\Cache\Entity' . md5(get_class($object));
+        $class = '\Wetzel\Datamapper\Cache\Entity' . md5(get_class($entity));
 
-        $model = new $class;
+        $eloquentModel = new $class;
 
         // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ( ! is_subclass_of($object, '\Wetzel\Datamapper\Support\Entity')) {
-            return $object->toEloquentModel($model);
+        if ( ! is_subclass_of($entity, '\Wetzel\Datamapper\Support\Entity')) {
+            return $entity->toEloquentModel($eloquentModel);
         }
 
         // get private properties via reflection (slow!)
         else {
-            $reflectionObject = new ReflectionObject($object);
+            $reflectionObject = new ReflectionObject($entity);
 
-            $mapping = $model->getMapping();
+            $mapping = $eloquentModel->getMapping();
 
             // attributes
             foreach($mapping['attributes'] as $attribute) {
-                $model->setAttribute($attribute, $model->getProperty($reflectionObject, $object, $attribute));
+                $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
             }
 
             // embeddeds
             foreach($mapping['embeddeds'] as $name => $embedded) {
-                $embeddedObject = $model->getProperty($reflectionObject, $object, $name);
+                $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
                 $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
                 foreach($embedded['attributes'] as $attribute) {
-                    $model->setAttribute($attribute, $model->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                    $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
                 }
             }
 
             // relations
             foreach($mapping['relations'] as $name => $relation) {
-                $relationObject = $model->getProperty($reflectionObject, $object, $name);
+                $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
                 if ( ! empty($relationObject)) {
                     $class = ($relationObject instanceof \Wetzel\Datamapper\Eloquent\Collection)
                         ? '\Wetzel\Datamapper\Eloquent\Collection'
                         : '\Wetzel\Datamapper\Eloquent\Model';
 
-                    $model->setRelation($name, $class::newFromEntity($relationObject));
+                    $eloquentModel->setRelation($name, $class::newFromEntity($relationObject));
                 }
             }
 
-            return $model;
+            return $eloquentModel;
         }
     }
 
@@ -194,32 +194,32 @@ class Model extends EloquentModel {
      * Set a private property of an entity.
      *
      * @param \ReflectionClass $reflectionClass
-     * @param object $object
+     * @param object $entity
      * @param string $name
      * @param mixed $value
      * @return void
      */
-    protected function setProperty(&$reflectionClass, $object, $name, $value)
+    protected function setProperty(&$reflectionClass, $entity, $name, $value)
     {
         $property = $reflectionClass->getProperty($name);
         $property->setAccessible(true);
-        $property->setValue($object, $value);
+        $property->setValue($entity, $value);
     }
 
     /**
      * Get a private property of an entity.
      *
      * @param \ReflectionObject $reflectionObject
-     * @param object $object
+     * @param object $entity
      * @param string $name
      * @param mixed $value
      * @return mixed
      */
-    protected function getProperty($reflectionObject, $object, $name)
+    protected function getProperty($reflectionObject, $entity, $name)
     {
         $property = $reflectionObject->getProperty($name);
         $property->setAccessible(true);
-        return $property->getValue($object);
+        return $property->getValue($entity);
     }
 
     /**

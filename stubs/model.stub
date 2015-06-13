@@ -17,9 +17,9 @@ class {{class}} extends Model {
 
     public $timestamps = {{timestamps}};
 
-    protected $hidden = {{hidden}};
+    //protected $hidden = {{hidden}};
 
-    protected $visible = {{visible}};
+    //protected $visible = {{visible}};
 
     //protected $dates = {{dates}};
 

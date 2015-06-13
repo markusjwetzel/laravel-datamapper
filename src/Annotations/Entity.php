@@ -6,4 +6,18 @@
  */
 final class Entity implements Annotation
 {
+    /**
+     * @var string
+     */
+    public $morphClass;
+
+    /**
+     * @var array
+     */
+    public $touches;
+
+    /**
+     * @var array
+     */
+    public $with;
 }

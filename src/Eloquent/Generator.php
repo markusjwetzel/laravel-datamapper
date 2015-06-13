@@ -19,13 +19,6 @@ class Generator {
     protected $path;
 
     /**
-     * Namespace of mapped models.
-     * 
-     * @var array
-     */
-    protected $namespace;
-
-    /**
      * Model stubs.
      * 
      * @var array
@@ -36,14 +29,13 @@ class Generator {
      * Constructor.
      *
      * @param \Illuminate\Filesystem\Filesystem $files
-     * @param string $storagePath
+     * @param string $path
      * @return void
      */
-    public function __construct(Filesystem $files, $storagePath)
+    public function __construct(Filesystem $files, $path)
     {
         $this->files = $files;
-        $this->path = $storagePath . '/framework/entities';
-        $this->namespace = 'Wetzel\Datamapper\Cache';
+        $this->path = $path;
 
         $this->stubs['model'] = $this->files->get(__DIR__ . '/../../stubs/model.stub');
         $this->stubs['relation'] = $this->files->get(__DIR__ . '/../../stubs/model-relation.stub');
@@ -53,11 +45,11 @@ class Generator {
     /**
      * Generate model from metadata.
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @param boolean $saveMode
      * @return void
      */
-    public function generate($metadataArray, $saveMode=false)
+    public function generate($metadata, $saveMode=false)
     {
         // clean or make (if not exists) model storage directory
         if ( ! $this->files->exists($this->path)) {
@@ -70,15 +62,15 @@ class Generator {
         }
 
         // create models
-        foreach($metadataArray as $metadata) {
-            $this->generateModel($metadata);
+        foreach($metadata as $entityMetadata) {
+            $this->generateModel($entityMetadata);
         }
 
         // create .gitignore
         $this->files->put($this->path . '/.gitignore', '*' . PHP_EOL . '!.gitignore');
 
         // create json file for metadata
-        $contents = json_encode($metadataArray, JSON_PRETTY_PRINT);
+        $contents = json_encode($metadata, JSON_PRETTY_PRINT);
         $this->files->put($this->path . '/entities.json', $contents);
     }
 
@@ -97,61 +89,59 @@ class Generator {
     /**
      * Generate model from metadata.
      *
-     * @param array $metadata
+     * @param array $entityMetadata
      * @return void
      */
-    public function generateModel($metadata)
+    public function generateModel($entityMetadata)
     {
         $stub = $this->stubs['model'];
 
         // header
-        $this->replaceNamespace($this->namespace, $stub);
-        $this->replaceClass(class_basename($this->getMappedClass($metadata['class'])), $stub);
-        $this->replaceMappedClass($metadata['class'], $stub);
+        $this->replaceNamespace(get_mapped_model_namespace(), $stub);
+        $this->replaceClass(class_basename(get_mapped_model($entityMetadata['class'])), $stub);
+        $this->replaceMappedClass($entityMetadata['class'], $stub);
 
         // softDeletes
-        $this->replaceSoftDeletes($metadata['softDeletes'], $stub);
+        $this->replaceSoftDeletes($entityMetadata['softDeletes'], $stub);
 
         // table name
-        $this->replaceTable($metadata['table']['name'], $stub);
+        $this->replaceTable($entityMetadata['table']['name'], $stub);
 
         // primary key
-        list($primaryKey, $incrementing) = $this->getPrimaryKey($metadata);
+        list($primaryKey, $incrementing) = $this->getPrimaryKey($entityMetadata);
         $this->replacePrimaryKey($primaryKey, $stub);
         $this->replaceIncrementing($incrementing, $stub);
 
         // timestamps
-        $this->replaceTimestamps($metadata['timestamps'], $stub);
+        $this->replaceTimestamps($entityMetadata['timestamps'], $stub);
 
         // misc
-        $this->replaceHidden($metadata['hidden'], $stub);
-        $this->replaceVisible($metadata['visible'], $stub);
-        $this->replaceTouches($metadata['touches'], $stub);
-        $this->replaceWith($metadata['with'], $stub);
-        $this->replaceMorphClass($metadata['morphClass'], $stub);
+        $this->replaceTouches($entityMetadata['touches'], $stub);
+        $this->replaceWith($entityMetadata['with'], $stub);
+        $this->replaceMorphClass($entityMetadata['morphClass'], $stub);
 
         // mapping data
-        $mapping = $this->generateMappingData($metadata);
+        $mapping = $this->generateMappingData($entityMetadata);
         $this->replaceMapping($mapping, $stub);
         
         // relations
-        $this->replaceRelations($metadata['relations'], $stub);
+        $this->replaceRelations($entityMetadata['relations'], $stub);
 
-        $this->files->put($this->path . '/' . $this->getMappedClassHash($metadata['class']), $stub);
+        $this->files->put($this->path . '/' . get_mapped_model_hash($entityMetadata['class']), $stub);
     }
 
     /**
      * Get primary key and auto increment value.
      *
-     * @param  array  $metadata
+     * @param  array  $entityMetadata
      * @return array
      */
-    protected function getPrimaryKey($metadata)
+    protected function getPrimaryKey($entityMetadata)
     {
         $primaryKey = 'id';
         $incrementing = true;
 
-        foreach($metadata['table']['columns'] as $column) {
+        foreach($entityMetadata['table']['columns'] as $column) {
             if ( ! empty($column['primary'])) {
                 $primaryKey = $column['name'];
                 $incrementing = ( ! empty($column['options']['autoIncrement']));
@@ -164,18 +154,18 @@ class Generator {
     /**
      * Generate mapping array.
      *
-     * @param  array  $metadata
+     * @param  array  $entityMetadata
      * @return array
      */
-    protected function generateMappingData($metadata)
+    protected function generateMappingData($entityMetadata)
     {
         $attributes = [];
-        foreach($metadata['attributes'] as $attributeMetadata) {
+        foreach($entityMetadata['attributes'] as $attributeMetadata) {
             $attributes[] = $attributeMetadata['name'];
         }
 
         $embeddeds = [];
-        foreach($metadata['embeddeds'] as $embeddedMetadata) {
+        foreach($entityMetadata['embeddeds'] as $embeddedMetadata) {
             $embedded = [];
             $embedded['class'] = $embeddedMetadata['class'];
             $embeddedAttributes = [];
@@ -187,14 +177,14 @@ class Generator {
         }
 
         $relations = [];
-        foreach($metadata['relations'] as $relationMetadata) {
+        foreach($entityMetadata['relations'] as $relationMetadata) {
             $relation = [];
-            if ( ! empty($relationMetadata['targetEntity'])) {
-                $relation['targetEntity'] = $relationMetadata['targetEntity'];
-                $relation['mappedTargetEntity'] = $this->getMappedClass($relationMetadata['targetEntity']);
+            if ( ! empty($relationMetadata['foreignEntity'])) {
+                $relation['foreignEntity'] = $relationMetadata['foreignEntity'];
+                $relation['mappedForeignEntity'] = get_mapped_model($relationMetadata['foreignEntity']);
             } else {
-                $relation['targetEntity'] = null;
-                $relation['mappedTargetEntity'] = null;
+                $relation['foreignEntity'] = null;
+                $relation['mappedForeignEntity'] = null;
             }
             $relations[$relationMetadata['name']] = $relation;
         }
@@ -304,30 +294,6 @@ class Generator {
     }
     
     /**
-     * Replace hidden.
-     * 
-     * @param array $hidden
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceHidden($hidden, &$stub)
-    {
-        $stub = str_replace('{{hidden}}', $this->getArrayAsText($hidden), $stub);
-    }
-    
-    /**
-     * Replace visible.
-     * 
-     * @param array $visible
-     * @param string $stub
-     * @return void
-     */
-    protected function replaceVisible($visible, &$stub)
-    {
-        $stub = str_replace('{{visible}}', $this->getArrayAsText($visible), $stub);
-    }
-    
-    /**
      * Replace touches.
      * 
      * @param array $touches
@@ -393,7 +359,7 @@ class Generator {
             $options = [];
 
             if ($relation['type'] != 'morphTo') {
-                $options[] = "'".$this->getMappedClass($relation['targetEntity'])."'";
+                $options[] = "'" . get_mapped_model($relation['foreignEntity'])."'";
             }
 
             foreach($relation['options'] as $name => $option) {
@@ -405,7 +371,7 @@ class Generator {
                     $options[] = 'false';
                 } else {
                     if ($name == 'throughEntity') {
-                        $options[] = "'".$this->getMappedClass($option)."'";
+                        $options[] = "'".get_mapped_model($option)."'";
                     } elseif ($name != 'morphableClasses') {
                         $options[] = "'".$option."'";
                     }
@@ -428,7 +394,7 @@ class Generator {
 
                 $morphableClasses = [];
                 foreach($relation['options']['morphableClasses'] as $key => $name) {
-                    $morphableClasses[$key] = $this->getMappedClass($name);
+                    $morphableClasses[$key] = get_mapped_model($name);
                 }
 
                 $morphStub = str_replace('{{name}}', $relation['name'], $morphStub);
@@ -440,28 +406,6 @@ class Generator {
         }
 
         $stub = str_replace('{{relations}}', implode(PHP_EOL . PHP_EOL, $textRelations), $stub);
-    }
-
-    /**
-     * Get mapped class.
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function getMappedClass($class)
-    {
-        return $this->namespace . '\Entity' . $this->getMappedClassHash($class);
-    }
-
-    /**
-     * Get mapped class hash.
-     *
-     * @param string $class
-     * @return string
-     */
-    protected function getMappedClassHash($class)
-    {
-        return md5($class);
     }
 
     /**

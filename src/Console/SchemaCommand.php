@@ -2,7 +2,8 @@
 
 use Illuminate\Console\Command;
 
-use Wetzel\Datamapper\Metadata\Builder as MetadataBuilder;
+use Wetzel\Datamapper\Metadata\ClassFinder;
+use Wetzel\Datamapper\Metadata\EntityScanner;
 use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
 use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
 use UnexpectedValueException;
@@ -10,11 +11,18 @@ use UnexpectedValueException;
 abstract class SchemaCommand extends Command {
 
     /**
-     * The metadata builder instance.
+     * The class finder instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\Builder
+     * @var \Wetzel\Datamapper\Metadata\ClassFinder
      */
-    protected $metadata;
+    protected $finder;
+
+    /**
+     * The entity scanner instance.
+     *
+     * @var \Wetzel\Datamapper\Metadata\EntityScanner
+     */
+    protected $scanner;
 
     /**
      * The schema builder instance.
@@ -31,19 +39,31 @@ abstract class SchemaCommand extends Command {
     protected $modelGenerator;
 
     /**
+     * The config of the datamapper package.
+     *
+     * @var array
+     */
+    protected $config;
+
+    /**
      * Create a new migration install command instance.
      *
-     * @param  \Wetzel\Datamapper\Metadata\Builder $metadata
-     * @param  \Wetzel\Datamapper\Schema\Builder $schema
+     * @param \Wetzel\Datamapper\Metadata\ClassFinder $finder
+     * @param \Wetzel\Datamapper\Metadata\EntityScanner $scanner
+     * @param \Wetzel\Datamapper\Schema\Builder $schema
+     * @param \Wetzel\Datamapper\Eloquent\Generator $models
+     * @param array $config
      * @return void
      */
-    public function __construct(MetadataBuilder $metadata, SchemaBuilder $schema, ModelGenerator $models)
+    public function __construct(ClassFinder $finder, EntityScanner $scanner, SchemaBuilder $schema, ModelGenerator $models, $config)
     {
         parent::__construct();
 
-        $this->metadata = $metadata;
+        $this->finder = $finder;
+        $this->scanner = $scanner;
         $this->schema = $schema;
         $this->models = $models;
+        $this->config = $config;
     }
 
     /**
@@ -59,11 +79,13 @@ abstract class SchemaCommand extends Command {
         if ($class) {
             if (class_exists($class)) {
                 $classes = [$class];
+            } elseif (class_exists($this->config['base_namespace'] . '\\' . $class)) {
+                $classes = [$this->config['base_namespace'] . '\\' . $class];
             } else {
                 throw new UnexpectedValueException('Classname is not valid.');
             }
         } else {
-            $classes = $this->metadata->getClassesFromNamespace();
+            $classes = $this->finder->getClassesFromNamespace();
         }
 
         return $classes;

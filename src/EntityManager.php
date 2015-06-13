@@ -6,6 +6,24 @@ use Exception;
 class EntityManager {
 
     /**
+     * The config of the datamapper package.
+     *
+     * @var array
+     */
+    protected $config;
+
+    /**
+     * Constructor.
+     *
+     * @param array $config
+     * @return void
+     */
+    public function __construct($config)
+    {
+        $this->config = $config;
+    }
+
+    /**
      * Set an entity class.
      * 
      * @param string $class
@@ -13,13 +31,11 @@ class EntityManager {
      */
     public function entity($class)
     {
-        $model = '\Wetzel\Datamapper\Cache\Entity' . md5($class);
+        $class = get_real_entity($class);
 
-        if (class_exists($model)) {
-            return (new $model)->newDatamapperQuery();
-        } else {
-            throw new Exception('There is no cached Eloquent class for class "'.$class.'".');
-        }
+        $model = get_mapped_model($class);
+
+        return (new $model)->newDatamapperQuery();
     }
 
     /**

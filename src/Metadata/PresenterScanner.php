@@ -1,0 +1,76 @@
+<?php namespace Wetzel\Datamapper\Metadata;
+
+use Doctrine\Common\Annotations\AnnotationReader;
+
+class PresenterScanner {
+
+    /**
+     * The annotation reader instance.
+     *
+     * @var \Doctrine\Common\Annotations\AnnotationReader
+     */
+    protected $reader;
+
+    /**
+     * Create a new metadata builder instance.
+     *
+     * @param \Doctrine\Common\Annotations\AnnotationReader $reader
+     * @return void
+     */
+    public function __construct(AnnotationReader $reader)
+    {
+        $this->reader = $reader;
+    }
+
+    /**
+     * Build metadata from all entity classes.
+     *
+     * @param array $classes
+     * @return array
+     */
+    public function scan($classes)
+    {
+        $metadata = [];
+
+        foreach($classes as $class) {
+            $presenter = $this->parseClass($class);
+
+            if ($presenter) {
+                $metadata[$class] = $presenter;
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * Parse a class.
+     *
+     * @param array $annotations
+     * @return string|null
+     */
+    public function parseClass($class)
+    {
+        $reflectionClass = new ReflectionClass($class);
+
+        // check if class is entity
+        if ($annotation = $this->reader->getClassAnnotation($reflectionClass, '\Wetzel\Datamapper\Annotations\Presenter')) {
+            return $this->parsePresenter($class, $annotation);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Parse an entity class.
+     *
+     * @param array $class
+     * @param \Wetzel\Datamapper\Annotations\Presenter $annotation
+     * @return string
+     */
+    public function parsePresenter($class, $annotation)
+    {
+        return $annotation->class;
+    }
+
+}

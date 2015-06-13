@@ -4,10 +4,6 @@
  * @Annotation
  * @Target("CLASS")
  */
-final class With implements Annotation
+final class Presenter implements Annotation
 {
-    /**
-     * @var array
-     */
-    public $value;
 }

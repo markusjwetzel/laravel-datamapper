@@ -15,9 +15,6 @@ class Entity extends Definition {
         'softDeletes' => false,
         'timestamps' => false,
         'versionable' => false,
-
-        'hidden' => [],
-        'visible' => [],
         
         'touches' => [],
         'with' => [],

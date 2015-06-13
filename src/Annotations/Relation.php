@@ -14,22 +14,12 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $targetEntity;
+    public $localKey;
 
     /**
      * @var string
      */
-    public $morphName;
-
-    /**
-     * @var string
-     */
-    public $table;
-
-    /**
-     * @var string
-     */
-    public $throughEntity;
+    public $foreignEntity;
 
     /**
      * @var string
@@ -39,27 +29,22 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $otherKey;
+    public $throughEntity;
 
     /**
      * @var string
      */
-    public $localKey;
+    public $throughKey;
 
     /**
      * @var string
      */
-    public $firstKey;
+    public $pivotTable;
 
     /**
      * @var string
      */
-    public $secondKey;
-
-    /**
-     * @var boolean
-     */
-    public $inverse = false;
+    public $morphName;
 
     /**
      * @var string
@@ -70,6 +55,11 @@ final class Relation implements Annotation
      * @var string
      */
     public $morphId;
+
+    /**
+     * @var boolean
+     */
+    public $inverse = false;
 
     /**
      * @var string

@@ -40,6 +40,6 @@ return [
     |
     */
 
-    'base_namespace' => 'Examunity/Domain',
+    'base_namespace' => 'Examunity\Test',
 
 ];

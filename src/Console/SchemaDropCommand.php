@@ -33,13 +33,13 @@ class SchemaDropCommand extends SchemaCommand {
         $classes = $this->getClasses();
 
         // build metadata
-        $metadataArray = $this->metadata->build($classes);
+        $metadata = $this->scanner->scan($classes);
 
         // clean generated eloquent models
         $this->models->clean();
 
         // build schema
-        $statements = $this->schema->drop($metadataArray);
+        $statements = $this->schema->drop($metadata);
 
         $this->info('Schema dropped successfully!');
 

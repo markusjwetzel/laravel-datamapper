@@ -4,10 +4,6 @@
  * @Annotation
  * @Target("CLASS")
  */
-final class Hidden implements Annotation
+final class ValueObject implements Annotation
 {
-    /**
-     * @var array
-     */
-    public $value;
 }

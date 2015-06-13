@@ -37,17 +37,17 @@ class SchemaCreateCommand extends SchemaCommand {
         $this->info(' 25% Building metadata');
 
         // build metadata
-        $metadataArray = $this->metadata->build($classes);
+        $metadata = $this->scanner->scan($classes);
 
         $this->info(' 50% Generating entity models');
 
         // generate eloquent models
-        $this->models->generate($metadataArray, true);
+        $this->models->generate($metadata, true);
 
         $this->info(' 75% Building database schema');
 
         // build schema
-        $statements = $this->schema->create($metadataArray);
+        $statements = $this->schema->create($metadata);
 
         $this->info(PHP_EOL . 'Schema created successfully!');
 

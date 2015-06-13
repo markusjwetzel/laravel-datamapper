@@ -37,17 +37,17 @@ class SchemaUpdateCommand extends SchemaCommand {
         $this->info(' 25% Building metadata');
 
         // build metadata
-        $metadataArray = $this->metadata->build($classes);
+        $metadata = $this->scanner->scan($classes);
 
         $this->info(' 50% Generating entity models');
 
         // generate eloquent models
-        $this->models->generate($metadataArray, $this->option('save-mode'));
+        $this->models->generate($metadata, $this->option('save-mode'));
 
         $this->info(' 75% Building database schema');
 
         // build schema
-        $statements = $this->schema->update($metadataArray, $this->option('save-mode'));
+        $statements = $this->schema->update($metadata, $this->option('save-mode'));
 
         $this->info(PHP_EOL . 'Schema updated successfully!');
 

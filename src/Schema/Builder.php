@@ -69,12 +69,12 @@ class Builder {
     /**
      * Create all tables.
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @return array
      */
-    public function create(array $metadataArray)
+    public function create(array $metadata)
     {
-        $schema = $this->getSchemaFromMetadata($metadataArray);
+        $schema = $this->getSchemaFromMetadata($metadata);
 
         $statements = $schema->toSql($this->platform);
 
@@ -86,14 +86,14 @@ class Builder {
     /**
      * Update all tables.
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @param boolean $saveMode
      * @return array
      */
-    public function update(array $metadataArray, $saveMode=false)
+    public function update(array $metadata, $saveMode=false)
     {
         $fromSchema = $this->schemaManager->createSchema();
-        $toSchema = $this->getSchemaFromMetadata($metadataArray);
+        $toSchema = $this->getSchemaFromMetadata($metadata);
 
         $comparator = new Comparator;
         $schemaDiff = $comparator->compare($fromSchema, $toSchema);
@@ -112,14 +112,14 @@ class Builder {
     /**
      * Drop all tables.
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @return array
      */
-    public function drop(array $metadataArray)
+    public function drop(array $metadata)
     {
         $visitor = new DropSchemaSqlCollector($this->platform);
 
-        $schema = $this->getSchemaFromMetadata($metadataArray);
+        $schema = $this->getSchemaFromMetadata($metadata);
 
         $fullSchema = $this->schemaManager->createSchema();
 
@@ -153,19 +153,19 @@ class Builder {
     /**
      * Create schema instance from metadata
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @return \Doctrine\DBAL\Schema\Schema
      */
-    public function getSchemaFromMetadata(array $metadataArray)
+    public function getSchemaFromMetadata(array $metadata)
     {
-        $metadataSchemaConfig = $this->schemaManager->createSchemaConfig();
-        $schema = new Schema([], [], $metadataSchemaConfig);
+        $entityMetadataSchemaConfig = $this->schemaManager->createSchemaConfig();
+        $schema = new Schema([], [], $entityMetadataSchemaConfig);
         $pivotTables = [];
 
-        foreach ($metadataArray as $metadata) {
-            $this->generateTableFromMetadata($schema, $metadata['table']);
+        foreach ($metadata as $entityMetadata) {
+            $this->generateTableFromMetadata($schema, $entityMetadata['table']);
 
-            foreach($metadata['relations'] as $relationMetadata) {
+            foreach($entityMetadata['relations'] as $relationMetadata) {
                 if ( ! empty($relationMetadata['pivotTable'])) {
                     // create pivot table for many to many relations
                     if ( ! in_array($relationMetadata['pivotTable']['name'], $pivotTables)) {

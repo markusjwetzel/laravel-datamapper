@@ -1,11 +1,13 @@
 <?php namespace Wetzel\Datamapper\Metadata;
 
+use Exception;
 use DomainException;
 use UnexpectedValueException;
+use InvalidArgumentException;;
 
-use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
+use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 
-class Validator {
+class EntityValidator {
 
     /**
      * List of valid attribute types.
@@ -43,6 +45,48 @@ class Validator {
     }
 
     /**
+     * Check if class exists.
+     *
+     * @param string $class
+     * @param array $classAnnotations
+     * @return void
+     */
+    public function validateEmbeddedClass($class, $classAnnotations)
+    {
+        $check = false;
+
+        foreach ($classAnnotations as $annotation) {
+            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embeddable ||
+                $annotation instanceof \Wetzel\Datamapper\Annotations\ValueObject
+            ) {
+                $check = true;
+            }
+        }
+
+        if ( ! $check) {
+            throw new InvalidArgumentException('Embedded class '.$class.' has no @Embeddable or @ValueObject annotation.');
+        }
+    }
+
+    /**
+     * Check if class exists.
+     *
+     * @param string $class
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return void
+     */
+    public function validateClass($class, $definedClass)
+    {
+        try {
+            $class = get_real_entity($class);
+        } catch(Exception $e) {
+            throw new Exception('Class "'.$class.'" (defined in class "'.$definedClass.'") does not exist.');
+        }
+
+        return $class;
+    }
+
+    /**
      * Validate a column type.
      *
      * @param string $type
@@ -71,43 +115,43 @@ class Validator {
     /**
      * Validate the number of primary keys from a table.
      *
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Table $tableMetadata
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
-    public function validatePrimaryKey(TableDefinition $tableMetadata)
+    public function validatePrimaryKey(EntityDefinition $entityMetadata)
     {
         // check if all tables have exactly one primary key
         $countPrimaryKeys = 0;
 
-        foreach($tableMetadata['columns'] as $column) {
+        foreach($entityMetadata['table']['columns'] as $column) {
             if ( ! empty($column['primary'])) {
                 $countPrimaryKeys++;
             }
         }
 
         if ($countPrimaryKeys == 0) {
-            throw new DomainException('No primary key defined in class ' . $metadata['class'] . '.');
+            throw new DomainException('No primary key defined in class ' . $entityMetadata['class'] . '.');
         } elseif ($countPrimaryKeys > 1) {
-            throw new DomainException('No composite primary keys allowed for class ' . $metadata['class'] . '.');
+            throw new DomainException('No composite primary keys allowed for class ' . $entityMetadata['class'] . '.');
         }
     }
 
     /**
      * Check if pivot tables of bi-directional relations are identically.
      *
-     * @param array $metadataArray
+     * @param array $metadata
      * @return void
      */
-    public function validatePivotTables($metadataArray)
+    public function validatePivotTables($metadata)
     {
         $pivotTables = [];
-        foreach($metadataArray as $metadata) {
-            foreach($metadata['relations'] as $relationMetadata) {
+        foreach($metadata as $entityMetadata) {
+            foreach($entityMetadata['relations'] as $relationMetadata) {
                 if ( ! empty($relationMetadata['pivotTable'])) {
-                    $pivotTables[$metadata['class'].$relationMetadata['targetEntity']] = $relationMetadata;
+                    $pivotTables[$entityMetadata['class'].$relationMetadata['foreignEntity']] = $relationMetadata;
 
-                    if (isset($pivotTables[$relationMetadata['targetEntity'].$metadata['class']])) {
-                        $relation1 = $pivotTables[$relationMetadata['targetEntity'].$metadata['class']];
+                    if (isset($pivotTables[$relationMetadata['foreignEntity'].$entityMetadata['class']])) {
+                        $relation1 = $pivotTables[$relationMetadata['foreignEntity'].$entityMetadata['class']];
                         $relation2 = $relationMetadata;
 
                         $error = null;
@@ -125,7 +169,7 @@ class Validator {
                         }
 
                         if ($error) {
-                            throw new DomainException('Error syncing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['targetEntity'].'" and "'.$relation2['name'].'" in "'.$relation1['targetEntity'].'": '.$error);
+                            throw new DomainException('Error syncing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['foreignEntity'].'" and "'.$relation2['name'].'" in "'.$relation1['foreignEntity'].'": '.$error);
                         }
                     }
                 }
