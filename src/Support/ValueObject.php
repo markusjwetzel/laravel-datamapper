@@ -1,9 +1,11 @@
-<?php namespace Wetzel\Datamapper\Support;
+<?php
+
+namespace Wetzel\Datamapper\Support;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 
-abstract class ValueObject extends Model {
-    
+abstract class ValueObject extends Model
+{
     /**
      * Compare two value objects.
      *
@@ -12,8 +14,10 @@ abstract class ValueObject extends Model {
      */
     public function equals(ValueObject $valueObject)
     {
-        foreach(get_object_vars($this) as $name => $value) {
-            if ($this->{$name} !== $valueObject->{$name}) return false;
+        foreach (get_object_vars($this) as $name => $value) {
+            if ($this->{$name} !== $valueObject->{$name}) {
+                return false;
+            }
         }
 
         return true;
@@ -36,7 +40,7 @@ abstract class ValueObject extends Model {
             'attributes' => $eloquentModel->getAttributes()
         ];
 
-        foreach($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
+        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
             $valueObject->{$attribute} = $dict['attributes'][$attribute];
         }
 
@@ -57,9 +61,8 @@ abstract class ValueObject extends Model {
             'mapping' => $eloquentModel->getMapping()
         ];
 
-        foreach($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
+        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
             $eloquentModel->setAttribute($attribute, $this->{$attribute});
         }
     }
-
 }

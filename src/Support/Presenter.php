@@ -1,10 +1,17 @@
-<?php namespace Wetzel\Datamapper\Support;
+<?php
 
+namespace Wetzel\Datamapper\Support;
+
+use Exception;
+use BadMethodCallException;
 use ArrayAccess;
 use Wetzel\Datamapper\Support\Model;
+use Wetzel\Datamapper\Presenter\Decorator;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Jsonable;
 
-class Presenter implements ArrayAccess {
-
+class Presenter implements ArrayAccess, Arrayable, Jsonable
+{
     /**
      * The instance of the presentable model.
      *
@@ -27,33 +34,76 @@ class Presenter implements ArrayAccess {
     protected $visible = array();
 
     /**
+     * The attributes that are added by the presenter.
+     *
+     * @var array
+     */
+    protected $added;
+
+    /**
      * Get an attribute array of all arrayable values.
      *
      * @param  array  $values
+     * @param boolean $refresh
      * @return array
      */
-    public function getPresentableItems(array $values)
+    public function getPresentableItems(array $values, $refresh = false)
     {
-        if (count($this->visible) > 0) {
-            return array_intersect_key($values, array_flip($this->visible));
+        // parse items only if instance is not base presenter
+        if (static::class != self::class) {
+            $addedValues = [];
+
+            foreach ($this->getAdded() as $key) {
+                $addedValues[$key] = $this->{$key}();
+            }
+
+            $values = array_merge($values, $addedValues);
+
+            if (count($this->visible) > 0) {
+                return array_intersect_key($values, array_flip($this->visible));
+            }
+
+            return array_diff_key($values, array_flip($this->hidden));
         }
 
-        return array_diff_key($values, array_flip($this->hidden));
+        return $values;
+    }
+
+    /**
+     * Get added attributes.
+     *
+     * @return array
+     */
+    public function getAdded()
+    {
+        // add attributes defined by the presenter
+        if (! $this->added) {
+            $added = array_diff_key(
+                array_flip(get_class_methods(static::class)),
+                array_flip(get_class_methods(self::class))
+            );
+
+            array_forget($added, '__construct');
+            
+            $this->added = array_flip($added);
+        }
+
+        return $this->added;
     }
 
     /**
      * Check an attribute against whitelist/blacklist values.
      *
-     * @param  string  $value
+     * @param  string  $key
      * @return array
      */
-    public function checkPresentable($value)
+    protected function checkPresentable($key)
     {
         if (count($this->visible) > 0) {
-            return count(array_intersect([$value], $this->visible));
+            return count(array_intersect([$key], $this->visible));
         }
 
-        return count(array_diff([$value], $this->hidden));
+        return count(array_diff([$key], $this->hidden));
     }
     
     /**
@@ -101,53 +151,56 @@ class Presenter implements ArrayAccess {
     /**
      * Determine if an item exists at an offset.
      *
-     * @param  mixed  $key
+     * @param  mixed  $offset
      * @return bool
      */
-    public function offsetExists($key)
+    public function offsetExists($offset)
     {
-        return array_key_exists($key, $this->items);
+        try {
+            $this->offsetGet($offset);
+        } catch (Exception $e) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Get an item at a given offset.
      *
-     * @param  mixed  $key
+     * @param  mixed  $offset
      * @return mixed
      */
-    public function offsetGet($key)
+    public function offsetGet($offset)
     {
-        return $this->items[$key];
+        if (method_exists($this, $offset)) {
+            return $this->{$offset}();
+        } else {
+            return $this->__call($offset, []);
+        }
     }
 
     /**
      * Set the item at a given offset.
      *
-     * @param  mixed  $key
+     * @param  mixed  $offset
      * @param  mixed  $value
      * @return void
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($offset, $value)
     {
-        if (is_null($key))
-        {
-            $this->items[] = $value;
-        }
-        else
-        {
-            $this->items[$key] = $value;
-        }
+        throw new Exception('Presenter cannot set offset "'.$offset.'" to "'.$value.'" in '.get_class().'.');
     }
 
     /**
      * Unset the item at a given offset.
      *
-     * @param  string  $key
+     * @param  string  $offset
      * @return void
      */
-    public function offsetUnset($key)
+    public function offsetUnset($offset)
     {
-        unset($this->items[$key]);
+        throw new Exception('Presenter cannot unset offset "'.$offset.'" in '.get_class().'.');
     }
 
     /**
@@ -160,40 +213,12 @@ class Presenter implements ArrayAccess {
     public function __call($method, $parameters)
     {
         // magical getter
-        if ($this->checkPresentable($method))
-        {
-            // method exists in model
-            if (is_callable([$this->model, $method])) {
-                $item = $this->model->{$method}();
+        if ($this->checkPresentable($method)) {
+            $item = $this->model->{$method}();
 
-                // item is presentable
-                if ($item instanceof \Wetzel\Datamapper\Contracts\Presentable) {
-                    return $item->getPresenter();
-                }
-
-                // item is collection
-                elseif ($item instanceof \Wetzel\Datamapper\Eloquent\Collection) {
-                    return $item;
-                }
-
-                // item is value
-                else {
-                    return $item;
-                }
-            }
-
-            // method exists in this presenter
-            elseif (method_exists($this, $method)) {
-                return $this->{$method}();
-            }
+            return Decorator::decorate($item);
+        } else {
+            throw new BadMethodCallException('Method '.$method.' is hidden for presentation.');
         }
-
-        $class = get_class($this);
-        $trace = debug_backtrace();
-        $file = $trace[0]['file'];
-        $line = $trace[0]['line'];
-        trigger_error("Call to undefined method $class::$method() in $file on line $line", E_USER_ERROR);
     }
-
-
 }

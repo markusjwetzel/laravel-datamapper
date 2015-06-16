@@ -1,9 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata;
+<?php
 
+namespace Wetzel\Datamapper\Metadata;
+
+use ReflectionClass;
 use Doctrine\Common\Annotations\AnnotationReader;
 
-class PresenterScanner {
-
+class PresenterScanner
+{
     /**
      * The annotation reader instance.
      *
@@ -32,7 +35,7 @@ class PresenterScanner {
     {
         $metadata = [];
 
-        foreach($classes as $class) {
+        foreach ($classes as $class) {
             $presenter = $this->parseClass($class);
 
             if ($presenter) {
@@ -70,7 +73,6 @@ class PresenterScanner {
      */
     public function parsePresenter($class, $annotation)
     {
-        return $annotation->class;
+        return get_real_entity($annotation->class);
     }
-
 }

@@ -1,15 +1,16 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Illuminate\Console\Command;
-
 use Wetzel\Datamapper\Metadata\ClassFinder;
 use Wetzel\Datamapper\Metadata\EntityScanner;
 use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
 use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
 use UnexpectedValueException;
 
-abstract class SchemaCommand extends Command {
-
+abstract class SchemaCommand extends Command
+{
     /**
      * The class finder instance.
      *
@@ -39,23 +40,15 @@ abstract class SchemaCommand extends Command {
     protected $modelGenerator;
 
     /**
-     * The config of the datamapper package.
-     *
-     * @var array
-     */
-    protected $config;
-
-    /**
      * Create a new migration install command instance.
      *
      * @param \Wetzel\Datamapper\Metadata\ClassFinder $finder
      * @param \Wetzel\Datamapper\Metadata\EntityScanner $scanner
      * @param \Wetzel\Datamapper\Schema\Builder $schema
      * @param \Wetzel\Datamapper\Eloquent\Generator $models
-     * @param array $config
      * @return void
      */
-    public function __construct(ClassFinder $finder, EntityScanner $scanner, SchemaBuilder $schema, ModelGenerator $models, $config)
+    public function __construct(ClassFinder $finder, EntityScanner $scanner, SchemaBuilder $schema, ModelGenerator $models)
     {
         parent::__construct();
 
@@ -63,7 +56,6 @@ abstract class SchemaCommand extends Command {
         $this->scanner = $scanner;
         $this->schema = $schema;
         $this->models = $models;
-        $this->config = $config;
     }
 
     /**
@@ -106,5 +98,4 @@ abstract class SchemaCommand extends Command {
             $this->info(implode(';' . PHP_EOL, $statements));
         }
     }
-
 }

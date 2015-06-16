@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
 
-class EmbeddedClass extends Definition {
-    
+namespace Wetzel\Datamapper\Metadata\Definitions;
+
+class EmbeddedClass extends Definition
+{
     /**
      * Valid keys.
-     * 
+     *
      * @var array
      */
     protected $keys = [
@@ -12,5 +14,4 @@ class EmbeddedClass extends Definition {
         'class' => null,
         'attributes' => [],
     ];
-
 }

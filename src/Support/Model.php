@@ -1,21 +1,32 @@
-<?php namespace Wetzel\Datamapper\Support;
+<?php
+
+namespace Wetzel\Datamapper\Support;
 
 use Wetzel\Datamapper\Presenter\Repository;
-use Wetzel\Datamapper\Presenter\Storage;
+use Wetzel\Datamapper\Presenter\Decorator;
 use Wetzel\Datamapper\Support\Presenter;
-
+use Wetzel\Datamapper\Contracts\Model as ModelContract;
 use Wetzel\Datamapper\Contracts\Presentable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Support\Facades\App;
 
-abstract class Model implements Presentable, Arrayable, Jsonable {
-    
+abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
+{
+    /**
+     * The instance of the presenter.
+     *
+     * @var array
+     */
+    private $__presenter;
+
     /**
      * Private final constructor, because you should name your constructor's in domain driven design.
      *
      * @return void
      */
-    protected final function __construct() {
+    final protected function __construct()
+    {
     }
 
     /**
@@ -25,25 +36,23 @@ abstract class Model implements Presentable, Arrayable, Jsonable {
      */
     public function getPresenter()
     {
-        $objectHash = spl_object_hash($this);
-
-        if ( ! Storage::has($objectHash)) {
-            $presenters = Repository::$presenters;
+        if (! $this->__presenter) {
+            $presenters = array_flip(Repository::$presenters);
 
             $class = static::class;
 
             if (isset($presenters[$class])) {
-                $presenter = new $presenters[$class];
+                $presenter = App::make($presenters[$class]);
             } else {
                 $presenter = new Presenter;
             }
 
             $presenter->setModel($this);
 
-            Storage::add($objectHash, $presenter);
+            $this->__presenter = $presenter;
         }
 
-        return Storage::get($objectHash);
+        return $this->__presenter;
     }
     
     /**
@@ -66,35 +75,13 @@ abstract class Model implements Presentable, Arrayable, Jsonable {
     {
         $presenter = $this->getPresenter();
 
-        $items = $presenter->getPresentableItems(get_object_vars($this));
+        $items = $presenter->getPresentableItems(array_except(get_object_vars($this), '__presenter'));
 
         $array = [];
 
-        foreach($items as $name => $item) {
-            // item is presentable
-            if ($item instanceof \Wetzel\Datamapper\Contracts\Presentable) {
-                $array[$name] = $item->getPresenter()->toArray();
-            }
-
-            // item is collection
-            elseif ($item instanceof \Wetzel\Datamapper\Eloquent\Collection) {
-                $array[$name] = $item->toArray();
-            }
-
-            // item is value
-            else {
-                $array[$name] = (string) $presenter->{$name}();
-            }
+        foreach ($items as $name => $item) {
+            $array[$name] = Decorator::decorate($item, true);
         }
-
-        /*$addedItems = $presenter->getAddedVars($items);
-
-        foreach($addedItems as $name => $item) {
-
-        }
-
-        dd(array_diff_key($items, array_flip(get_class_methods($presenter))));*/
-        // todo: extra presenter vars
 
         return $array;
     }
@@ -109,7 +96,7 @@ abstract class Model implements Presentable, Arrayable, Jsonable {
     public function __call($method, $parameters)
     {
         // magical getter
-        if (isset($this->{$method}) || property_exists($this, $method)) {
+        if ($method != '__presenter' && (isset($this->{$method}) || property_exists($this, $method))) {
             return $this->{$method};
         }
 
@@ -119,5 +106,4 @@ abstract class Model implements Presentable, Arrayable, Jsonable {
         $line = $trace[0]['line'];
         trigger_error("Call to undefined method $class::$method() in $file on line $line", E_USER_ERROR);
     }
-
 }

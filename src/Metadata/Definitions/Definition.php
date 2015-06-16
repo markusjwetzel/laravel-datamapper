@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
+
+namespace Wetzel\Datamapper\Metadata\Definitions;
 
 use ArrayObject;
 use UnexpectedValueException;
 
-abstract class Definition extends ArrayObject {
-
+abstract class Definition extends ArrayObject
+{
     protected $keys;
     
     /**
@@ -15,11 +17,11 @@ abstract class Definition extends ArrayObject {
      */
     public function __construct(array $array=[])
     {
-        if($diff = array_diff(array_keys($this->keys), array_keys($array))) {
+        if ($diff = array_diff(array_keys($this->keys), array_keys($array))) {
             throw new UnexpectedValueException('Missing value(s) '.implode(", ", $diff).' in metadata definition '.get_class($this).'.');
         }
 
-        foreach($array as $name => $value) {
+        foreach ($array as $name => $value) {
             $this[$name] = $value;
         }
     }
@@ -39,5 +41,4 @@ abstract class Definition extends ArrayObject {
             throw new UnexpectedValueException($key.' is not defined in metadata definition '.get_class($this).'.');
         }
     }
-
 }

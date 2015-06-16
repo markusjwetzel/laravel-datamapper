@@ -1,9 +1,11 @@
-<?php namespace Wetzel\Datamapper\Eloquent;
+<?php
+
+namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder as BaseBuilder;
 
-class Builder extends BaseBuilder {
-
+class Builder extends BaseBuilder
+{
     /**
      * Execute the query as a "select" statement.
      *
@@ -12,11 +14,8 @@ class Builder extends BaseBuilder {
      */
     public function get($columns = array('*'))
     {
-        $models = parent::get($columns);
-
-        $models->toEntity();
+        $models = parent::get($columns)->toEntity();
 
         return $models;
     }
-
 }

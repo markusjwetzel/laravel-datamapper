@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper;
+<?php
+
+namespace Wetzel\Datamapper;
 
 use Wetzel\Datamapper\Eloquent\Model;
 use Exception;
 
-class EntityManager {
-
+class EntityManager
+{
     /**
      * The config of the datamapper package.
      *
@@ -25,9 +27,9 @@ class EntityManager {
 
     /**
      * Set an entity class.
-     * 
+     *
      * @param string $class
-     * @return Eloquent
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
     public function entity($class)
     {
@@ -40,35 +42,61 @@ class EntityManager {
 
     /**
      * Create an entity object.
-     * 
-     * @param Entity $object
+     *
+     * @param object $object
      * @return void
      */
-    public function create($object)
+    public function insert($object)
     {
-        dd(Model::newFromEntity($object));
+        $model = $this->getEloquentModel($object);
+
+        $model->save();
     }
 
     /**
      * Update an entity object.
-     * 
-     * @param Entity $object
+     *
+     * @param object $object
      * @return void
      */
     public function update($object)
     {
-        dd(Model::newFromEntity($object));
+        $model = $this->getEloquentModel($object, true);
+
+        $model->save();
     }
 
     /**
      * Delete an entity object.
-     * 
-     * @param Entity $object
+     *
+     * @param object $object
      * @return void
      */
     public function delete($object)
     {
+        $model = $this->getEloquentModel($object, true);
 
+        //dd($model);
+
+        $model->delete();
     }
 
+    /**
+     * Delete an entity object.
+     *
+     * @param object $object
+     * @return \Wetzel\Datamapper\Eloquent\Model
+     */
+    protected function getEloquentModel($object, $exists=false)
+    {
+        if (! is_object($object)) {
+            throw new Exception('Object transfered to EntityManager is not an object');
+        }
+
+        $model = Model::newFromEntity($object);
+
+        $model->exists = $exists;
+
+        return $model;
+    }
 }

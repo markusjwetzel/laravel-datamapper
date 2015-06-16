@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
 
-class Entity extends Definition {
-    
+namespace Wetzel\Datamapper\Metadata\Definitions;
+
+class Entity extends Definition
+{
     /**
      * Valid keys.
-     * 
+     *
      * @var array
      */
     protected $keys = [
@@ -24,5 +26,4 @@ class Entity extends Definition {
         'embeddeds' => [],
         'relations' => [],
     ];
-
 }

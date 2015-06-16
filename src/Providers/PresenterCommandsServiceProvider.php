@@ -1,30 +1,20 @@
-<?php namespace Wetzel\Datamapper;
+<?php
+
+namespace Wetzel\Datamapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
-
-use Wetzel\Datamapper\Presenter\Repository;
+use Wetzel\Datamapper\Metadata\PresenterScanner;
 use Wetzel\Datamapper\Console\PresenterRegisterCommand;
 use Wetzel\Datamapper\Console\PresenterClearCommand;
 
-class PresenterServiceProvider extends ServiceProvider {
-
+class PresenterCommandsServiceProvider extends ServiceProvider
+{
     /**
-     * Perform post-registration booting of services.
+     * Indicates if loading of the provider is deferred.
      *
-     * @return void
+     * @var bool
      */
-    public function boot()
-    {
-        $this->app['view']->composer('*', function ($view) use ($app) {
-            $data = array_merge($view->getFactory()->getShared(), $view->getData());
-
-            foreach ($data as $key => $value) {
-                if ($value instanceof \Wetzel\Datamapper\Contracts\Presentable) {
-                    $view[$key] = $value->getPresenter();
-                }
-            }
-        });
-    }
+    protected $defer = true;
 
     /**
      * Register the application services.
@@ -33,23 +23,25 @@ class PresenterServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-        $this->registerPresenters();
+        $this->app->register('Wetzel\Datamapper\Providers\MetadataServiceProvider');
+
+        $this->registerScanner();
 
         $this->registerCommands();
     }
 
     /**
-     * Register all presenters.
+     * Register the scanner implementation.
      *
      * @return void
      */
-    protected function registerPresenters()
+    protected function registerScanner()
     {
-        $path = $app['path.storage'].'/framework'
+        $this->app->singleton('datamapper.presenter.scanner', function ($app) {
+            $reader = $app['datamapper.annotationreader'];
 
-        $repositoy = new Repository($app['files'], $path);
-
-        $repository->load();
+            return new PresenterScanner($reader);
+        });
     }
 
     /**
@@ -63,7 +55,7 @@ class PresenterServiceProvider extends ServiceProvider {
         $commands = array('Register', 'Clear');
 
         foreach ($commands as $command) {
-            $this->{'registerPresenter'.$command.'Command'}();
+            $this->{'register'.$command.'Command'}();
         }
 
         // register commands
@@ -78,9 +70,9 @@ class PresenterServiceProvider extends ServiceProvider {
      *
      * @return void
      */
-    protected function registerPresenterRegisterCommand()
+    protected function registerRegisterCommand()
     {
-        $this->app->singleton('command.presenter.register', function($app) {
+        $this->app->singleton('command.presenter.register', function ($app) {
             return new PresenterRegisterCommand(
                 $app['datamapper.classfinder'],
                 $app['datamapper.presenter.scanner'],
@@ -94,9 +86,9 @@ class PresenterServiceProvider extends ServiceProvider {
      *
      * @return void
      */
-    protected function registerPresenterClearCommand()
+    protected function registerClearCommand()
     {
-        $this->app->singleton('command.presenter.clear', function($app) {
+        $this->app->singleton('command.presenter.clear', function ($app) {
             return new PresenterClearCommand(
                 $app['datamapper.classfinder'],
                 $app['datamapper.presenter.scanner'],
@@ -113,9 +105,9 @@ class PresenterServiceProvider extends ServiceProvider {
     public function provides()
     {
         return [
+            'datamapper.presenter.scanner',
             'command.presenter.register',
             'command.presenter.clear'
         ];
     }
-
 }

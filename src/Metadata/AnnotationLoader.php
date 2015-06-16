@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata;
+<?php
+
+namespace Wetzel\Datamapper\Metadata;
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Illuminate\Filesystem\Filesystem;
 
-class AnnotationLoader {
-
+class AnnotationLoader
+{
     /**
      * The filesystem instance.
      *
@@ -36,5 +38,4 @@ class AnnotationLoader {
             AnnotationRegistry::registerFile($file->getRealPath());
         }
     }
-
 }

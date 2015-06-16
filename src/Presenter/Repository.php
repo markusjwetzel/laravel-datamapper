@@ -1,17 +1,17 @@
-<?php namespace Wetzel\Datamapper\Presenter;
+<?php
+
+namespace Wetzel\Datamapper\Presenter;
 
 use Illuminate\Filesystem\Filesystem;
 
-class Repository {
-
+class Repository
+{
     /**
      * The presentable classes.
      *
      * @var array
      */
-    public static $presenters = [
-        'Examunity\Test\Test\UserTest' => 'Examunity\Test\Test\UserTestPresenter'
-    ];
+    public static $presenters = [];
 
     /**
      * The filesystem instance.
@@ -43,25 +43,36 @@ class Repository {
     /**
      * Load the presenters mapping JSON file.
      *
-     * @return array
+     * @return void
      */
     public function load()
     {
         if ($this->files->exists($this->path)) {
-            static::$presenters = json_decode($this->files->get($this->path . '/presenters.json'), true);
+            static::$presenters = json_decode($this->files->get($this->path), true);
         }
     }
 
     /**
      * Write the presenters mapping file to disk.
      *
-     * @param  array  $presenters
-     * @return array
+     * @return void
      */
     public function save()
     {
         $this->files->put(
-            $this->path . '/presenters.json', json_encode(static::$presenters, JSON_PRETTY_PRINT)
+            $this->path, json_encode(static::$presenters, JSON_PRETTY_PRINT)
+        );
+    }
+
+    /**
+     * Delete the presenters mapping file.
+     *
+     * @return void
+     */
+    public function delete()
+    {
+        $this->files->delete(
+            $this->path
         );
     }
 
@@ -96,5 +107,4 @@ class Repository {
     {
         return static::$presenters;
     }
-
 }

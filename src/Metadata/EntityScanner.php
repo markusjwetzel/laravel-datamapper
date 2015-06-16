@@ -1,9 +1,9 @@
-<?php namespace Wetzel\Datamapper\Metadata;
+<?php
+
+namespace Wetzel\Datamapper\Metadata;
 
 use ReflectionClass;
-
 use Doctrine\Common\Annotations\AnnotationReader;
-
 use Wetzel\Datamapper\Metadata\EntityValidator;
 use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Attribute as AttributeDefinition;
@@ -12,8 +12,8 @@ use Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass as EmbeddedClassDefinit
 use Wetzel\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
 
-class EntityScanner {
-
+class EntityScanner
+{
     /**
      * The annotation reader instance.
      *
@@ -60,7 +60,7 @@ class EntityScanner {
     {
         $metadata = [];
 
-        foreach($classes as $class) {
+        foreach ($classes as $class) {
             $entityMetadata = $this->parseClass($class);
 
             if ($entityMetadata) {
@@ -130,7 +130,7 @@ class EntityScanner {
             'relations' => [],
         ]);
 
-        foreach($classAnnotations as $annotation) {
+        foreach ($classAnnotations as $annotation) {
             // entity
             if ($annotation instanceof \Wetzel\Datamapper\Annotations\Entity) {
                 if (! empty($annotation->morphClass)) {
@@ -166,11 +166,11 @@ class EntityScanner {
         }
 
         // scan property annotations
-        foreach($reflectionClass->getProperties() as $reflectionProperty) {
+        foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
 
-            foreach($propertyAnnotations as $annotation) {
+            foreach ($propertyAnnotations as $annotation) {
                 // property is embedded class
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
                     $entityMetadata['embeddeds'][$name] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
@@ -179,7 +179,7 @@ class EntityScanner {
                 // property is attribute
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Attribute) {
                     // try to find @Id annotation -> set primary key
-                    foreach($propertyAnnotations as $subAnnotation) {
+                    foreach ($propertyAnnotations as $subAnnotation) {
                         if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Id) {
                             $annotation->primary = true;
                         }
@@ -227,13 +227,13 @@ class EntityScanner {
         $this->validator->validateEmbeddedClass($embeddedClass, $classAnnotations);
 
         // scan property annotations
-        foreach($reflectionClass->getProperties() as $reflectionProperty) {
+        foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $reflectionProperty->getName();
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
             
             $attributes = [];
 
-            foreach($propertyAnnotations as $annotation) {
+            foreach ($propertyAnnotations as $annotation) {
                 // property is attribute
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Attribute) {
                     $attributes[$name] = $this->parseAttribute($name, $annotation);
@@ -300,18 +300,18 @@ class EntityScanner {
         $options = [];
 
         // length option
-        if($annotation->type == 'string' || $annotation->type == 'char') {
+        if ($annotation->type == 'string' || $annotation->type == 'char') {
             $options['length'] = $annotation->length;
         }
 
         // unsigned and autoIncrement option
-        if($annotation->type == 'smallInteger' || $annotation->type == 'integer' || $annotation->type == 'bigInteger') {
+        if ($annotation->type == 'smallInteger' || $annotation->type == 'integer' || $annotation->type == 'bigInteger') {
             $options['unsigned'] = $annotation->unsigned;
             $options['autoIncrement'] = $annotation->autoIncrement;
         }
 
         // scale and precision option
-        if($annotation->type == 'decimal') {
+        if ($annotation->type == 'decimal') {
             $options['scale'] = $annotation->scale;
             $options['precision'] = $annotation->precision;
         }
@@ -391,14 +391,14 @@ class EntityScanner {
         $options = [];
 
         // belongsTo relation
-        if($annotation->type == 'belongsTo') {
+        if ($annotation->type == 'belongsTo') {
             $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->foreignEntity);
             $options['localKey'] = $annotation->localKey ?: 'id';
             $options['relation'] = $annotation->relation;
         }
 
         // belongsToMany relation
-        if($annotation->type == 'belongsToMany') {
+        if ($annotation->type == 'belongsToMany') {
             $options['pivotTable'] = $annotation->pivotTable ?: $this->generatePivotTablename($entityMetadata['class'], $annotation->foreignEntity, $annotation->inverse);
             $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($annotation->foreignEntity);
             $options['localKey'] = $annotation->localKey ?: $this->generateKey($entityMetadata['class']);
@@ -406,26 +406,26 @@ class EntityScanner {
         }
 
         // hasMany relation
-        if($annotation->type == 'hasMany') {
+        if ($annotation->type == 'hasMany') {
             $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($entityMetadata['class']);
             $options['localKey'] = $annotation->localKey ?: 'id';
         }
 
         // hasManyThrough relation
-        if($annotation->type == 'hasManyThrough') {
+        if ($annotation->type == 'hasManyThrough') {
             $options['throughEntity'] = $annotation->throughEntity;
             $options['localKey'] = $annotation->localKey ?: $this->generateKey($entityMetadata['class']);
             $options['throughKey'] = $annotation->throughKey ?: $this->generateKey($annotation->throughEntity);
         }
 
         // hasOne relation
-        if($annotation->type == 'hasOne') {
+        if ($annotation->type == 'hasOne') {
             $options['foreignKey'] = $annotation->foreignKey ?: $this->generateKey($entityMetadata['class']);
             $options['localKey'] = $annotation->localKey ?: 'id';
         }
 
         // morphMany relation
-        if($annotation->type == 'morphMany') {
+        if ($annotation->type == 'morphMany') {
             $options['morphName'] = $annotation->morphName ?: $name;
             $options['morphType'] = $annotation->morphType;
             $options['morphId'] = $annotation->morphId;
@@ -433,7 +433,7 @@ class EntityScanner {
         }
 
         // morphOne relation
-        if($annotation->type == 'morphOne') {
+        if ($annotation->type == 'morphOne') {
             $options['morphName'] = $annotation->morphName ?: $name;
             $options['morphType'] = $annotation->morphType;
             $options['morphId'] = $annotation->morphId;
@@ -441,14 +441,14 @@ class EntityScanner {
         }
 
         // morphTo relation
-        if($annotation->type == 'morphTo') {
+        if ($annotation->type == 'morphTo') {
             $options['morphName'] = $annotation->morphName ?: $name;
             $options['morphType'] = $annotation->morphType;
             $options['morphId'] = $annotation->morphId;
         }
 
         // morphToMany relation
-        if($annotation->type == 'morphToMany') {
+        if ($annotation->type == 'morphToMany') {
             $options['morphName'] = $annotation->morphName ?: $name;
             $options['pivotTable'] = $annotation->pivotTable ?: $this->generatePivotTablename($entityMetadata['class'], $annotation->foreignEntity, $annotation->inverse, $annotation->morphName);
             if ($annotation->inverse) {
@@ -500,15 +500,15 @@ class EntityScanner {
      */
     protected function generateMorphToColumns($name, $annotation, &$entityMetadata)
     {
-        $morphName = ( ! empty($annotation->morphName))
+        $morphName = (! empty($annotation->morphName))
             ? $annotation->morphName
             : $name;
 
-        $morphId = ( ! empty($annotation->morphId))
+        $morphId = (! empty($annotation->morphId))
             ? $annotation->morphId
             : $morphName.'_id';
 
-        $morphType = ( ! empty($annotation->morphType))
+        $morphType = (! empty($annotation->morphType))
             ? $annotation->morphType
             : $morphName.'_type';
 
@@ -617,7 +617,7 @@ class EntityScanner {
 
         $foreignKey = $annotation->foreignKey ?: $this->generateKey($annotation->inverse ? $entityMetadata['class'] : $annotation->foreignEntity);
 
-        $morphId = ( ! empty($annotation->localKey))
+        $morphId = (! empty($annotation->localKey))
             ? $annotation->localKey
             : $morphName.'_id';
 
@@ -685,8 +685,8 @@ class EntityScanner {
      */
     protected function generateMorphableClasses(&$metadata)
     {
-        foreach($metadata as $key => $entityMetadata) {
-            foreach($entityMetadata['relations'] as $relationKey => $relationMetadata) {
+        foreach ($metadata as $key => $entityMetadata) {
+            foreach ($entityMetadata['relations'] as $relationKey => $relationMetadata) {
                 // get morphable classes for morphTo relations
                 if ($relationMetadata['type'] == 'morphTo') {
                     $metadata[$key]['relations'][$relationKey]['options']['morphableClasses']
@@ -715,20 +715,18 @@ class EntityScanner {
     {
         $morphableClasses = [];
 
-        foreach($metadata as $entityMetadata) {
-            foreach($entityMetadata['relations'] as $relationMetadata) {
+        foreach ($metadata as $entityMetadata) {
+            foreach ($entityMetadata['relations'] as $relationMetadata) {
                 // check relation type
-                if ( ! (( ! $many && $relationMetadata['type'] == 'morphOne')
-                    || ( ! $many && $relationMetadata['type'] == 'morphMany')
-                    || ($many && $relationMetadata['type'] == 'morphToMany' && $relationMetadata['options']['inverse'])))
-                {
+                if (! ((! $many && $relationMetadata['type'] == 'morphOne')
+                    || (! $many && $relationMetadata['type'] == 'morphMany')
+                    || ($many && $relationMetadata['type'] == 'morphToMany' && $relationMetadata['options']['inverse']))) {
                     continue;
                 }
 
                 // check foreign entity and morph name
                 if ($relationMetadata['foreignEntity'] == $foreignEntity
-                    && $relationMetadata['options']['morphName'] == $morphName)
-                {
+                    && $relationMetadata['options']['morphName'] == $morphName) {
                     $morphableClasses[$entityMetadata['morphClass']] = $entityMetadata['class'];
                 }
             }
@@ -765,9 +763,9 @@ class EntityScanner {
                 ? $this->generateTableName($class1, true)
                 : $this->generateTableName($class2, true);
 
-            $related = ( ! empty($morph))
+            $related = (! empty($morph))
                 ? $morph
-                : ( ! empty($inverse)
+                : (! empty($inverse)
                     ? snake_case(class_basename($class2))
                     : snake_case(class_basename($class1)));
 
@@ -796,7 +794,7 @@ class EntityScanner {
     {
         // datamapper namespace tables
         if ($this->config['namespace_tables']) {
-            $className = array_slice(explode('/',str_replace('\\', '/', $class)), 2);
+            $className = array_slice(explode('/', str_replace('\\', '/', $class)), 2);
 
             // delete last entry if entry is equal to the next to last entry
             if (count($className) >= 2 && end($className) == prev($className)) {
@@ -805,7 +803,7 @@ class EntityScanner {
 
             $classBasename = array_pop($className);
 
-            return strtolower(implode('_',array_merge($className, preg_split('/(?<=\\w)(?=[A-Z])/', $classBasename))));
+            return strtolower(implode('_', array_merge($className, preg_split('/(?<=\\w)(?=[A-Z])/', $classBasename))));
         }
 
         // eloquent default
@@ -828,5 +826,4 @@ class EntityScanner {
         // eloquent default
         return $class;
     }
-
 }

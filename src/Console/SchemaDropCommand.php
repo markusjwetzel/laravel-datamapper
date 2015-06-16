@@ -1,13 +1,14 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-
 use Wetzel\Datamapper\Console\SchemaCommand;
 
-class SchemaDropCommand extends SchemaCommand {
-
+class SchemaDropCommand extends SchemaCommand
+{
     /**
      * The console command name.
      *
@@ -72,5 +73,4 @@ class SchemaDropCommand extends SchemaCommand {
             array('dump-sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
         );
     }
-
 }

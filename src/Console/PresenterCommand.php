@@ -1,14 +1,15 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Illuminate\Console\Command;
-
 use Wetzel\Datamapper\Metadata\ClassFinder;
 use Wetzel\Datamapper\Metadata\PresenterScanner;
 use Wetzel\Datamapper\Presenter\Repository;
 use UnexpectedValueException;
 
-abstract class PresenterCommand extends Command {
-
+abstract class PresenterCommand extends Command
+{
     /**
      * The class finder instance.
      *
@@ -38,7 +39,7 @@ abstract class PresenterCommand extends Command {
      * @param \Wetzel\Datamapper\Presenter\Repository $schema
      * @return void
      */
-    public function __construct(ClassFinder $finder, EntityScanner $scanner, Repository $repository)
+    public function __construct(ClassFinder $finder, PresenterScanner $scanner, Repository $repository)
     {
         parent::__construct();
 
@@ -46,5 +47,4 @@ abstract class PresenterCommand extends Command {
         $this->scanner = $scanner;
         $this->repository = $repository;
     }
-
 }

@@ -1,15 +1,16 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
 
-class Table extends Definition {
-    
+namespace Wetzel\Datamapper\Metadata\Definitions;
+
+class Table extends Definition
+{
     /**
      * Valid keys.
-     * 
+     *
      * @var array
      */
     protected $keys = [
         'name' => null,
         'columns' => [],
     ];
-
 }

@@ -1,4 +1,6 @@
-<?php namespace Wetzel\Datamapper\Annotations;
+<?php
+
+namespace Wetzel\Datamapper\Annotations;
 
 /**
  * @Annotation
@@ -6,4 +8,8 @@
  */
 final class Presenter implements Annotation
 {
+    /**
+     * @var string
+     */
+    public $class;
 }

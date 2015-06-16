@@ -1,17 +1,9 @@
-<?php namespace Wetzel\Datamapper;
+<?php
+
+namespace Wetzel\Datamapper\Support;
 
 use Illuminate\Support\Collection as BaseCollection;
 
-class Collection extends BaseCollection {
-
-    /**
-     * Create a new mapping instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-
-    }
-
+class Collection extends BaseCollection
+{
 }

@@ -1,14 +1,15 @@
-<?php namespace Wetzel\Datamapper\Metadata;
+<?php
+
+namespace Wetzel\Datamapper\Metadata;
 
 use Exception;
 use DomainException;
 use UnexpectedValueException;
-use InvalidArgumentException;;
-
+use InvalidArgumentException;
 use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 
-class EntityValidator {
-
+class EntityValidator
+{
     /**
      * List of valid attribute types.
      *
@@ -63,7 +64,7 @@ class EntityValidator {
             }
         }
 
-        if ( ! $check) {
+        if (! $check) {
             throw new InvalidArgumentException('Embedded class '.$class.' has no @Embeddable or @ValueObject annotation.');
         }
     }
@@ -79,7 +80,7 @@ class EntityValidator {
     {
         try {
             $class = get_real_entity($class);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             throw new Exception('Class "'.$class.'" (defined in class "'.$definedClass.'") does not exist.');
         }
 
@@ -94,7 +95,7 @@ class EntityValidator {
      */
     public function validateColumnType($type)
     {
-        if ( ! in_array($type, $this->columnTypes)) {
+        if (! in_array($type, $this->columnTypes)) {
             throw new UnexpectedValueException('Attribute type "'.$type.'" is not supported.');
         }
     }
@@ -107,7 +108,7 @@ class EntityValidator {
      */
     public function validateRelationType($type)
     {
-        if ( ! in_array($type, $this->relationTypes)) {
+        if (! in_array($type, $this->relationTypes)) {
             throw new UnexpectedValueException('Relation type "'.$type.'" is not supported.');
         }
     }
@@ -123,8 +124,8 @@ class EntityValidator {
         // check if all tables have exactly one primary key
         $countPrimaryKeys = 0;
 
-        foreach($entityMetadata['table']['columns'] as $column) {
-            if ( ! empty($column['primary'])) {
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            if (! empty($column['primary'])) {
                 $countPrimaryKeys++;
             }
         }
@@ -145,9 +146,9 @@ class EntityValidator {
     public function validatePivotTables($metadata)
     {
         $pivotTables = [];
-        foreach($metadata as $entityMetadata) {
-            foreach($entityMetadata['relations'] as $relationMetadata) {
-                if ( ! empty($relationMetadata['pivotTable'])) {
+        foreach ($metadata as $entityMetadata) {
+            foreach ($entityMetadata['relations'] as $relationMetadata) {
+                if (! empty($relationMetadata['pivotTable'])) {
                     $pivotTables[$entityMetadata['class'].$relationMetadata['foreignEntity']] = $relationMetadata;
 
                     if (isset($pivotTables[$relationMetadata['foreignEntity'].$entityMetadata['class']])) {
@@ -162,7 +163,7 @@ class EntityValidator {
                         }
 
                         // check name
-                        if ( ! empty(array_diff_key($relation1['pivotTable']['columns'], $relation2['pivotTable']['columns']))) {
+                        if (! empty(array_diff_key($relation1['pivotTable']['columns'], $relation2['pivotTable']['columns']))) {
                             $columns1 = implode(', ', array_keys($relation1['pivotTable']['columns']));
                             $columns2 = implode(', ', array_keys($relation2['pivotTable']['columns']));
                             $error = 'Different column names (compared '.$columns1.' with '.$columns2.').';
@@ -173,9 +174,7 @@ class EntityValidator {
                         }
                     }
                 }
-
             }
         }
     }
-
 }

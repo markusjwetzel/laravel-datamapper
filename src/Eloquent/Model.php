@@ -1,11 +1,15 @@
-<?php namespace Wetzel\Datamapper\Eloquent;
+<?php
+
+namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Wetzel\Datamapper\Eloquent\Collection;
+use Wetzel\Datamapper\Support\Proxy;
 use ReflectionClass;
 use ReflectionObject;
 
-class Model extends EloquentModel {
-
+class Model extends EloquentModel
+{
     /**
      * Mapped class of this model.
      *
@@ -106,16 +110,16 @@ class Model extends EloquentModel {
             $entity = $reflectionClass->newInstanceWithoutConstructor();
 
             // attributes
-            foreach($this->mapping['attributes'] as $attribute) {
+            foreach ($this->mapping['attributes'] as $attribute) {
                 $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$attribute]);
             }
 
             // embeddeds
-            foreach($this->mapping['embeddeds'] as $name => $embedded) {
+            foreach ($this->mapping['embeddeds'] as $name => $embedded) {
                 $embeddedReflectionClass = new ReflectionClass($embedded['class']);
 
                 $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
-                foreach($embedded['attributes'] as $attribute) {
+                foreach ($embedded['attributes'] as $attribute) {
                     $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$attribute]);
                 }
 
@@ -123,11 +127,13 @@ class Model extends EloquentModel {
             }
 
             // relations
-            foreach($this->mapping['relations'] as $name => $relation) {
-                $relationObject = ( ! empty($this->relations[$name]))
-                    ? $this->relations[$name]->toEntity()
-                    : null;
-
+            foreach ($this->mapping['relations'] as $name => $relation) {
+                if (! empty($this->relations[$name])) {
+                    $relationObject = $this->relations[$name]->toEntity();
+                } else {
+                    $relationObject = new Proxy;
+                }
+                
                 $this->setProperty($reflectionClass, $entity, $name, $relationObject);
             }
 
@@ -138,16 +144,17 @@ class Model extends EloquentModel {
     /**
      * Convert model to plain old php object.
      *
-     * @return string
+     * @param object $entity
+     * @return \Wetzel\Datamapper\Eloquent\Model
      */
     public static function newFromEntity($entity)
     {
-        $class = '\Wetzel\Datamapper\Cache\Entity' . md5(get_class($entity));
+        $class = get_mapped_model(get_class($entity));
 
         $eloquentModel = new $class;
 
         // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ( ! is_subclass_of($entity, '\Wetzel\Datamapper\Support\Entity')) {
+        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
             return $entity->toEloquentModel($eloquentModel);
         }
 
@@ -158,31 +165,33 @@ class Model extends EloquentModel {
             $mapping = $eloquentModel->getMapping();
 
             // attributes
-            foreach($mapping['attributes'] as $attribute) {
-                $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+            foreach ($mapping['attributes'] as $attribute) {
+                if (! $eloquentModel->isGeneratedDate($attribute)) {
+                    $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+                }
             }
 
             // embeddeds
-            foreach($mapping['embeddeds'] as $name => $embedded) {
+            foreach ($mapping['embeddeds'] as $name => $embedded) {
                 $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
                 $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
-                foreach($embedded['attributes'] as $attribute) {
+                foreach ($embedded['attributes'] as $attribute) {
                     $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
                 }
             }
 
             // relations
-            foreach($mapping['relations'] as $name => $relation) {
+            foreach ($mapping['relations'] as $name => $relation) {
                 $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
-                if ( ! empty($relationObject)) {
-                    $class = ($relationObject instanceof \Wetzel\Datamapper\Eloquent\Collection)
-                        ? '\Wetzel\Datamapper\Eloquent\Collection'
-                        : '\Wetzel\Datamapper\Eloquent\Model';
-
-                    $eloquentModel->setRelation($name, $class::newFromEntity($relationObject));
+                if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
+                    $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
+                        ? Collection::newFromEntity($relationObject)
+                        : self::newFromEntity($relationObject);
+                    
+                    $eloquentModel->setRelation($name, $value);
                 }
             }
 
@@ -223,6 +232,27 @@ class Model extends EloquentModel {
     }
 
     /**
+     * Check if attribute is auto generated and updated date.
+     *
+     * @param string $attribute
+     * @return boolean
+     */
+    public function isGeneratedDate($attribute)
+    {
+        // soft deletes
+        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses(static::class)) && $attribute == $this->getDeletedAtColumn()) {
+            return true;
+        }
+
+        // timestamps
+        if ($this->timestamps && ($attribute == $this->getCreatedAtColumn() || $attribute == $this->getUpdatedAtColumn())) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * Get the mapping data.
      *
      * @return array
@@ -231,5 +261,4 @@ class Model extends EloquentModel {
     {
         return $this->mapping;
     }
-
 }

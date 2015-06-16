@@ -1,12 +1,14 @@
-<?php namespace Wetzel\Datamapper\Support\Facades;
+<?php
+
+namespace Wetzel\Datamapper\Support\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
  * @see \Wetzel\Datamapper\EntityManager
  */
-class EntityManager extends Facade {
-
+class EntityManager extends Facade
+{
     /**
      * Get the registered name of the component.
      *
@@ -16,5 +18,4 @@ class EntityManager extends Facade {
     {
         return 'datamapper.entitymanager';
     }
-
 }

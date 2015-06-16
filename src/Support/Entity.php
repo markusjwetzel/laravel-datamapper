@@ -1,9 +1,12 @@
-<?php namespace Wetzel\Datamapper\Support;
+<?php
 
-use Illuminate\Database\Eloquent\Model as EloquentModel;
+namespace Wetzel\Datamapper\Support;
 
-abstract class Entity extends Model {
+use Wetzel\Datamapper\Eloquent\Model as EloquentModel;
+use Wetzel\Datamapper\Eloquent\Collection as EloquentCollection;
 
+abstract class Entity extends Model
+{
     /**
      * Build new instance from an eloquent model object.
      *
@@ -22,20 +25,24 @@ abstract class Entity extends Model {
         ];
 
         // attributes
-        foreach($dict['mapping']['attributes'] as $attribute) {
+        foreach ($dict['mapping']['attributes'] as $attribute) {
             $entity->{$attribute} = $dict['attributes'][$attribute];
         }
 
         // embeddeds
-        foreach($dict['mapping']['embeddeds'] as $name => $embedded) {
+        foreach ($dict['mapping']['embeddeds'] as $name => $embedded) {
             $entity->{$name} = $embedded['class']::newFromEloquentModel($eloquentModel, $name);
         }
 
         // relations
-        foreach($dict['mapping']['relations'] as $name => $relation) {
-            $entity->{$name} = ( ! empty($dict['relations'][$name]))
-                ? $dict['relations'][$name]->toEntity()
-                : null;
+        foreach ($dict['mapping']['relations'] as $name => $relation) {
+            if (! empty($dict['relations'][$name])) {
+                $relationObject = $dict['relations'][$name]->toEntity();
+            } else {
+                $relationObject = new Proxy;
+            }
+            
+            $entity->{$name} = $relationObject;
         }
 
         return $entity;
@@ -57,31 +64,32 @@ abstract class Entity extends Model {
         ];
 
         // attributes
-        foreach($dict['mapping']['attributes'] as $attribute) {
-            $eloquentModel->setAttribute($attribute, $this->{$attribute});
+        foreach ($dict['mapping']['attributes'] as $attribute) {
+            if (! $eloquentModel->isGeneratedDate($attribute)) {
+                $eloquentModel->setAttribute($attribute, $this->{$attribute});
+            }
         }
 
         // embeddeds
-        foreach($dict['mapping']['embeddeds'] as $name => $embedded) {
+        foreach ($dict['mapping']['embeddeds'] as $name => $embedded) {
             $embeddedObject = $this->{$name};
 
             $embeddedObject->toEloquentModel($eloquentModel, $name);
         }
 
         // relations
-        foreach($dict['mapping']['relations'] as $name => $relation) {
+        foreach ($dict['mapping']['relations'] as $name => $relation) {
             $relationObject = $this->{$name};
 
-            if ( ! empty($relationObject)) {
-                $class = ($relationObject instanceof \Wetzel\Datamapper\Eloquent\Collection)
-                    ? '\Wetzel\Datamapper\Eloquent\Collection'
-                    : '\Wetzel\Datamapper\Eloquent\Model';
-
-                $eloquentModel->setRelation($name, $class::newFromEntity($relationObject)); // or newFromEloquentModel??
+            if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
+                $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
+                    ? EloquentCollection::newFromEntity($relationObject)
+                    : EloquentModel::newFromEntity($relationObject);
+                
+                $eloquentModel->setRelation($name, $value);
             }
         }
 
         return $eloquentModel;
     }
-
 }

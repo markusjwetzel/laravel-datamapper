@@ -1,13 +1,14 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-
 use Wetzel\Datamapper\Console\SchemaCommand;
 
-class SchemaCreateCommand extends SchemaCommand {
-
+class SchemaCreateCommand extends SchemaCommand
+{
     /**
      * The console command name.
      *
@@ -51,6 +52,11 @@ class SchemaCreateCommand extends SchemaCommand {
 
         $this->info(PHP_EOL . 'Schema created successfully!');
 
+        // register presenters
+        if ($this->option('presenter')) {
+            $this->call('presenter:register');
+        }
+
         // output SQL queries
         if ($this->option('dump-sql')) {
             $this->outputQueries($statements);
@@ -78,7 +84,7 @@ class SchemaCreateCommand extends SchemaCommand {
     {
         return array(
             array('dump-sql', null, InputOption::VALUE_NONE, 'Search for all eloquent models.'),
+            array('presenter', null, InputOption::VALUE_NONE, 'Also register presenters with this command.'),
         );
     }
-
 }

@@ -1,9 +1,11 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Wetzel\Datamapper\Console\PresenterCommand;
 
-class PresenterRegisterCommand extends PresenterCommand {
-
+class PresenterRegisterCommand extends PresenterCommand
+{
     /**
      * The console command name.
      *
@@ -37,5 +39,4 @@ class PresenterRegisterCommand extends PresenterCommand {
 
         $this->info('Presenters registered successfully!');
     }
-
 }

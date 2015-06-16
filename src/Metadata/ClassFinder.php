@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata;
+<?php
+
+namespace Wetzel\Datamapper\Metadata;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Filesystem\ClassFinder as FilesystemClassFinder;
 
-class ClassFinder {
-
+class ClassFinder
+{
     use AppNamespaceDetectorTrait;
 
     /**
@@ -60,5 +62,4 @@ class ClassFinder {
         
         return null;
     }
-
 }

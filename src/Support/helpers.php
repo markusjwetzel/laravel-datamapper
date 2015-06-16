@@ -1,7 +1,6 @@
 <?php
 
-if ( ! function_exists('get_real_entity'))
-{
+if (! function_exists('get_real_entity')) {
     /**
      * Get the real entity namespace.
      *
@@ -22,8 +21,7 @@ if ( ! function_exists('get_real_entity'))
     }
 }
 
-if ( ! function_exists('get_mapped_hash'))
-{
+if (! function_exists('get_mapped_model_hash')) {
     /**
      * Get the hash of an entity that is used for the mapped eloquent model.
      *
@@ -36,8 +34,7 @@ if ( ! function_exists('get_mapped_hash'))
     }
 }
 
-if ( ! function_exists('get_mapped_model_namespace'))
-{
+if (! function_exists('get_mapped_model_namespace')) {
     /**
      * Get the namespace of an entity that is used for the mapped eloquent model.
      *
@@ -49,8 +46,7 @@ if ( ! function_exists('get_mapped_model_namespace'))
     }
 }
 
-if ( ! function_exists('get_mapped_model'))
-{
+if (! function_exists('get_mapped_model')) {
     /**
      * Get the classname of an entity that is used for the mapped eloquent model.
      *

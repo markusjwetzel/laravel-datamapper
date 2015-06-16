@@ -1,40 +1,43 @@
-<?php namespace Wetzel\Datamapper\Eloquent;
+<?php
+
+namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Wetzel\Datamapper\Support\Collection as DatamapperCollection;
+use Wetzel\Datamapper\Eloquent\Model;
 
-class Collection extends EloquentCollection {
-
+class Collection extends EloquentCollection
+{
     /**
      * Convert models to plain old php objects.
      *
-     * @return \Wetzel\Datamapper\Eloquent\Collection
+     * @return \Wetzel\Datamapper\Support\Collection
      */
     public function toEntity()
     {
-        foreach($this->items as $name => $item) {
-            $this->items[$name] = $item->toEntity();
+        $entities = new DatamapperCollection;
+
+        foreach ($this->items as $name => $item) {
+            $entities->put($name, $item->toEntity());
         }
 
-        return $this;
+        return $entities;
     }
 
     /**
      * Convert models to eloquent models.
      *
-     * @param \Wetzel\Datamapper\Support\Entity $object
+     * @param \Wetzel\Datamapper\Support\Collection $object
      * @return \Wetzel\Datamapper\Eloquent\Collection
      */
-    public static function newFromEntity($objects)
+    public static function newFromEntity($entities)
     {
-        $models = new static;
+        $eloquentModels = new static;
 
-        foreach($objects->items as $name => $item) {
-            $class = get_class($item);
-
-            $models->items[$name] = $class::newFromEntity($item);
+        foreach ($entities as $name => $item) {
+            $eloquentModels->put($name, Model::newFromEntity($item));
         }
 
-        return $models;
+        return $eloquentModels;
     }
-
 }

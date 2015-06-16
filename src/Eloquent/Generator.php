@@ -1,26 +1,28 @@
-<?php namespace Wetzel\Datamapper\Eloquent;
+<?php
+
+namespace Wetzel\Datamapper\Eloquent;
 
 use Illuminate\Filesystem\Filesystem;
 
-class Generator {
-
+class Generator
+{
     /**
      * The filesystem instance.
-     * 
+     *
      * @var \Illuminate\Filesystem\Filesystem
      */
     protected $files;
 
     /**
      * Path to model storage directory.
-     * 
+     *
      * @var array
      */
     protected $path;
 
     /**
      * Model stubs.
-     * 
+     *
      * @var array
      */
     protected $stubs;
@@ -52,17 +54,17 @@ class Generator {
     public function generate($metadata, $saveMode=false)
     {
         // clean or make (if not exists) model storage directory
-        if ( ! $this->files->exists($this->path)) {
+        if (! $this->files->exists($this->path)) {
             $this->files->makeDirectory($this->path);
         }
 
         // clear existing models if save mode is off
-        if ( ! $saveMode) {
+        if (! $saveMode) {
             $this->clean();
         }
 
         // create models
-        foreach($metadata as $entityMetadata) {
+        foreach ($metadata as $entityMetadata) {
             $this->generateModel($entityMetadata);
         }
 
@@ -141,10 +143,10 @@ class Generator {
         $primaryKey = 'id';
         $incrementing = true;
 
-        foreach($entityMetadata['table']['columns'] as $column) {
-            if ( ! empty($column['primary'])) {
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            if (! empty($column['primary'])) {
                 $primaryKey = $column['name'];
-                $incrementing = ( ! empty($column['options']['autoIncrement']));
+                $incrementing = (! empty($column['options']['autoIncrement']));
             }
         }
 
@@ -160,16 +162,16 @@ class Generator {
     protected function generateMappingData($entityMetadata)
     {
         $attributes = [];
-        foreach($entityMetadata['attributes'] as $attributeMetadata) {
+        foreach ($entityMetadata['attributes'] as $attributeMetadata) {
             $attributes[] = $attributeMetadata['name'];
         }
 
         $embeddeds = [];
-        foreach($entityMetadata['embeddeds'] as $embeddedMetadata) {
+        foreach ($entityMetadata['embeddeds'] as $embeddedMetadata) {
             $embedded = [];
             $embedded['class'] = $embeddedMetadata['class'];
             $embeddedAttributes = [];
-            foreach($embeddedMetadata['attributes'] as $attributeMetadata) {
+            foreach ($embeddedMetadata['attributes'] as $attributeMetadata) {
                 $embeddedAttributes[] = $attributeMetadata['name'];
             }
             $embedded['attributes'] = $embeddedAttributes;
@@ -177,9 +179,9 @@ class Generator {
         }
 
         $relations = [];
-        foreach($entityMetadata['relations'] as $relationMetadata) {
+        foreach ($entityMetadata['relations'] as $relationMetadata) {
             $relation = [];
-            if ( ! empty($relationMetadata['foreignEntity'])) {
+            if (! empty($relationMetadata['foreignEntity'])) {
                 $relation['foreignEntity'] = $relationMetadata['foreignEntity'];
                 $relation['mappedForeignEntity'] = get_mapped_model($relationMetadata['foreignEntity']);
             } else {
@@ -241,12 +243,12 @@ class Generator {
      */
     protected function replaceSoftDeletes($option, &$stub)
     {
-        $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '' , $stub);
+        $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**
      * Replace table name.
-     * 
+     *
      * @param boolean $name
      * @param string $stub
      * @return void
@@ -258,20 +260,19 @@ class Generator {
     
     /**
      * Replace primary key.
-     * 
+     *
      * @param string $name
      * @param string $stub
      * @return void
      */
     protected function replacePrimaryKey($name, &$stub)
     {
-
         $stub = str_replace('{{primaryKey}}', "'".$name."'", $stub);
     }
     
     /**
      * Replace incrementing.
-     * 
+     *
      * @param boolean $option
      * @param string $stub
      * @return void
@@ -283,7 +284,7 @@ class Generator {
     
     /**
      * Replace timestamps.
-     * 
+     *
      * @param boolean $option
      * @param string $stub
      * @return void
@@ -295,7 +296,7 @@ class Generator {
     
     /**
      * Replace touches.
-     * 
+     *
      * @param array $touches
      * @param string $stub
      * @return void
@@ -307,7 +308,7 @@ class Generator {
     
     /**
      * Replace with.
-     * 
+     *
      * @param array $with
      * @param string $stub
      * @return void
@@ -331,7 +332,7 @@ class Generator {
     
     /**
      * Replace mapping.
-     * 
+     *
      * @param array $mapping
      * @param string $stub
      * @return void
@@ -343,7 +344,7 @@ class Generator {
     
     /**
      * Replace relations.
-     * 
+     *
      * @param array $relations
      * @param string $stub
      * @return void
@@ -352,7 +353,7 @@ class Generator {
     {
         $textRelations = [];
 
-        foreach($relations as $key => $relation) {
+        foreach ($relations as $key => $relation) {
             $relationStub = $this->stubs['relation'];
 
             // generate options array
@@ -362,7 +363,7 @@ class Generator {
                 $options[] = "'" . get_mapped_model($relation['foreignEntity'])."'";
             }
 
-            foreach($relation['options'] as $name => $option) {
+            foreach ($relation['options'] as $name => $option) {
                 if ($option === null) {
                     $options[] = 'null';
                 } elseif ($option === true) {
@@ -388,12 +389,11 @@ class Generator {
             $textRelations[] = $relationStub;
 
             if ($relation['type'] == 'morphTo'
-                || ($relation['type'] == 'morphToMany' && ! $relation['options']['inverse']))
-            {
+                || ($relation['type'] == 'morphToMany' && ! $relation['options']['inverse'])) {
                 $morphStub = $this->stubs['morph_extension'];
 
                 $morphableClasses = [];
-                foreach($relation['options']['morphableClasses'] as $key => $name) {
+                foreach ($relation['options']['morphableClasses'] as $key => $name) {
                     $morphableClasses[$key] = get_mapped_model($name);
                 }
 
@@ -417,7 +417,7 @@ class Generator {
     protected function getArrayAsText($array, $intendBy=1)
     {
         $intention = '';
-        for($i=0; $i<$intendBy; $i++) {
+        for ($i=0; $i<$intendBy; $i++) {
             $intention .= '    ';
         }
 
@@ -427,5 +427,4 @@ class Generator {
         $text = preg_replace("/\=\>[ \n    ]+array[ ]+\(/", '=> array(', $text);
         return $text = preg_replace("/\n/", "\n".$intention, $text);
     }
-
 }

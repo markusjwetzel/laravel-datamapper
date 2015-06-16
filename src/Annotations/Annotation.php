@@ -1,4 +1,6 @@
-<?php namespace Wetzel\Datamapper\Annotations;
+<?php
+
+namespace Wetzel\Datamapper\Annotations;
 
 interface Annotation
 {

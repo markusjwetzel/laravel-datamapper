@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
 
-class Column extends Definition {
-    
+namespace Wetzel\Datamapper\Metadata\Definitions;
+
+class Column extends Definition
+{
     /**
      * Valid keys.
-     * 
+     *
      * @var array
      */
     protected $keys = [
@@ -17,5 +19,4 @@ class Column extends Definition {
         'default' => null,
         'options' => [],
     ];
-
 }

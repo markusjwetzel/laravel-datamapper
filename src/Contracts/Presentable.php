@@ -1,12 +1,13 @@
-<?php namespace Wetzel\Datamapper\Contracts;
+<?php
 
-interface Presentable {
+namespace Wetzel\Datamapper\Contracts;
 
-	/**
-	 * Get the presenter instance
-	 *
-	 * @return mixed
-	 */
-	public function getPresenter();
-
+interface Presentable
+{
+    /**
+     * Get the presenter instance
+     *
+     * @return mixed
+     */
+    public function getPresenter();
 }

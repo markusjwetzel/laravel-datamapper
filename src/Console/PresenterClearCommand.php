@@ -1,9 +1,11 @@
-<?php namespace Wetzel\Datamapper\Console;
+<?php
+
+namespace Wetzel\Datamapper\Console;
 
 use Wetzel\Datamapper\Console\PresenterCommand;
 
-class PresenterClearCommand extends PresenterCommand {
-
+class PresenterClearCommand extends PresenterCommand
+{
     /**
      * The console command name.
      *
@@ -25,11 +27,9 @@ class PresenterClearCommand extends PresenterCommand {
      */
     public function fire()
     {
-        // save empty array to clean presenters file
-        $this->repository->set([]);
-        $this->repository->save();
+        // delete presenters.json file
+        $this->repository->delete();
 
         $this->info('Presenters cleared successfully!');
     }
-
 }

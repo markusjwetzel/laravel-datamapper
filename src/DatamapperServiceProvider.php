@@ -1,21 +1,30 @@
-<?php namespace Wetzel\Datamapper;
+<?php
+
+namespace Wetzel\Datamapper;
 
 use Illuminate\Support\ServiceProvider;
-use Wetzel\Datamapper\Metadata\ClassFinder;
-use Wetzel\Datamapper\Metadata\EntityScanner;
-use Wetzel\Datamapper\Metadata\EntityValidator;
-use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
-use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
+use Wetzel\Datamapper\Presenter\Repository;
+use Wetzel\Datamapper\Presenter\Decorator;
 
-use Doctrine\Common\Annotations\AnnotationReader;
+class DatamapperServiceProvider extends ServiceProvider
+{
+    /**
+     * Perform post-registration booting of services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        $app = $this->app;
 
-use Wetzel\Datamapper\Metadata\AnnotationLoader;
-use Illuminate\Filesystem\ClassFinder as FilesystemClassFinder;
-use Wetzel\Datamapper\Console\SchemaCreateCommand;
-use Wetzel\Datamapper\Console\SchemaUpdateCommand;
-use Wetzel\Datamapper\Console\SchemaDropCommand;
+        $app['view']->composer('*', function ($view) use ($app) {
+            $data = array_merge($view->getFactory()->getShared(), $view->getData());
 
-class DatamapperServiceProvider extends ServiceProvider {
+            foreach ($data as $key => $item) {
+                $view[$key] = Decorator::decorate($item);
+            }
+        });
+    }
 
     /**
      * Register the application services.
@@ -26,23 +35,17 @@ class DatamapperServiceProvider extends ServiceProvider {
     {
         $this->registerConfig();
 
-        $this->registerAnnotations();
-
         $this->registerEntityManager();
-
-        $this->registerClassFinder();
-
-        $this->registerEntityScanner();
-
-        $this->registerSchemaBuilder();
-
-        $this->registerModelGenerator();
-
-        $this->registerCommands();
 
         $this->registerHelpers();
 
+        $this->registerPresenters();
+
         $this->registerEloquentModels();
+
+        $this->app->register('Wetzel\Datamapper\Providers\SchemaCommandsServiceProvider');
+
+        $this->app->register('Wetzel\Datamapper\Providers\PresenterCommandsServiceProvider');
     }
 
     /**
@@ -60,20 +63,6 @@ class DatamapperServiceProvider extends ServiceProvider {
     }
 
     /**
-     * Registers all annotation classes
-     *
-     * @return void
-     */
-    public function registerAnnotations()
-    {
-        $app = $this->app;
-
-        $loader = new AnnotationLoader($app['files']);
-
-        $loader->registerAll();
-    }
-
-    /**
      * Register the entity manager implementation.
      *
      * @return void
@@ -82,154 +71,10 @@ class DatamapperServiceProvider extends ServiceProvider {
     {
         $app = $this->app;
 
-        $app->singleton('datamapper.entitymanager', function($app) {
+        $app->singleton('datamapper.entitymanager', function ($app) {
             $config = $app['config']['datamapper'];
 
             return new EntityManager($config);
-        });
-    }
-
-    /**
-     * Register the class finder implementation.
-     *
-     * @return void
-     */
-    protected function registerClassFinder()
-    {
-        $app = $this->app;
-
-        $app->singleton('datamapper.classfinder', function($app) {
-            $finder = new FilesystemClassFinder;
-
-            return new ClassFinder($finder);
-        });
-    }
-
-    /**
-     * Register the entity scanner implementation.
-     *
-     * @return void
-     */
-    protected function registerEntityScanner()
-    {
-        $app = $this->app;
-
-        $app->singleton('datamapper.entityscanner', function($app) {
-            $reader = new AnnotationReader;
-
-            $validator = new EntityValidator;
-
-            $config = $app['config']['datamapper'];
-
-            return new EntityScanner($reader, $validator, $config);
-        });
-    }
-
-    /**
-     * Register the scehma builder implementation.
-     *
-     * @return void
-     */
-    protected function registerSchemaBuilder()
-    {
-        $app = $this->app;
-
-        $app->singleton('datamapper.schema', function($app) {
-            $connection = $app['db']->connection();
-
-            return new SchemaBuilder($connection);
-        });
-    }
-
-    /**
-     * Register the scehma builder implementation.
-     *
-     * @return void
-     */
-    protected function registerModelGenerator()
-    {
-        $app = $this->app;
-
-        $app->singleton('datamapper.modelgenerator', function($app) {
-            $path = $app['path.storage'] . '/framework/entities';
-
-            return new ModelGenerator($app['files'], $path);
-        });
-    }
-
-    /**
-     * Register all of the migration commands.
-     *
-     * @return void
-     */
-    protected function registerCommands()
-    {
-        // create singletons of each command
-        $commands = array('Create', 'Update', 'Drop');
-
-        foreach ($commands as $command) {
-            $this->{'registerSchema'.$command.'Command'}();
-        }
-
-        // register commands
-        $this->commands(
-            'command.schema.create',
-            'command.schema.update',
-            'command.schema.drop'
-        );
-    }
-
-    /**
-     * Register the "schema:create" command.
-     *
-     * @return void
-     */
-    protected function registerSchemaCreateCommand()
-    {
-        $this->app->singleton('command.schema.create', function($app) {
-            return new SchemaCreateCommand(
-                $app['datamapper.classfinder'],
-                $app['datamapper.entityscanner'],
-                $app['datamapper.schema'],
-                $app['datamapper.modelgenerator'],
-                $app['config']['datamapper']
-            );
-        });
-    }
-
-    /**
-     * Register the "schema:update" command.
-     *
-     * @return void
-     */
-    protected function registerSchemaUpdateCommand()
-    {
-        $this->app->singleton('command.schema.update', function($app) {
-            return new SchemaUpdateCommand(
-                $app['datamapper.classfinder'],
-                $app['datamapper.entityscanner'],
-                $app['datamapper.schema'],
-                $app['datamapper.modelgenerator'],
-                $app['config']['datamapper']
-            );
-        });
-    }
-
-    /**
-     * Register the "schema:drop" command.
-     *
-     * @return void
-     */
-    protected function registerSchemaDropCommand()
-    {
-        $this->app->singleton('command.schema.drop', function($app) {
-            return new SchemaDropCommand(
-                $app['datamapper.classfinder'],
-                $app['datamapper.entityscanner'],
-                $app['datamapper.schema'],
-                $app['datamapper.modelgenerator'],
-                $app['config']['datamapper']
-            );
         });
     }
 
@@ -240,7 +85,25 @@ class DatamapperServiceProvider extends ServiceProvider {
      */
     protected function registerHelpers()
     {
-        require __DIR__ . '/Support/helpers.php';
+        require_once __DIR__ . '/Support/helpers.php';
+    }
+
+    /**
+     * Register all presenters.
+     *
+     * @return void
+     */
+    protected function registerPresenters()
+    {
+        $app = $this->app;
+
+        $app->singleton('datamapper.presenter.repository', function ($app) {
+            $path = $app['path.storage'] . '/framework/presenters.json';
+
+            return new Repository($app['files'], $path);
+        });
+
+        $app['datamapper.presenter.repository']->load();
     }
 
     /**
@@ -252,30 +115,10 @@ class DatamapperServiceProvider extends ServiceProvider {
     {
         $files = $this->app['files']->files($this->app['path.storage'] . '/framework/entities');
         
-        foreach($files as $file) {
+        foreach ($files as $file) {
             if ($this->app['files']->extension($file) == '') {
-                require $file;
+                require_once $file;
             }
         }
     }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [
-            'datamapper.entitymanager',
-            'datamapper.classfinder',
-            'datamapper.entityscanner',
-            'datamapper.schema',
-            'datamapper.modelgenerator',
-            'command.schema.create',
-            'command.schema.update',
-            'command.schema.drop',
-        ];
-    }
-
 }

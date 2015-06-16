@@ -1,10 +1,12 @@
-<?php namespace Wetzel\Datamapper\Metadata\Definitions;
+<?php
 
-class Relation extends Definition {
-    
+namespace Wetzel\Datamapper\Metadata\Definitions;
+
+class Relation extends Definition
+{
     /**
      * Valid keys.
-     * 
+     *
      * @var array
      */
     protected $keys = [
@@ -14,5 +16,4 @@ class Relation extends Definition {
         'pivotTable' => null,
         'options' => [],
     ];
-
 }
