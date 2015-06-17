@@ -32,32 +32,35 @@ Run php artisan vendor:publish to publish this package configuration. Afterwards
 
 ### Annotations
 
-We will map all classes to a database table by using annotations. Annotations are doc-comments that you add to a class. The annotations are quite similar to the Doctrine 2 annotations. Here is a simple example of a `User` class:
+We will map all classes to a database table by using annotations. Annotations are doc-comments that you add to a class. The annotations are quite similar to the Doctrine2 annotations. Here is a simple example of a `User` class:
 
 ```php
 <?php
 
-use Wetzel\Datamapper\Mapping as ORM;
+use Wetzel\Datamapper\Support\Entity;
+use Wetzel\Datamapper\Annotations as ORM;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="users")
  */
-class User
+class User extends Entity
 {
     /**
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Attribute(type="increments")
      */
-    private $id;
+    protected $id;
+    
+    /**
+     * @ORM\Embedded(class="Acme\Models\Email")
+     */
+    protected $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Relation(type="hasMany", foreignEntity="Acme\Models\Comment")
      */
-    private $name;
-    
-    ...
+    protected $comments;
 }
 ```
 
@@ -65,11 +68,11 @@ For a full documentation on all annotations see the wiki.
 
 ### Migrations
 
-Once you have defined the annotations, you can run `php artisan datamapper:generate`. This command will walk through all registered classes and will generate migration files in the default migrations directory (e. g. `database/migrations`) based on the defined annotations (Important: old migration files will be overwritten).
+Once you have defined the annotations, you can run `php artisan schema:create`. This command will scan all registered classes and will create database tables and will generate a mapped Eloquent model for each entity based on the defined annotations.
 
-You can combine this command with all the migrate commands by adding the `--migrate` flag (e. g. `--migrate:refresh`). If you set the `--migrate` flag, you can also set the `--seed` flag to migrate and seed the database.
+You can also update an already existing schema with `php artisan schema:update`. Use the `--save-mode` flag to ensure that old tables will not be deleted.
 
-Furthermore you can use a `--timestamps:false` flag if you do not want a timestamp prefix in the migration files.
+Furthermore you can drop a schema with `php artisan schema:drop`.
 
 ### Entity Manager
 
@@ -91,13 +94,13 @@ class UserRepository {
 }
 ```
 
-In addition to define a table for the query with `$em->table('users')`, you can pass an entity class or an entity object to select a table (e. g. `$em->class('Entity\User')` or `$em->object($user)`).
+The entity manager selects a table by passing the classname of an entity to the manager (e. g. `$em->entity('Acme\Models\User')`. The `entity` method then returns an object of the modified Laravel Query Builder, so you can chain all query builder methods after it (see examples).
 
 #### Example #1: Get one or many User objects
 
-`$user = $em->class('Entity\User')->where('id',$id)->get();` (returns a User object)
+`$user = $em->entity('Acme\Models\User')->where('id',$id)->get();` (returns a User object)
 
-`$users = $em->class('Entity\User')->all();` (returns an ArrayCollection of User objects)
+`$users = $em->entity('Acme\Models\User')->all();` (returns an ArrayCollection of User objects)
 
 #### Example #2: Insert, update and delete a record
 
@@ -111,11 +114,17 @@ Hint: Relational objects are not inserted or updated.
 
 #### Example #3: Eager Loading
 
-`$users = $em->class('Entity\User')->with('User.comments')->get();`
+`$users = $em->class('Entity\User')->with('comments')->get();`
 
-You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('User.comments.likes')`
+You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('comments.likes')`).
 
-#### Example #4: Versioning Plugin
+#### Example #4: SoftDeletes Plugin
+
+If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deleting methods from Eloquent, e. g.:
+
+`$users = $em->class('Entity\User')->withTrashed()->all();`
+
+#### Example #5: Versioning Plugin
 
 If an entity has the `@ORM\Versionable` annotation, you can use the versioning methods:
 
@@ -124,12 +133,6 @@ If an entity has the `@ORM\Versionable` annotation, you can use the versioning m
 `$user = $em->class('Entity\User')->where('id',$id)->getVersion(1);`
 
 Hint: `get()` returns always the latest version.
-
-#### Example #5: SoftDeleting Plugin
-
-If an entity has the `@ORM\Softdeleteable` annotation, you can use the soft deleting methods from Eloquent, e. g.:
-
-`$users = $em->class('Entity\User')->withTrashed()->all();`
 
 ## Support
 
