@@ -66,7 +66,7 @@ class User extends Entity
 
 For a full documentation on all annotations see the wiki.
 
-### Migrations
+### Database Schema
 
 Once you have defined the annotations, you can run `php artisan schema:create`. This command will scan all registered classes and will create database tables and will generate a mapped Eloquent model for each entity based on the defined annotations.
 
