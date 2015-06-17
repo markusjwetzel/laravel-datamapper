@@ -76,7 +76,8 @@ class PresenterCommandsServiceProvider extends ServiceProvider
             return new PresenterRegisterCommand(
                 $app['datamapper.classfinder'],
                 $app['datamapper.presenter.scanner'],
-                $app['datamapper.presenter.repository']
+                $app['datamapper.presenter.repository'],
+                $app['config']['datamapper']
             );
         });
     }
@@ -92,7 +93,8 @@ class PresenterCommandsServiceProvider extends ServiceProvider
             return new PresenterClearCommand(
                 $app['datamapper.classfinder'],
                 $app['datamapper.presenter.scanner'],
-                $app['datamapper.presenter.repository']
+                $app['datamapper.presenter.repository'],
+                $app['config']['datamapper']
             );
         });
     }

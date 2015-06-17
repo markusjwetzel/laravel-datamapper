@@ -97,7 +97,7 @@ class Model extends EloquentModel
     public function toEntity()
     {
         // directly set private properties if entity extends the datamapper entity class (fast!)
-        if (! is_subclass_of($this->class, '\Wetzel\Datamapper\Support\Entity')) {
+        if (is_subclass_of($this->class, '\Wetzel\Datamapper\Support\Entity')) {
             $class = $this->class;
 
             return $class::newFromEloquentModel($this);
@@ -154,7 +154,7 @@ class Model extends EloquentModel
         $eloquentModel = new $class;
 
         // directly get private properties if entity extends the datamapper entity class (fast!)
-        if (! $entity instanceof \Wetzel\Datamapper\Support\Entity) {
+        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
             return $entity->toEloquentModel($eloquentModel);
         }
 

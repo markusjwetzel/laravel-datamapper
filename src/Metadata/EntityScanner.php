@@ -29,11 +29,18 @@ class EntityScanner
     protected $validator;
 
     /**
-     * The config of the datamapper package.
+     * Option for using tablesnames by namespace instead of default Eloquent tablenames.
      *
-     * @var array
+     * @var boolean
      */
-    protected $config;
+    protected $namespaceTablenames = true;
+
+    /**
+     * Option for using short morph class names instead of default Eloquent morph classes.
+     *
+     * @var boolean
+     */
+    protected $morphClassAbbreviations = true;
 
     /**
      * Create a new metadata builder instance.
@@ -43,11 +50,10 @@ class EntityScanner
      * @param array $config
      * @return void
      */
-    public function __construct(AnnotationReader $reader, EntityValidator $validator, $config)
+    public function __construct(AnnotationReader $reader, EntityValidator $validator)
     {
         $this->reader = $reader;
         $this->validator = $validator;
-        $this->config = $config;
     }
 
     /**
@@ -56,8 +62,11 @@ class EntityScanner
      * @param array $classes
      * @return array
      */
-    public function scan($classes)
+    public function scan($classes, $namespaceTablenames=true, $morphClassAbbreviations=true)
     {
+        $this->namespaceTablenames = $namespaceTablenames;
+        $this->morphClassAbbreviations = $morphClassAbbreviations;
+
         $metadata = [];
 
         foreach ($classes as $class) {
@@ -759,7 +768,7 @@ class EntityScanner
     protected function generatePivotTablename($class1, $class2, $inverse, $morph=null)
     {
         // datamapper namespace tables
-        if ($this->config['namespace_tables']) {
+        if ($this->namespaceTablenames) {
             $base = ($inverse)
                 ? $this->generateTableName($class1, true)
                 : $this->generateTableName($class2, true);
@@ -794,7 +803,7 @@ class EntityScanner
     protected function generateTableName($class)
     {
         // datamapper namespace tables
-        if ($this->config['namespace_tables']) {
+        if ($this->namespaceTablenames) {
             $className = array_slice(explode('/', str_replace('\\', '/', $class)), 2);
 
             // delete last entry if entry is equal to the next to last entry
@@ -820,7 +829,7 @@ class EntityScanner
     protected function generateMorphClass($class)
     {
         // datamapper morphclass abbreviations
-        if ($this->config['morphclass_abbreviations']) {
+        if ($this->morphClassAbbreviations) {
             return snake_case(class_basename($class));
         }
 

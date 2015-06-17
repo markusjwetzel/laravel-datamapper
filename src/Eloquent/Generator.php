@@ -181,13 +181,12 @@ class Generator
         $relations = [];
         foreach ($entityMetadata['relations'] as $relationMetadata) {
             $relation = [];
-            if (! empty($relationMetadata['foreignEntity'])) {
-                $relation['foreignEntity'] = $relationMetadata['foreignEntity'];
-                $relation['mappedForeignEntity'] = get_mapped_model($relationMetadata['foreignEntity']);
-            } else {
-                $relation['foreignEntity'] = null;
-                $relation['mappedForeignEntity'] = null;
+            
+            $relation['type'] = $relationMetadata['type'];
+            if ($relation['type'] == 'belongsToMany' || $relation['type'] == 'morphToMany') {
+                $relation['inverse'] = (! empty($relationMetadata['options']['inverse']));
             }
+
             $relations[$relationMetadata['name']] = $relation;
         }
 

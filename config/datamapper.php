@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Namespace Tables
+    | Namespace Tablenames
     |--------------------------------------------------------------------------
     |
     | If this option is set to true, all tablenames will be auto-generated from
@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'namespace_tables' => true,
+    'namespace_tablenames' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -30,16 +30,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Base Namespace
+    | Models Namespace
     |--------------------------------------------------------------------------
     |
-    | If a base namespace is defined, only the classes in the sub-namespace
-    | will be scanned by the schema commands. Also you only have to name the
-    | sub-namespace in annotations (i. e. for the relatedEntity parameter of
-    | the @Relation annotation).
+    | If a models namespace is defined, only the entities and value objects in
+    | the sub-namespace will be scanned by the schema commands. Also you only
+    | have to name the sub-namespace in annotations (i. e. for the
+    | relatedEntity parameter of the @Relation annotation).
     |
     */
 
-    'base_namespace' => 'Examunity\Test',
+    'models_namespace' => 'Examunity\Test',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Presenters Namespace
+    |--------------------------------------------------------------------------
+    |
+    | If a presenters namespace is defined, only the classes in the sub-namespace
+    | will be scanned by the schema commands.
+    |
+    */
+
+    'presenters_namespace' => 'Examunity\Test',
 
 ];

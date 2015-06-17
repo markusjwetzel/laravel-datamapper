@@ -9,10 +9,10 @@ if (! function_exists('get_real_entity')) {
      */
     function get_real_entity($class)
     {
-        $base_namespace = app('config')['datamapper']['base_namespace'];
+        $models_namespace = app('config')['datamapper']['models_namespace'];
 
-        if (class_exists($base_namespace . '\\' . $class)) {
-            return $base_namespace . '\\' . $class;
+        if (class_exists($models_namespace . '\\' . $class)) {
+            return $models_namespace . '\\' . $class;
         } elseif (class_exists($class)) {
             return $class;
         } else {

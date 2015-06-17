@@ -52,9 +52,7 @@ class SchemaCommandsServiceProvider extends ServiceProvider
 
             $validator = new EntityValidator;
 
-            $config = $app['config']['datamapper'];
-
-            return new EntityScanner($reader, $validator, $config);
+            return new EntityScanner($reader, $validator);
         });
     }
 
@@ -124,7 +122,8 @@ class SchemaCommandsServiceProvider extends ServiceProvider
                 $app['datamapper.classfinder'],
                 $app['datamapper.entity.scanner'],
                 $app['datamapper.schema.builder'],
-                $app['datamapper.eloquent.generator']
+                $app['datamapper.eloquent.generator'],
+                $app['config']['datamapper']
             );
         });
     }
@@ -141,7 +140,8 @@ class SchemaCommandsServiceProvider extends ServiceProvider
                 $app['datamapper.classfinder'],
                 $app['datamapper.entity.scanner'],
                 $app['datamapper.schema.builder'],
-                $app['datamapper.eloquent.generator']
+                $app['datamapper.eloquent.generator'],
+                $app['config']['datamapper']
             );
         });
     }
@@ -158,7 +158,8 @@ class SchemaCommandsServiceProvider extends ServiceProvider
                 $app['datamapper.classfinder'],
                 $app['datamapper.entity.scanner'],
                 $app['datamapper.schema.builder'],
-                $app['datamapper.eloquent.generator']
+                $app['datamapper.eloquent.generator'],
+                $app['config']['datamapper']
             );
         });
     }

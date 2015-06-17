@@ -31,10 +31,10 @@ class SchemaDropCommand extends SchemaCommand
     public function fire()
     {
         // get classes
-        $classes = $this->getClasses();
+        $classes = $this->getClasses($this->config['models_namespace']);
 
         // build metadata
-        $metadata = $this->scanner->scan($classes);
+        $metadata = $this->scanner->scan($classes, $this->config['namespace_tablenames'], $this->config['morphclass_abbreviations']);
 
         // clean generated eloquent models
         $this->models->clean();

@@ -33,12 +33,12 @@ class SchemaCreateCommand extends SchemaCommand
         $this->info(PHP_EOL . ' 0% Initializing');
 
         // get classes
-        $classes = $this->getClasses();
+        $classes = $this->getClasses($this->config['models_namespace']);
 
         $this->info(' 25% Building metadata');
 
         // build metadata
-        $metadata = $this->scanner->scan($classes);
+        $metadata = $this->scanner->scan($classes, $this->config['namespace_tablenames'], $this->config['morphclass_abbreviations']);
 
         $this->info(' 50% Generating entity models');
 

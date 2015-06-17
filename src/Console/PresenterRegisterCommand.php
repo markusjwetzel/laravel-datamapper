@@ -28,7 +28,7 @@ class PresenterRegisterCommand extends PresenterCommand
     public function fire()
     {
         // get classes
-        $classes = $this->finder->getClassesFromNamespace();
+        $classes = $this->finder->getClassesFromNamespace($this->config['presenters_namespace']);
 
         // build metadata
         $presenters = $this->scanner->scan($classes);
