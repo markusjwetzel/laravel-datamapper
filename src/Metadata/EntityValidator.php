@@ -73,8 +73,8 @@ class EntityValidator
      * Check if class exists.
      *
      * @param string $class
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
-     * @return void
+     * @param string $definedClass
+     * @return boolean
      */
     public function validateClass($class, $definedClass)
     {
@@ -84,7 +84,23 @@ class EntityValidator
             throw new Exception('Class "'.$class.'" (defined in class "'.$definedClass.'") does not exist.');
         }
 
-        return $class;
+        return true;
+    }
+
+    /**
+     * Check if name is not snake case.
+     *
+     * @param string $name
+     * @param string $definedClass
+     * @return boolean
+     */
+    public function validateName($name, $definedClass)
+    {
+        if ($name != camel_case($name)) {
+            throw new Exception('Name "'.$name.'" (defined in class "'.$definedClass.'") is not a camel case name.');
+        }
+
+        return true;
     }
 
     /**

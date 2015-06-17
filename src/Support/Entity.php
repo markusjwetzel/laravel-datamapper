@@ -26,7 +26,7 @@ abstract class Entity extends Model
 
         // attributes
         foreach ($dict['mapping']['attributes'] as $attribute) {
-            $entity->{$attribute} = $dict['attributes'][$attribute];
+            $entity->{$attribute} = $dict['attributes'][snake_case($attribute)];
         }
 
         // embeddeds
@@ -65,8 +65,8 @@ abstract class Entity extends Model
 
         // attributes
         foreach ($dict['mapping']['attributes'] as $attribute) {
-            if (! $eloquentModel->isGeneratedDate($attribute)) {
-                $eloquentModel->setAttribute($attribute, $this->{$attribute});
+            if (! $eloquentModel->isGeneratedDate(snake_case($attribute))) {
+                $eloquentModel->setAttribute(snake_case($attribute), $this->{$attribute});
             }
         }
 

@@ -97,7 +97,7 @@ class Model extends EloquentModel
     public function toEntity()
     {
         // directly set private properties if entity extends the datamapper entity class (fast!)
-        if (is_subclass_of($this->class, '\Wetzel\Datamapper\Support\Entity')) {
+        if (! is_subclass_of($this->class, '\Wetzel\Datamapper\Support\Entity')) {
             $class = $this->class;
 
             return $class::newFromEloquentModel($this);
@@ -111,7 +111,7 @@ class Model extends EloquentModel
 
             // attributes
             foreach ($this->mapping['attributes'] as $attribute) {
-                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$attribute]);
+                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[snake_case($attribute)]);
             }
 
             // embeddeds
@@ -120,7 +120,7 @@ class Model extends EloquentModel
 
                 $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
                 foreach ($embedded['attributes'] as $attribute) {
-                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$attribute]);
+                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[snake_case($attribute)]);
                 }
 
                 $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
@@ -154,7 +154,7 @@ class Model extends EloquentModel
         $eloquentModel = new $class;
 
         // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
+        if (! $entity instanceof \Wetzel\Datamapper\Support\Entity) {
             return $entity->toEloquentModel($eloquentModel);
         }
 
@@ -166,8 +166,8 @@ class Model extends EloquentModel
 
             // attributes
             foreach ($mapping['attributes'] as $attribute) {
-                if (! $eloquentModel->isGeneratedDate($attribute)) {
-                    $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+                if (! $eloquentModel->isGeneratedDate(snake_case($attribute))) {
+                    $eloquentModel->setAttribute(snake_case($attribute), $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
                 }
             }
 
@@ -178,7 +178,7 @@ class Model extends EloquentModel
                 $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
                 foreach ($embedded['attributes'] as $attribute) {
-                    $eloquentModel->setAttribute($attribute, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                    $eloquentModel->setAttribute(snake_case($attribute), $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
                 }
             }
 
@@ -250,6 +250,17 @@ class Model extends EloquentModel
         }
         
         return false;
+    }
+
+    /**
+     * Check if relation is owning side of relation.
+     *
+     * @param object $object
+     * @return \Wetzel\Datamapper\Eloquent\Model
+     */
+    protected function isOwningSideOfRelation($relation)
+    {
+        //if ()
     }
 
     /**

@@ -17,8 +17,10 @@ class Decorator
     {
         // make item presentable
         if ($item instanceof \Wetzel\Datamapper\Contracts\Presentable) {
-            if ($toArray && $item instanceof \Wetzel\Datamapper\Contracts\Arrayable) {
-                return $item->toArray();
+            if ($toArray) {
+                if ($item instanceof \Illuminate\Contracts\Support\Arrayable) {
+                    return $item->toArray();
+                }
             } else {
                 return $item->getPresenter();
             }
@@ -29,6 +31,12 @@ class Decorator
             // decorate collection items
             foreach ($item as $key => $collectionItem) {
                 $item[$key] = self::decorate($collectionItem, $toArray);
+            }
+
+            if ($toArray) {
+                return $item->toArray();
+            } else {
+                return $item;
             }
         }
 

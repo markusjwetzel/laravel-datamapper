@@ -89,11 +89,17 @@ class EntityManager
      */
     protected function getEloquentModel($object, $exists=false)
     {
+        if (empty($object)) {
+            throw new Exception('Object transfered to EntityManager is empty');
+        }
+
         if (! is_object($object)) {
             throw new Exception('Object transfered to EntityManager is not an object');
         }
 
         $model = Model::newFromEntity($object);
+
+        dd($model);
 
         $model->exists = $exists;
 

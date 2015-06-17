@@ -167,13 +167,13 @@ class EntityScanner
 
         // scan property annotations
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
-            $name = $reflectionProperty->getName();
+            $name = $this->getSanitizedName($reflectionProperty->getName(), $entityMetadata['class']);
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
 
             foreach ($propertyAnnotations as $annotation) {
                 // property is embedded class
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
-                    $entityMetadata['embeddeds'][$name] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
+                    $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
                 }
 
                 // property is attribute
@@ -185,13 +185,13 @@ class EntityScanner
                         }
                     }
                     // set attribute data
-                    $entityMetadata['attributes'][$name] = $this->parseAttribute($name, $annotation);
-                    $entityMetadata['table']['columns'][$name] = $this->parseColumn($name, $annotation);
+                    $entityMetadata['attributes'][] = $this->parseAttribute($name, $annotation);
+                    $entityMetadata['table']['columns'][] = $this->parseColumn($name, $annotation);
                 }
 
                 // property is relationship
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Relation) {
-                    $entityMetadata['relations'][$name] = $this->parseRelation($name, $annotation, $entityMetadata);
+                    $entityMetadata['relations'][] = $this->parseRelation($name, $annotation, $entityMetadata);
                 }
             }
         }
@@ -214,7 +214,7 @@ class EntityScanner
     {
         // check if related class is valid
         $annotation->class = $annotation->class
-            ? $this->validator->validateClass($annotation->class, $entityMetadata['class'])
+            ? $this->getRealEntity($annotation->class, $entityMetadata['class'])
             : null;
 
         $embeddedClass = $annotation->class;
@@ -225,28 +225,29 @@ class EntityScanner
 
         // check if class is embedded class
         $this->validator->validateEmbeddedClass($embeddedClass, $classAnnotations);
+        
+        $attributes = [];
 
         // scan property annotations
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
-            $name = $reflectionProperty->getName();
+            $name = $this->getSanitizedName($reflectionProperty->getName(), $entityMetadata['class']);
+
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
-            
-            $attributes = [];
 
             foreach ($propertyAnnotations as $annotation) {
                 // property is attribute
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Attribute) {
                     $attributes[$name] = $this->parseAttribute($name, $annotation);
-                    $entityMetadata['table']['columns'][$name] = $this->parseColumn($name, $annotation);
+                    $entityMetadata['table']['columns'][] = $this->parseColumn($name, $annotation);
                 }
             }
-
-            return new EmbeddedClassDefinition([
-                'name' => $embeddedName,
-                'class' => $embeddedClass,
-                'attributes' => $attributes,
-            ]);
         }
+
+        return new EmbeddedClassDefinition([
+            'name' => $embeddedName,
+            'class' => $embeddedClass,
+            'attributes' => $attributes,
+        ]);
     }
 
     /**
@@ -278,7 +279,7 @@ class EntityScanner
 
         // add column
         return new ColumnDefinition([
-            'name' => $name,
+            'name' => snake_case($name),
             'type' => $annotation->type,
             'nullable' => $annotation->nullable,
             'default' => $annotation->default,
@@ -334,10 +335,10 @@ class EntityScanner
 
         // check if we need to add base namespace from configuration
         $annotation->foreignEntity = $annotation->foreignEntity
-            ? $this->validator->validateClass($annotation->foreignEntity, $entityMetadata['class'])
+            ? $this->getRealEntity($annotation->foreignEntity, $entityMetadata['class'])
             : null;
         $annotation->throughEntity = $annotation->throughEntity
-            ? $this->validator->validateClass($annotation->throughEntity, $entityMetadata['class'])
+            ? $this->getRealEntity($annotation->throughEntity, $entityMetadata['class'])
             : null;
 
         // lead back morphedByMany to inverse morphToMany
@@ -476,7 +477,7 @@ class EntityScanner
     {
         $localKey = $annotation->localKey ?: $this->generateKey($annotation->foreignEntity);
 
-        $entityMetadata['table']['columns'][$localKey] = new ColumnDefinition([
+        $entityMetadata['table']['columns'][] = new ColumnDefinition([
             'name' => $localKey,
             'type' => 'integer',
             'nullable' => false,
@@ -512,7 +513,7 @@ class EntityScanner
             ? $annotation->morphType
             : $morphName.'_type';
 
-        $entityMetadata['table']['columns'][$morphId] = new ColumnDefinition([
+        $entityMetadata['table']['columns'][] = new ColumnDefinition([
             'name' => $morphId,
             'type' => 'integer',
             'nullable' => false,
@@ -525,7 +526,7 @@ class EntityScanner
             ]
         ]);
 
-        $entityMetadata['table']['columns'][$morphType] = new ColumnDefinition([
+        $entityMetadata['table']['columns'][] = new ColumnDefinition([
             'name' => $morphType,
             'type' => 'string',
             'nullable' => false,
@@ -558,7 +559,7 @@ class EntityScanner
         return new TableDefinition([
             'name' => $tableName,
             'columns' => [
-                'id' => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => 'id',
                     'type' => 'integer',
                     'nullable' => false,
@@ -571,7 +572,7 @@ class EntityScanner
                         'unsigned' => true
                     ]
                 ]),
-                $foreignKey => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => $foreignKey,
                     'type' => 'integer',
                     'nullable' => false,
@@ -583,7 +584,7 @@ class EntityScanner
                         'unsigned' => true
                     ]
                 ]),
-                $localKey => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => $localKey,
                     'type' => 'integer',
                     'nullable' => false,
@@ -626,7 +627,7 @@ class EntityScanner
         return new TableDefinition([
             'name' => $tableName,
             'columns' => [
-                'id' => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => 'id',
                     'type' => 'integer',
                     'nullable' => false,
@@ -639,7 +640,7 @@ class EntityScanner
                         'unsigned' => true
                     ]
                 ]),
-                $foreignKey => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => $foreignKey,
                     'type' => 'integer',
                     'nullable' => false,
@@ -651,7 +652,7 @@ class EntityScanner
                         'unsigned' => true
                     ]
                 ]),
-                $morphId => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => $morphId,
                     'type' => 'integer',
                     'nullable' => false,
@@ -663,7 +664,7 @@ class EntityScanner
                         'unsigned' => true
                     ]
                 ]),
-                $morphType => new ColumnDefinition([
+                new ColumnDefinition([
                     'name' => $morphType,
                     'type' => 'string',
                     'nullable' => false,
@@ -825,5 +826,38 @@ class EntityScanner
 
         // eloquent default
         return $class;
+    }
+
+    /**
+     * Get snake case version of a name.
+     *
+     * @param string $name
+     * @param string $definedClass
+     * @param boolean $snakeCase
+     * @return string
+     */
+    protected function getSanitizedName($name, $definedClass, $snakeCase = false)
+    {
+        $this->validator->validateName($name, $definedClass);
+        
+        if ($snakeCase) {
+            return snake_case($name);
+        } else {
+            return $name;
+        }
+    }
+
+    /**
+     * Get snake case version of a name.
+     *
+     * @param string $class
+     * @param string $definedClass
+     * @return string
+     */
+    protected function getRealEntity($class, $definedClass)
+    {
+        $this->validator->validateClass($class, $definedClass);
+
+        return get_real_entity($class);
     }
 }

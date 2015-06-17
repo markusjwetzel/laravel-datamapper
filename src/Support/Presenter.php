@@ -173,6 +173,12 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
      */
     public function offsetGet($offset)
     {
+        if ($offset != snake_case($offset)) {
+            throw new Exception('Offset "'.$offset.'" is not snake case');
+        }
+
+        $offset = camel_case($offset);
+
         if (method_exists($this, $offset)) {
             return $this->{$offset}();
         } else {
@@ -189,7 +195,7 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
      */
     public function offsetSet($offset, $value)
     {
-        throw new Exception('Presenter cannot set offset "'.$offset.'" to "'.$value.'" in '.get_class().'.');
+        throw new Exception('Presenter cannot set offset "'.$offset.'" to "'.$value.'" in '.get_class());
     }
 
     /**
@@ -200,7 +206,7 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
      */
     public function offsetUnset($offset)
     {
-        throw new Exception('Presenter cannot unset offset "'.$offset.'" in '.get_class().'.');
+        throw new Exception('Presenter cannot unset offset "'.$offset.'" in '.get_class());
     }
 
     /**
@@ -218,7 +224,7 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
 
             return Decorator::decorate($item);
         } else {
-            throw new BadMethodCallException('Method '.$method.' is hidden for presentation.');
+            throw new BadMethodCallException('Method '.$method.' is hidden for presentation');
         }
     }
 }

@@ -80,7 +80,7 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
         $array = [];
 
         foreach ($items as $name => $item) {
-            $array[$name] = Decorator::decorate($item, true);
+            $array[snake_case($name)] = Decorator::decorate($item, true);
         }
 
         return $array;

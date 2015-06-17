@@ -41,7 +41,7 @@ abstract class ValueObject extends Model
         ];
 
         foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
-            $valueObject->{$attribute} = $dict['attributes'][$attribute];
+            $valueObject->{$attribute} = $dict['attributes'][snake_case($attribute)];
         }
 
         return $valueObject;
@@ -62,7 +62,7 @@ abstract class ValueObject extends Model
         ];
 
         foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
-            $eloquentModel->setAttribute($attribute, $this->{$attribute});
+            $eloquentModel->setAttribute(snake_case($attribute), $this->{$attribute});
         }
     }
 }
