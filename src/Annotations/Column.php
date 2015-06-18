@@ -6,12 +6,17 @@ namespace Wetzel\Datamapper\Annotations;
  * @Annotation
  * @Target("PROPERTY")
  */
-final class Attribute implements Annotation
+final class Column implements Annotation
 {
     /**
      * @var string
      */
     public $type;
+
+    /**
+     * @var string
+     */
+    public $name;
 
     /**
      * @var boolean

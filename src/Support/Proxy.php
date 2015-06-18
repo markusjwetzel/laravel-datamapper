@@ -8,7 +8,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use ArrayAccess;
 use Exception;
 
-class Proxy implements ArrayAccess, Arrayable, Jsonable, ProxyContract
+class Proxy implements ProxyContract, ArrayAccess, Arrayable, Jsonable
 {
     /**
      * Convert the entity instance to JSON.

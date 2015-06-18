@@ -16,17 +16,7 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $localKey;
-
-    /**
-     * @var string
-     */
-    public $foreignEntity;
-
-    /**
-     * @var string
-     */
-    public $foreignKey;
+    public $relatedEntity;
 
     /**
      * @var string
@@ -36,7 +26,32 @@ final class Relation implements Annotation
     /**
      * @var string
      */
-    public $throughKey;
+    public $localKey;
+
+    /**
+     * @var string
+     */
+    public $localForeignKey;
+
+    /**
+     * @var string
+     */
+    public $relatedForeignKey;
+
+    /**
+     * @var string
+     */
+    public $throughForeignKey;
+
+    /**
+     * @var string
+     */
+    public $localPivotKey;
+
+    /**
+     * @var string
+     */
+    public $relatedPivotKey;
 
     /**
      * @var string

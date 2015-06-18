@@ -18,6 +18,9 @@ class Decorator
         // make item presentable
         if ($item instanceof \Wetzel\Datamapper\Contracts\Presentable) {
             if ($toArray) {
+                if ($item instanceof \Wetzel\Datamapper\Contracts\Stringable) {
+                    return $item->toString();
+                }
                 if ($item instanceof \Illuminate\Contracts\Support\Arrayable) {
                     return $item->toArray();
                 }

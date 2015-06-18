@@ -11,5 +11,6 @@ class Attribute extends Definition
      */
     protected $keys = [
         'name' => null,
+        'columnName' => null,
     ];
 }

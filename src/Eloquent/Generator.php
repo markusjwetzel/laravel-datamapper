@@ -163,7 +163,7 @@ class Generator
     {
         $attributes = [];
         foreach ($entityMetadata['attributes'] as $attributeMetadata) {
-            $attributes[] = $attributeMetadata['name'];
+            $attributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
         }
 
         $embeddeds = [];
@@ -172,7 +172,7 @@ class Generator
             $embedded['class'] = $embeddedMetadata['class'];
             $embeddedAttributes = [];
             foreach ($embeddedMetadata['attributes'] as $attributeMetadata) {
-                $embeddedAttributes[] = $attributeMetadata['name'];
+                $embeddedAttributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
             }
             $embedded['attributes'] = $embeddedAttributes;
             $embeddeds[$embeddedMetadata['name']] = $embedded;
@@ -359,7 +359,7 @@ class Generator
             $options = [];
 
             if ($relation['type'] != 'morphTo') {
-                $options[] = "'" . get_mapped_model($relation['foreignEntity'])."'";
+                $options[] = "'" . get_mapped_model($relation['relatedEntity'])."'";
             }
 
             foreach ($relation['options'] as $name => $option) {

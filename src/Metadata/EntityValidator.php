@@ -165,10 +165,10 @@ class EntityValidator
         foreach ($metadata as $entityMetadata) {
             foreach ($entityMetadata['relations'] as $relationMetadata) {
                 if (! empty($relationMetadata['pivotTable'])) {
-                    $pivotTables[$entityMetadata['class'].$relationMetadata['foreignEntity']] = $relationMetadata;
+                    $pivotTables[$entityMetadata['class'].$relationMetadata['relatedEntity']] = $relationMetadata;
 
-                    if (isset($pivotTables[$relationMetadata['foreignEntity'].$entityMetadata['class']])) {
-                        $relation1 = $pivotTables[$relationMetadata['foreignEntity'].$entityMetadata['class']];
+                    if (isset($pivotTables[$relationMetadata['relatedEntity'].$entityMetadata['class']])) {
+                        $relation1 = $pivotTables[$relationMetadata['relatedEntity'].$entityMetadata['class']];
                         $relation2 = $relationMetadata;
 
                         $error = null;
@@ -186,7 +186,7 @@ class EntityValidator
                         }
 
                         if ($error) {
-                            throw new DomainException('Error syncing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['foreignEntity'].'" and "'.$relation2['name'].'" in "'.$relation1['foreignEntity'].'": '.$error);
+                            throw new DomainException('Error syncing pivot tables for relations "'.$relation1['name'].'" in "'.$relation2['relatedEntity'].'" and "'.$relation2['name'].'" in "'.$relation1['relatedEntity'].'": '.$error);
                         }
                     }
                 }

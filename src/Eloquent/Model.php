@@ -5,6 +5,7 @@ namespace Wetzel\Datamapper\Eloquent;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Wetzel\Datamapper\Eloquent\Collection;
 use Wetzel\Datamapper\Support\Proxy;
+use Wetzel\Datamapper\Contracts\Entity as EntityContract;
 use ReflectionClass;
 use ReflectionObject;
 
@@ -110,8 +111,8 @@ class Model extends EloquentModel
             $entity = $reflectionClass->newInstanceWithoutConstructor();
 
             // attributes
-            foreach ($this->mapping['attributes'] as $attribute) {
-                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[snake_case($attribute)]);
+            foreach ($this->mapping['attributes'] as $attribute => $column) {
+                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
             }
 
             // embeddeds
@@ -119,8 +120,8 @@ class Model extends EloquentModel
                 $embeddedReflectionClass = new ReflectionClass($embedded['class']);
 
                 $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
-                foreach ($embedded['attributes'] as $attribute) {
-                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[snake_case($attribute)]);
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
                 }
 
                 $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
@@ -144,10 +145,10 @@ class Model extends EloquentModel
     /**
      * Convert model to plain old php object.
      *
-     * @param object $entity
+     * @param \Wetzel\Datamapper\Contracts\Entity $entity
      * @return \Wetzel\Datamapper\Eloquent\Model
      */
-    public static function newFromEntity($entity)
+    public static function newFromEntity(EntityContract $entity)
     {
         $class = get_mapped_model(get_class($entity));
 
@@ -165,9 +166,9 @@ class Model extends EloquentModel
             $mapping = $eloquentModel->getMapping();
 
             // attributes
-            foreach ($mapping['attributes'] as $attribute) {
-                if (! $eloquentModel->isGeneratedDate(snake_case($attribute))) {
-                    $eloquentModel->setAttribute(snake_case($attribute), $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+            foreach ($mapping['attributes'] as $attribute => $column) {
+                if (! $eloquentModel->isGeneratedDate($column)) {
+                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
                 }
             }
 
@@ -177,8 +178,8 @@ class Model extends EloquentModel
 
                 $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
-                foreach ($embedded['attributes'] as $attribute) {
-                    $eloquentModel->setAttribute(snake_case($attribute), $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
                 }
             }
 
@@ -255,12 +256,30 @@ class Model extends EloquentModel
     /**
      * Check if relation is owning side of relation.
      *
-     * @param object $object
-     * @return \Wetzel\Datamapper\Eloquent\Model
+     * @param string $relation
+     * @return boolean
      */
     protected function isOwningSideOfRelation($relation)
     {
-        //if ()
+        $relationMapping = $this->mapping['relations'][$relation];
+
+        if ($relationMapping['type'] == 'belongsTo') {
+            return true;
+        }
+
+        if ($relationMapping['type'] == 'belongsToMany' && ! $relationMapping['inverse']) {
+            return true;
+        }
+
+        if ($relationMapping['type'] == 'morphTo') {
+            return true;
+        }
+
+        if ($relationMapping['type'] == 'morphToMany' && ! $relationMapping['inverse']) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

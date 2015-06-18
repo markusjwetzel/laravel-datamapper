@@ -2,6 +2,8 @@
 
 namespace Wetzel\Datamapper\Support;
 
-abstract class AggregateRoot extends Entity
+use Wetzel\Datamapper\Contracts\AggregateRoot as AggregateRootContract;
+
+abstract class AggregateRoot extends Entity implements AggregateRootContract
 {
 }

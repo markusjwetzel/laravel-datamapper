@@ -4,8 +4,9 @@ namespace Wetzel\Datamapper\Support;
 
 use Wetzel\Datamapper\Eloquent\Model as EloquentModel;
 use Wetzel\Datamapper\Eloquent\Collection as EloquentCollection;
+use Wetzel\Datamapper\Contracts\Entity as EntityContract;
 
-abstract class Entity extends Model
+abstract class Entity extends Model implements EntityContract
 {
     /**
      * Build new instance from an eloquent model object.
@@ -25,8 +26,8 @@ abstract class Entity extends Model
         ];
 
         // attributes
-        foreach ($dict['mapping']['attributes'] as $attribute) {
-            $entity->{$attribute} = $dict['attributes'][snake_case($attribute)];
+        foreach ($dict['mapping']['attributes'] as $attribute => $column) {
+            $entity->{$attribute} = $dict['attributes'][$column];
         }
 
         // embeddeds
@@ -64,9 +65,9 @@ abstract class Entity extends Model
         ];
 
         // attributes
-        foreach ($dict['mapping']['attributes'] as $attribute) {
-            if (! $eloquentModel->isGeneratedDate(snake_case($attribute))) {
-                $eloquentModel->setAttribute(snake_case($attribute), $this->{$attribute});
+        foreach ($dict['mapping']['attributes'] as $attribute => $column) {
+            if (! $eloquentModel->isGeneratedDate($column)) {
+                $eloquentModel->setAttribute($column, $this->{$attribute});
             }
         }
 

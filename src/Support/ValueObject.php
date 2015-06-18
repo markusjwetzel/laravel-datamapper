@@ -3,16 +3,17 @@
 namespace Wetzel\Datamapper\Support;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Wetzel\Datamapper\Contracts\ValueObject as ValueObjectContract;
 
-abstract class ValueObject extends Model
+abstract class ValueObject extends Model implements ValueObjectContract
 {
     /**
      * Compare two value objects.
      *
-     * @param \Wetzel\Datamapper\Support\ValueObject $valueObject
+     * @param \Wetzel\Datamapper\Contracts\ValueObject $valueObject
      * @return boolean
      */
-    public function equals(ValueObject $valueObject)
+    public function equals(ValueObjectContract $valueObject)
     {
         foreach (get_object_vars($this) as $name => $value) {
             if ($this->{$name} !== $valueObject->{$name}) {
@@ -40,8 +41,8 @@ abstract class ValueObject extends Model
             'attributes' => $eloquentModel->getAttributes()
         ];
 
-        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
-            $valueObject->{$attribute} = $dict['attributes'][snake_case($attribute)];
+        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute => $column) {
+            $valueObject->{$attribute} = $dict['attributes'][$column];
         }
 
         return $valueObject;
@@ -61,8 +62,8 @@ abstract class ValueObject extends Model
             'mapping' => $eloquentModel->getMapping()
         ];
 
-        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute) {
-            $eloquentModel->setAttribute(snake_case($attribute), $this->{$attribute});
+        foreach ($dict['mapping']['embeddeds'][$name]['attributes'] as $attribute => $column) {
+            $eloquentModel->setAttribute($column, $this->{$attribute});
         }
     }
 }

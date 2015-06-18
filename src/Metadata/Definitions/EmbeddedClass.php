@@ -12,6 +12,7 @@ class EmbeddedClass extends Definition
     protected $keys = [
         'name' => null,
         'class' => null,
+        'columnPrefix' => null,
         'attributes' => [],
     ];
 }

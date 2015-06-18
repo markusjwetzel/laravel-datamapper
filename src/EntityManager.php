@@ -35,74 +35,122 @@ class EntityManager
     {
         $class = get_real_entity($class);
 
-        $model = get_mapped_model($class);
+        $eloquentModel = get_mapped_model($class);
 
-        return (new $model)->newDatamapperQuery();
+        return (new $eloquentModel)->newDatamapperQuery();
     }
 
     /**
      * Create an entity object.
      *
-     * @param object $object
+     * @param object $entity
      * @return void
      */
-    public function insert($object)
+    public function insert($entity)
     {
-        $model = $this->getEloquentModel($object);
+        $eloquentModel = $this->getEloquentModel($entity);
 
-        $model->save();
+        $this->updateRelations($eloquentModel, 'insert');
+
+        $eloquentModel->save();
     }
 
     /**
      * Update an entity object.
      *
-     * @param object $object
+     * @param object $entity
      * @return void
      */
-    public function update($object)
+    public function update($entity)
     {
-        $model = $this->getEloquentModel($object, true);
+        $eloquentModel = $this->getEloquentModel($entity, true);
 
-        $model->save();
+        $this->updateRelations($eloquentModel, 'update');
+
+        $eloquentModel->save();
     }
 
     /**
      * Delete an entity object.
      *
-     * @param object $object
+     * @param object $entity
      * @return void
      */
-    public function delete($object)
+    public function delete($entity)
     {
-        $model = $this->getEloquentModel($object, true);
+        $eloquentModel = $this->getEloquentModel($entity, true);
 
-        //dd($model);
+        $this->updateRelations($eloquentModel, 'delete');
 
-        $model->delete();
+        $eloquentModel->delete();
+    }
+
+    /**
+     * Update a relation.
+     *
+     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $mode
+     * @return void
+     */
+    protected function updateRelations($eloquentModel, $mode='insert')
+    {
+        $mapping = $eloquentModel->getMapping();
+        $relations = $eloquentModel->getRelations();
+
+        foreach($mapping['relations'] as $name => $relation) {
+
+            // set foreign key for belongsTo/morphTo relation
+            if ($relation['type'] == 'belongsTo' || $relation['type'] == 'morphTo') {
+                if ($mode == 'insert' || $mode == 'update') {
+                    $eloquentModel->{$name}()->associate($relations[$name]);
+                }
+            }
+
+            // set foreign keys for belongsToMany/morphToMany relation
+            if (($relation['type'] == 'belongsToMany' || $relation['type'] == 'morphToMany') && ! $relation['inverse']) {
+                // get related keys
+                $keys = [];
+                foreach($relations[$name] as $item) {
+                    $keys[] = $item->getKey();
+                }
+
+                // attach/sync/detach keys
+                if ($mode == 'insert') {
+                    $eloquentModel->{$name}()->attach($keys);
+                }
+                if ($mode == 'update') {
+                    $eloquentModel->{$name}()->sync($keys);
+                }
+                if ($mode == 'delete') {
+                    $eloquentModel->{$name}()->detach($keys);
+                }
+            }
+
+        }
     }
 
     /**
      * Delete an entity object.
      *
-     * @param object $object
+     * @param object $entity
      * @return \Wetzel\Datamapper\Eloquent\Model
      */
-    protected function getEloquentModel($object, $exists=false)
+    protected function getEloquentModel($entity, $exists=false)
     {
-        if (empty($object)) {
+        if (empty($entity)) {
             throw new Exception('Object transfered to EntityManager is empty');
         }
 
-        if (! is_object($object)) {
+        if (! is_object($entity)) {
             throw new Exception('Object transfered to EntityManager is not an object');
         }
 
-        $model = Model::newFromEntity($object);
+        $eloquentModel = Model::newFromEntity($entity);
 
-        dd($model);
+        dd($eloquentModel);
 
-        $model->exists = $exists;
+        $eloquentModel->exists = $exists;
 
-        return $model;
+        return $eloquentModel;
     }
 }
