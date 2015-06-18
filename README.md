@@ -48,7 +48,7 @@ class User extends Entity
 {
     /**
      * @ORM\Id
-     * @ORM\Attribute(type="increments")
+     * @ORM\Column(type="increments")
      */
     protected $id;
     
