@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class {{class}} extends Model
 {
-
-    {{softDeletes}}protected $class = {{mappedClass}};
+    {{softDeletes}}{{versionable}}protected $class = {{mappedClass}};
 
     protected $mapping = {{mapping}};
 
@@ -31,6 +30,8 @@ class {{class}} extends Model
     //protected $casts = {{casts}};
 
     protected $with = {{with}};
+
+    protected $versioned = {{versioned}};
 
     protected $morphClass = {{morphClass}};
 

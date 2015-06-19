@@ -11,6 +11,7 @@ use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass as EmbeddedClassDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
 use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
+use Wetzel\Datamapper\Annotations\Annotation;
 
 class EntityScanner
 {
@@ -53,6 +54,7 @@ class EntityScanner
     public function __construct(AnnotationReader $reader, EntityValidator $validator)
     {
         $this->reader = $reader;
+
         $this->validator = $validator;
     }
 
@@ -60,6 +62,8 @@ class EntityScanner
      * Build metadata from all entity classes.
      *
      * @param array $classes
+     * @param boolean $namespaceTablenames
+     * @param boolean $morphClassAbbreviations
      * @return array
      */
     public function scan($classes, $namespaceTablenames=true, $morphClassAbbreviations=true)
@@ -125,10 +129,10 @@ class EntityScanner
                 'name' => $this->generateTableName($class),
                 'columns' => [],
             ]),
+            'versionTable' => false,
         
             'softDeletes' => false,
             'timestamps' => false,
-            'versionable' => false,
             
             'touches' => [],
             'with' => [],
@@ -167,10 +171,16 @@ class EntityScanner
             if ($annotation instanceof \Wetzel\Datamapper\Annotations\Timestamps) {
                 $entityMetadata['timestamps'] = true;
             }
+        }
 
+        // make sure tablename is set, then loop annotations again for versioning
+        foreach ($classAnnotations as $annotation) {
             // versioned
             if ($annotation instanceof \Wetzel\Datamapper\Annotations\Versionable) {
-                $entityMetadata['versionable'] = true;
+                $entityMetadata['versionTable'] = new TableDefinition([
+                    'name' => $entityMetadata['table']['name'] . '_version',
+                    'columns' => [],
+                ]);
             }
         }
 
@@ -187,17 +197,9 @@ class EntityScanner
 
                 // property is column
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Column) {
-                    // try to find @Id annotation -> set primary key
-                    foreach ($propertyAnnotations as $subAnnotation) {
-                        if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Id) {
-                            $annotation->primary = true;
-                        }
-                    }
-                    // set column data
-                    $columnName = $this->getColumnName($annotation->name ?: $name);
+                    $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations);
 
-                    $entityMetadata['attributes'][] = $this->parseAttribute($name, $columnName, $annotation);
-                    $entityMetadata['table']['columns'][] = $this->parseColumn($columnName, $annotation);
+                    $entityMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata);
                 }
 
                 // property is relationship
@@ -210,6 +212,21 @@ class EntityScanner
         // check primary key
         $this->validator->validatePrimaryKey($entityMetadata);
 
+        // check timestamps extension
+        if (! empty($entityMetadata['timestamps'])) {
+            $this->validator->validateTimestamps($entityMetadata);
+        }
+
+        // check softDeletes extension
+        if (! empty($entityMetadata['softDeletes'])) {
+            $this->validator->validateSoftDeletes($entityMetadata);
+        }
+
+        // check version extension
+        if (! empty($entityMetadata['versionTable'])) {
+            $this->validator->validateVersionTable($entityMetadata);
+        }
+
         return $entityMetadata;
     }
 
@@ -218,10 +235,10 @@ class EntityScanner
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass
      */
-    protected function parseEmbeddedClass($name, $annotation, &$entityMetadata)
+    protected function parseEmbeddedClass($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         // check if related class is valid
         $annotation->class = $this->getRealEntity($annotation->class, $entityMetadata['class']);
@@ -253,10 +270,9 @@ class EntityScanner
             foreach ($propertyAnnotations as $annotation) {
                 // property is column
                 if ($annotation instanceof \Wetzel\Datamapper\Annotations\Column) {
-                    $columnName = $this->getColumnName($annotation->name ?: $name, $embeddedColumnPrefix);
+                    $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations, true, $embeddedColumnPrefix);
 
-                    $embeddedClassMetadata['attributes'][] = $this->parseAttribute($name, $columnName, $annotation);
-                    $entityMetadata['table']['columns'][] = $this->parseColumn($columnName, $annotation);
+                    $embeddedClassMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata, true);
                 }
             }
         }
@@ -265,20 +281,37 @@ class EntityScanner
     }
 
     /**
-     * Parse an attribute.
+     * Set properties of column annotation related annotations.
      *
      * @param string $name
-     * @param string $columnName
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Attribute
+     * @param array $propertyAnnotations
+     * @param boolean $embedded
+     * @param mixed $columnPrefix
+     * @return void
      */
-    protected function parseAttribute($name, $columnName, $annotation)
+    protected function setAdditionalColumnProperties($name, Annotation &$annotation, array $propertyAnnotations, $embedded=false, $columnPrefix=false)
     {
-        // add attribute
-        return new AttributeDefinition([
-            'name' => $name,
-            'columnName' => $columnName,
-        ]);
+        // scan for primary and versioned property
+        foreach ($propertyAnnotations as $subAnnotation) {
+            if (! $embedded) {
+                // set primary key
+                if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Id) {
+                    $annotation->primary = true;
+                }
+                // set auto increment
+                if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\AutoIncrement) {
+                    $annotation->autoIncrement = true;
+                }
+            }
+            // set versioned
+            if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Versioned) {
+                $annotation->versioned = true;
+            }
+        }
+
+        // set column name
+        $annotation->name = $this->getColumnName($annotation->name ?: $name, $columnPrefix);
     }
 
     /**
@@ -286,16 +319,42 @@ class EntityScanner
      *
      * @param string $name
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param boolean $embedded
+     * @return \Wetzel\Datamapper\Metadata\Definitions\Attribute
+     */
+    protected function parseColumn($name, Annotation $annotation, EntityDefinition &$entityMetadata, $embedded=false)
+    {
+        // set column data
+        if (! empty($entityMetadata['versionTable']) && $annotation->versioned) {
+            $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
+        } else {
+            $entityMetadata['table']['columns'][] = $this->generateColumn($name, $annotation);
+        }
+
+        // set up version feature
+        if (! empty($entityMetadata['versionTable']) && ! $annotation->versioned && $annotation->primary) {
+            $this->generateVersionTable($name, $annotation, $entityMetadata);
+        }
+
+        return $this->generateAttribute($name, $annotation);
+    }
+
+    /**
+     * Generate a column.
+     *
+     * @param string $name
+     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
      * @return \Wetzel\Datamapper\Metadata\Definitions\Column
      */
-    protected function parseColumn($name, $annotation)
+    protected function generateColumn($name, $annotation)
     {
         // check if column type is valid
         $this->validator->validateColumnType($annotation->type);
 
         // add column
         return new ColumnDefinition([
-            'name' => $name,
+            'name' => $annotation->name,
             'type' => $annotation->type,
             'nullable' => $annotation->nullable,
             'default' => $annotation->default,
@@ -305,6 +364,37 @@ class EntityScanner
             'options' => $this->generateAttributeOptionsArray($annotation)
         ]);
     }
+    
+    /**
+     * Generate versioning table.
+     *
+     * @param string $name
+     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @return void
+     */
+    protected function generateVersionTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
+    {
+        // duplicate primary key in version table
+        $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
+    }
+
+    /**
+     * Generate an attribute.
+     *
+     * @param string $name
+     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @return \Wetzel\Datamapper\Metadata\Definitions\Attribute
+     */
+    protected function generateAttribute($name, $annotation)
+    {
+        // add attribute
+        return new AttributeDefinition([
+            'name' => $name,
+            'columnName' => $annotation->name,
+            'versioned' => $annotation->versioned
+        ]);
+    }
 
     /**
      * Generate an options array for an attribute.
@@ -312,7 +402,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
      * @return array
      */
-    protected function generateAttributeOptionsArray($annotation)
+    protected function generateAttributeOptionsArray(Annotation $annotation)
     {
         $options = [];
 
@@ -344,7 +434,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\Relation
      */
-    protected function parseRelation($name, $annotation, &$entityMetadata)
+    protected function parseRelation($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         // check if relation type is valid
         $this->validator->validateRelationType($annotation->type);
@@ -403,7 +493,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return array
      */
-    protected function generateRelationOptionsArray($name, $annotation, &$entityMetadata)
+    protected function generateRelationOptionsArray($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         $options = [];
 
@@ -489,7 +579,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return void
      */
-    protected function generateBelongsToColumns($name, $annotation, &$entityMetadata)
+    protected function generateBelongsToColumns($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         $relatedForeignKey = $annotation->relatedForeignKey ?: $this->generateKey($annotation->relatedEntity);
 
@@ -515,7 +605,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return void
      */
-    protected function generateMorphToColumns($name, $annotation, &$entityMetadata)
+    protected function generateMorphToColumns($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         $morphName = (! empty($annotation->morphName))
             ? $annotation->morphName
@@ -562,7 +652,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\Table
      */
-    protected function generateBelongsToManyPivotTable($name, $annotation, &$entityMetadata)
+    protected function generateBelongsToManyPivotTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         $tableName = ($annotation->pivotTable)
             ? $annotation->pivotTable
@@ -611,7 +701,7 @@ class EntityScanner
      * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return \Wetzel\Datamapper\Metadata\Definitions\Table
      */
-    protected function generateMorphToManyPivotTable($name, $annotation, &$entityMetadata)
+    protected function generateMorphToManyPivotTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
         $morphName = $annotation->morphName;
 
@@ -678,7 +768,7 @@ class EntityScanner
      * @param array $array
      * @return void
      */
-    protected function generateMorphableClasses(&$metadata)
+    protected function generateMorphableClasses(array &$metadata)
     {
         foreach ($metadata as $key => $entityMetadata) {
             foreach ($entityMetadata['relations'] as $relationKey => $relationMetadata) {
@@ -706,7 +796,7 @@ class EntityScanner
      * @param boolean $many
      * @return void
      */
-    protected function getMorphableClasses($relatedEntity, $morphName, $metadata, $many=false)
+    protected function getMorphableClasses($relatedEntity, $morphName, array $metadata, $many=false)
     {
         $morphableClasses = [];
 

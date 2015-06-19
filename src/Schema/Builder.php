@@ -164,6 +164,10 @@ class Builder
 
         foreach ($metadata as $entityMetadata) {
             $this->generateTableFromMetadata($schema, $entityMetadata['table']);
+            // create version table
+            if (! empty($entityMetadata['versionTable'])) {
+                $this->generateTableFromMetadata($schema, $entityMetadata['versionTable']);
+            }
 
             foreach ($entityMetadata['relations'] as $relationMetadata) {
                 if (! empty($relationMetadata['pivotTable'])) {

@@ -86,46 +86,93 @@ class EntityManager
     }
 
     /**
+     * Update relations.
+     *
+     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $action
+     * @return void
+     */
+    protected function updateRelations($eloquentModel, $action='insert')
+    {
+        $mapping = $eloquentModel->getMapping();
+        $eloquentRelations = $eloquentModel->getRelations();
+
+        foreach($mapping['relations'] as $name => $relationMapping) {
+            if (isset($eloquentRelations[$name])) {
+                $this->updateRelation($eloquentModel, $name, $relationMapping, $action);
+            }
+        }
+    }
+
+    /**
      * Update a relation.
      *
      * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
-     * @param string $mode
+     * @param string $name
+     * @param array $relationMapping
+     * @param string $action
      * @return void
      */
-    protected function updateRelations($eloquentModel, $mode='insert')
+    protected function updateRelation($eloquentModel, $name, $relationMapping, $action='insert')
     {
-        $mapping = $eloquentModel->getMapping();
-        $relations = $eloquentModel->getRelations();
+        // set foreign key for belongsTo/morphTo relation
+        if ($relationMapping['type'] == 'belongsTo' || $relationMapping['type'] == 'morphTo') {
+            $this->updateBelongsToRelation($eloquentModel, $name, $action);
+        }
 
-        foreach($mapping['relations'] as $name => $relation) {
+        // set foreign keys for belongsToMany/morphToMany relation
+        if (($relationMapping['type'] == 'belongsToMany' || $relationMapping['type'] == 'morphToMany') && ! $relationMapping['inverse']) {
+            $this->updateBelongsToManyRelation($eloquentModel, $name, $action);
+        }
+    }
 
-            // set foreign key for belongsTo/morphTo relation
-            if ($relation['type'] == 'belongsTo' || $relation['type'] == 'morphTo') {
-                if ($mode == 'insert' || $mode == 'update') {
-                    $eloquentModel->{$name}()->associate($relations[$name]);
-                }
-            }
+    /**
+     * Update a belongsTo or morphTo relation.
+     *
+     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $name
+     * @param string $action
+     * @return void
+     */
+    protected function updateBelongsToRelation($eloquentModel, $name, $action='insert')
+    {
+        if ($action == 'insert' || $action == 'update') {
+            $eloquentModel->{$name}()->associate($eloquentModel->getRelation($name));
+        }
+    }
 
-            // set foreign keys for belongsToMany/morphToMany relation
-            if (($relation['type'] == 'belongsToMany' || $relation['type'] == 'morphToMany') && ! $relation['inverse']) {
-                // get related keys
-                $keys = [];
-                foreach($relations[$name] as $item) {
-                    $keys[] = $item->getKey();
-                }
+    /**
+     * Update a belongsToMany or morphToMany relation.
+     *
+     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $name
+     * @param string $action
+     * @return void
+     */
+    protected function updateBelongsToManyRelation($eloquentModel, $name, $action='insert')
+    {
+        $eloquentCollection = $eloquentModel->getRelation($name);
 
-                // attach/sync/detach keys
-                if ($mode == 'insert') {
-                    $eloquentModel->{$name}()->attach($keys);
-                }
-                if ($mode == 'update') {
-                    $eloquentModel->{$name}()->sync($keys);
-                }
-                if ($mode == 'delete') {
-                    $eloquentModel->{$name}()->detach($keys);
-                }
-            }
+        if (! $eloquentCollection instanceof \Illuminate\Database\Eloquent\Collection) {
+            throw new Exception("Many-to-many relation '".$name."' is not an array collection");
+        }
 
+        // get related keys
+        $keys = [];
+
+        foreach($eloquentCollection as $item) {
+            $keys[] = $item->getKey();
+        }
+
+        // attach/sync/detach keys
+        if ($action == 'insert') {
+            $eloquentModel->{$name}()->attach($keys);
+        }
+        if ($action == 'update') {
+            $eloquentModel->{$name}()->sync($keys);
+        }
+        if ($action == 'delete') {
+            $eloquentModel->{$name}()->detach($keys);
         }
     }
 
@@ -146,8 +193,6 @@ class EntityManager
         }
 
         $eloquentModel = Model::newFromEntity($entity);
-
-        dd($eloquentModel);
 
         $eloquentModel->exists = $exists;
 

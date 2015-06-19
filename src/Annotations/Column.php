@@ -39,7 +39,7 @@ final class Column implements Annotation
     public $nullable = false;
 
     /**
-     * @var string
+     * @var mixed
      */
     public $default;
     
@@ -67,4 +67,9 @@ final class Column implements Annotation
      * @var boolean
      */
     public $autoIncrement = false;
+
+    /**
+     * @var boolean
+     */
+    public $versioned = false;
 }

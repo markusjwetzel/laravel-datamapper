@@ -103,8 +103,11 @@ class Generator
         $this->replaceClass(class_basename(get_mapped_model($entityMetadata['class'])), $stub);
         $this->replaceMappedClass($entityMetadata['class'], $stub);
 
-        // softDeletes
+        // softDeletes trait
         $this->replaceSoftDeletes($entityMetadata['softDeletes'], $stub);
+
+        // versionable trait
+        $this->replaceVersionable($entityMetadata['versionTable'], $stub);
 
         // table name
         $this->replaceTable($entityMetadata['table']['name'], $stub);
@@ -120,6 +123,7 @@ class Generator
         // misc
         $this->replaceTouches($entityMetadata['touches'], $stub);
         $this->replaceWith($entityMetadata['with'], $stub);
+        $this->replaceVersioned($entityMetadata['versionTable'], $stub);
         $this->replaceMorphClass($entityMetadata['morphClass'], $stub);
 
         // mapping data
@@ -234,7 +238,7 @@ class Generator
     }
     
     /**
-     * Replace soft deletes.
+     * Replace softDeletes.
      *
      * @param boolean $option
      * @param string $stub
@@ -243,6 +247,19 @@ class Generator
     protected function replaceSoftDeletes($option, &$stub)
     {
         $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
+    }
+    
+    /**
+     * Replace versionable.
+     *
+     * @param boolean $option
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceVersionable($versionTable, &$stub)
+    {
+        $option = false; // $option = ($versionTable) ? true : false;
+        $stub = str_replace('{{versionable}}', $option ? 'use Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**
@@ -315,6 +332,29 @@ class Generator
     protected function replaceWith($with, &$stub)
     {
         $stub = str_replace('{{with}}', $this->getArrayAsText($with), $stub);
+    }
+    
+    /**
+     * Replace versioned.
+     *
+     * @param mixed $versionTable
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceVersioned($versionTable, &$stub)
+    {
+        if (! $versionTable) {
+            $stub = str_replace('{{versioned}}', $this->getArrayAsText([]), $stub);
+            return;
+        }
+
+        $versioned = [];
+        foreach ($versionTable['columns'] as $column) {
+            if (! $column['primary'] || $column['name'] == 'version') {
+                $versioned[] = $column['name'];
+            }
+        }
+        $stub = str_replace('{{versioned}}', $this->getArrayAsText($versioned), $stub);
     }
 
     /**

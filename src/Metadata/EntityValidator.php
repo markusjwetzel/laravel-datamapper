@@ -130,7 +130,7 @@ class EntityValidator
     }
 
     /**
-     * Validate the number of primary keys from a table.
+     * Validate the number of primary keys.
      *
      * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
@@ -150,6 +150,102 @@ class EntityValidator
             throw new DomainException('No primary key defined in class ' . $entityMetadata['class'] . '.');
         } elseif ($countPrimaryKeys > 1) {
             throw new DomainException('No composite primary keys allowed for class ' . $entityMetadata['class'] . '.');
+        }
+    }
+
+    /**
+     * Validate the timestamps columns.
+     *
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return void
+     */
+    public function validateTimestamps(EntityDefinition $entityMetadata)
+    {
+        $columnNames = [];
+
+        // get column names
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            $columnNames[] = $column['name'];
+        }
+
+        // get version column names
+        if (! empty($entityMetadata['versionTable'])) {
+            foreach ($entityMetadata['versionTable']['columns'] as $column) {
+                $columnNames[] = $column['name'];
+            }
+        }
+
+        if (! in_array('created_at', $columnNames) || ! in_array('updated_at', $columnNames)) {
+            throw new DomainException('@Timestamps annotation defined in class ' . $entityMetadata['class'] . ' requires a $createdAt and an $updatedAt column property.');
+        }
+    }
+
+    /**
+     * Validate the softdeletes column.
+     *
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return void
+     */
+    public function validateSoftDeletes(EntityDefinition $entityMetadata)
+    {
+        $columnNames = [];
+
+        // get column names
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            $columnNames[] = $column['name'];
+        }
+
+        // get version column names
+        if (! empty($entityMetadata['versionTable'])) {
+            foreach ($entityMetadata['versionTable']['columns'] as $column) {
+                $columnNames[] = $column['name'];
+            }
+        }
+
+        if (! in_array('deleted_at', $columnNames)) {
+            throw new DomainException('@SoftDeletes annotation defined in class ' . $entityMetadata['class'] . ' requires a $deletedAt column property.');
+        }
+    }
+
+    /**
+     * Validate the version table.
+     *
+     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return void
+     */
+    public function validateVersionTable(EntityDefinition $entityMetadata)
+    {
+        $columnNames = [];
+        $countPrimaryKeys = 0;
+        $versionPrimaryKey = false;
+
+        // get column names
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            $columnNames[] = $column['name'];
+        }
+
+        if (! in_array('latest_version', $columnNames)) {
+            throw new DomainException('@Versionable annotation defined in class ' . $entityMetadata['class'] . ' requires a $latestVersion column property.');
+        }
+
+        $columnNames = [];
+
+        // get version column names
+        foreach ($entityMetadata['versionTable']['columns'] as $column) {
+            $columnNames[] = $column['name'];
+            if (! empty($column['primary'])) {
+                $countPrimaryKeys++;
+            }
+            if (! empty($column['primary']) && $column['name'] == 'version') {
+                $versionPrimaryKey = true;
+            }
+        }
+
+        if (! in_array('version', $columnNames) || ! $versionPrimaryKey) {
+            throw new DomainException('@Versionable annotation defined in class ' . $entityMetadata['class'] . ' requires a $version property column, which is a primary key.');
+        }
+        if ($countPrimaryKeys > 2) {
+            throw new DomainException('No more than 2 primary keys are allowed for version table in class ' . $entityMetadata['class'] . '.');
         }
     }
 

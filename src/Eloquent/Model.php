@@ -105,41 +105,39 @@ class Model extends EloquentModel
         }
 
         // set private properties via reflection (slow!)
-        else {
-            $reflectionClass = new ReflectionClass($this->class);
+        $reflectionClass = new ReflectionClass($this->class);
 
-            $entity = $reflectionClass->newInstanceWithoutConstructor();
+        $entity = $reflectionClass->newInstanceWithoutConstructor();
 
-            // attributes
-            foreach ($this->mapping['attributes'] as $attribute => $column) {
-                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
-            }
-
-            // embeddeds
-            foreach ($this->mapping['embeddeds'] as $name => $embedded) {
-                $embeddedReflectionClass = new ReflectionClass($embedded['class']);
-
-                $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
-                foreach ($embedded['attributes'] as $attribute => $column) {
-                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
-                }
-
-                $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
-            }
-
-            // relations
-            foreach ($this->mapping['relations'] as $name => $relation) {
-                if (! empty($this->relations[$name])) {
-                    $relationObject = $this->relations[$name]->toEntity();
-                } else {
-                    $relationObject = new Proxy;
-                }
-                
-                $this->setProperty($reflectionClass, $entity, $name, $relationObject);
-            }
-
-            return $entity;
+        // attributes
+        foreach ($this->mapping['attributes'] as $attribute => $column) {
+            $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
         }
+
+        // embeddeds
+        foreach ($this->mapping['embeddeds'] as $name => $embedded) {
+            $embeddedReflectionClass = new ReflectionClass($embedded['class']);
+
+            $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
+            foreach ($embedded['attributes'] as $attribute => $column) {
+                $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
+            }
+
+            $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
+        }
+
+        // relations
+        foreach ($this->mapping['relations'] as $name => $relation) {
+            if (! empty($this->relations[$name])) {
+                $relationObject = $this->relations[$name]->toEntity();
+            } else {
+                $relationObject = new Proxy;
+            }
+            
+            $this->setProperty($reflectionClass, $entity, $name, $relationObject);
+        }
+
+        return $entity;
     }
 
     /**
@@ -150,54 +148,52 @@ class Model extends EloquentModel
      */
     public static function newFromEntity(EntityContract $entity)
     {
+        // directly get private properties if entity extends the datamapper entity class (fast!)
+        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
+            return $entity->toEloquentModel();
+        }
+
+        // get private properties via reflection (slow!)
         $class = get_mapped_model(get_class($entity));
 
         $eloquentModel = new $class;
 
-        // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
-            return $entity->toEloquentModel($eloquentModel);
+        $reflectionObject = new ReflectionObject($entity);
+
+        $mapping = $eloquentModel->getMapping();
+
+        // attributes
+        foreach ($mapping['attributes'] as $attribute => $column) {
+            if (! $eloquentModel->isGeneratedDate($column)) {
+                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+            }
         }
 
-        // get private properties via reflection (slow!)
-        else {
-            $reflectionObject = new ReflectionObject($entity);
+        // embeddeds
+        foreach ($mapping['embeddeds'] as $name => $embedded) {
+            $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
-            $mapping = $eloquentModel->getMapping();
+            $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
-            // attributes
-            foreach ($mapping['attributes'] as $attribute => $column) {
-                if (! $eloquentModel->isGeneratedDate($column)) {
-                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
-                }
+            foreach ($embedded['attributes'] as $attribute => $column) {
+                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
             }
-
-            // embeddeds
-            foreach ($mapping['embeddeds'] as $name => $embedded) {
-                $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
-
-                $embeddedReflectionObject = new ReflectionObject($embeddedObject);
-
-                foreach ($embedded['attributes'] as $attribute => $column) {
-                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
-                }
-            }
-
-            // relations
-            foreach ($mapping['relations'] as $name => $relation) {
-                $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
-
-                if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
-                    $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
-                        ? Collection::newFromEntity($relationObject)
-                        : self::newFromEntity($relationObject);
-                    
-                    $eloquentModel->setRelation($name, $value);
-                }
-            }
-
-            return $eloquentModel;
         }
+
+        // relations
+        foreach ($mapping['relations'] as $name => $relation) {
+            $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
+
+            if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
+                $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
+                    ? Collection::newFromEntity($relationObject)
+                    : self::newFromEntity($relationObject);
+                
+                $eloquentModel->setRelation($name, $value);
+            }
+        }
+
+        return $eloquentModel;
     }
 
     /**
@@ -250,35 +246,6 @@ class Model extends EloquentModel
             return true;
         }
         
-        return false;
-    }
-
-    /**
-     * Check if relation is owning side of relation.
-     *
-     * @param string $relation
-     * @return boolean
-     */
-    protected function isOwningSideOfRelation($relation)
-    {
-        $relationMapping = $this->mapping['relations'][$relation];
-
-        if ($relationMapping['type'] == 'belongsTo') {
-            return true;
-        }
-
-        if ($relationMapping['type'] == 'belongsToMany' && ! $relationMapping['inverse']) {
-            return true;
-        }
-
-        if ($relationMapping['type'] == 'morphTo') {
-            return true;
-        }
-
-        if ($relationMapping['type'] == 'morphToMany' && ! $relationMapping['inverse']) {
-            return true;
-        }
-
         return false;
     }
 

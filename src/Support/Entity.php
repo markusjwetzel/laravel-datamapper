@@ -52,11 +52,14 @@ abstract class Entity extends Model implements EntityContract
     /**
      * Convert an instance to an eloquent model object.
      *
-     * @param \Illuminate\Database\Eloquent\Model $eloquentModel
      * @return \Wetzel\Datamapper\\Eloquent\Model
      */
-    public function toEloquentModel(EloquentModel $eloquentModel)
+    public function toEloquentModel()
     {
+        $class = get_mapped_model(static::class);
+
+        $eloquentModel = new $class;
+
         // get model data
         $dict = [
             'mapping' => $eloquentModel->getMapping(),
