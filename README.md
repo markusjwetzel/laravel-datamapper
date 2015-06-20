@@ -23,7 +23,7 @@ Then you have to run `composer update` to install the package. Once this is comp
 If you want to use a facade for the entity manager, you can create an alias in the aliases array of `config/app.php`:
 
 ```
-'Entity' => 'Wetzel\Datamapper\Support\Facades\Entity'
+'EM' => 'Wetzel\Datamapper\Support\Facades\EntityManager'
 ```
 
 Run php artisan vendor:publish to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
