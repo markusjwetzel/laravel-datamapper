@@ -126,13 +126,13 @@ If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deletin
 
 #### Example #5: Versioning Plugin
 
-If an entity has the `@ORM\Versionable` annotation, you can use the versioning methods:
+If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning] package:
+
+`$user = $em->class('Entity\User')->where('id',$id)->version(2);`
 
 `$users = $em->class('Entity\User')->where('id',$id)->allVersions();`
 
-`$user = $em->class('Entity\User')->where('id',$id)->getVersion(1);`
-
-Hint: `get()` returns always the latest version.
+Hint: By default the query builder returns always the latest version.
 
 ## Support
 
