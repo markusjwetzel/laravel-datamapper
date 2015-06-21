@@ -375,7 +375,9 @@ class EntityScanner
      */
     protected function generateVersionTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
-        // duplicate primary key in version table
+        $annotation->name ='ref_' . $annotation->name;
+
+        // copy primary key to version table
         $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
     }
 

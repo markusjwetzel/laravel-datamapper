@@ -7,7 +7,7 @@ use Wetzel\Datamapper\Annotations as ORM;
 trait SoftDeletes
 {
     /**
-     * @ORM\Column(type="dateTime")
+     * @ORM\Column(type="dateTime", nullable=true)
      */
     protected $deletedAt;
 }

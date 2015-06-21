@@ -246,7 +246,7 @@ class Generator
      */
     protected function replaceSoftDeletes($option, &$stub)
     {
-        $stub = str_replace('{{softDeletes}}', $option ? 'use SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
+        $stub = str_replace('{{softDeletes}}', $option ? 'use \ProAI\Versioning\SoftDeletes;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**
@@ -258,8 +258,8 @@ class Generator
      */
     protected function replaceVersionable($versionTable, &$stub)
     {
-        $option = false; // $option = ($versionTable) ? true : false;
-        $stub = str_replace('{{versionable}}', $option ? 'use Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
+        $option = (! empty($versionTable)) ? true : false;
+        $stub = str_replace('{{versionable}}', $option ? 'use \Wetzel\Datamapper\Eloquent\Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**

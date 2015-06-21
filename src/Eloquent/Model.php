@@ -30,7 +30,7 @@ class Model extends EloquentModel
      *
      * @var array
      */
-    protected $fillable = array('*');
+    protected $fillable = array();
 
     /**
      * The attributes that aren't mass assignable.
