@@ -130,7 +130,7 @@ If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\
 
 By default the query builder returns always the latest version. If you want a specific version or all versions, you can use the following:
 
-`$user = $em->class('Entity\User')->where('id',$id)->version(2)->get();`
+`$user = $em->class('Entity\User')->version(2)->find($id);`
 
 `$users = $em->class('Entity\User')->where('id',$id)->allVersions()->get();`
 
