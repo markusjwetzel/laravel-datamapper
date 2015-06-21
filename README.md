@@ -98,7 +98,7 @@ The entity manager selects a table by passing the classname of an entity to the 
 
 #### Example #1: Get one or many User objects
 
-`$user = $em->entity('Acme\Models\User')->where('id',$id)->get();` (returns a User object)
+`$user = $em->entity('Acme\Models\User')->find($id);` (returns a User object)
 
 `$users = $em->entity('Acme\Models\User')->all();` (returns an ArrayCollection of User objects)
 
@@ -118,13 +118,21 @@ Hint: Relational objects are not inserted or updated.
 
 You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('comments.likes')`).
 
-#### Example #4: SoftDeletes Plugin
+#### Example #4: Timestamps Plugin
+
+If an entity has the `@ORM\Timestamps` annotation, the created at and updated at timestamp will be updated automatically.
+
+Note: This plugin requires a `$createdAt` property and a `$updatedAt` property. You can use the `ProAI\Datamapper\Support\Traits\Timestamps` trait for this.
+
+#### Example #5: SoftDeletes Plugin
 
 If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deleting methods from Eloquent, e. g.:
 
 `$users = $em->class('Entity\User')->withTrashed()->all();`
 
-#### Example #5: Versioning Plugin
+Note: This plugin requires a `$deletedAt` property. You can use the `ProAI\Datamapper\Support\Traits\SoftDeletes` trait for this.
+
+#### Example #6: Versioning Plugin
 
 If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning) package:
 
