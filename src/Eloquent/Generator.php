@@ -100,7 +100,7 @@ class Generator
 
         // header
         $this->replaceNamespace(get_mapped_model_namespace(), $stub);
-        $this->replaceClass(class_basename(get_mapped_model($entityMetadata['class'])), $stub);
+        $this->replaceClass(class_basename(get_mapped_model($entityMetadata['class'], false)), $stub);
         $this->replaceMappedClass($entityMetadata['class'], $stub);
 
         // softDeletes trait
@@ -399,7 +399,7 @@ class Generator
             $options = [];
 
             if ($relation['type'] != 'morphTo') {
-                $options[] = "'" . get_mapped_model($relation['relatedEntity'])."'";
+                $options[] = "'" . get_mapped_model($relation['relatedEntity'], false)."'";
             }
 
             foreach ($relation['options'] as $name => $option) {
@@ -433,7 +433,7 @@ class Generator
 
                 $morphableClasses = [];
                 foreach ($relation['options']['morphableClasses'] as $key => $name) {
-                    $morphableClasses[$key] = get_mapped_model($name);
+                    $morphableClasses[$key] = get_mapped_model($name, false);
                 }
 
                 $morphStub = str_replace('{{name}}', $relation['name'], $morphStub);

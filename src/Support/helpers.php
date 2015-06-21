@@ -51,12 +51,13 @@ if (! function_exists('get_mapped_model')) {
      * Get the classname of an entity that is used for the mapped eloquent model.
      *
      * @param string $class
+     * @param boolean $check
      * @return string
      */
-    function get_mapped_model($class)
+    function get_mapped_model($class, $check=true)
     {
         $model = get_mapped_model_namespace() . '\Entity' . get_mapped_model_hash($class);
-        if (class_exists($model)) {
+        if (class_exists($model) || ! $check) {
             return $model;
         } else {
             throw new Exception('There is no mapped Eloquent class for class "'.$class.'".');
