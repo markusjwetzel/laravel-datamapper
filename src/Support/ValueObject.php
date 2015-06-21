@@ -1,16 +1,16 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
-use Wetzel\Datamapper\Contracts\ValueObject as ValueObjectContract;
+use ProAI\Datamapper\Contracts\ValueObject as ValueObjectContract;
 
 abstract class ValueObject extends Model implements ValueObjectContract
 {
     /**
      * Compare two value objects.
      *
-     * @param \Wetzel\Datamapper\Contracts\ValueObject $valueObject
+     * @param \ProAI\Datamapper\Contracts\ValueObject $valueObject
      * @return boolean
      */
     public function equals(ValueObjectContract $valueObject)
@@ -29,7 +29,7 @@ abstract class ValueObject extends Model implements ValueObjectContract
      *
      * @param \Illuminate\Database\Eloquent\Model $eloquentModel
      * @param array $name
-     * @return \Wetzel\Datamapper\Support\ValueObject
+     * @return \ProAI\Datamapper\Support\ValueObject
      */
     public static function newFromEloquentModel(EloquentModel $eloquentModel, $name)
     {

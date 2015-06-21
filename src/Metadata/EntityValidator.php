@@ -1,12 +1,12 @@
 <?php
 
-namespace Wetzel\Datamapper\Metadata;
+namespace ProAI\Datamapper\Metadata;
 
 use Exception;
 use DomainException;
 use UnexpectedValueException;
 use InvalidArgumentException;
-use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
+use ProAI\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
 
 class EntityValidator
 {
@@ -57,8 +57,8 @@ class EntityValidator
         $check = false;
 
         foreach ($classAnnotations as $annotation) {
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embeddable ||
-                $annotation instanceof \Wetzel\Datamapper\Annotations\ValueObject
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Embeddable ||
+                $annotation instanceof \ProAI\Datamapper\Annotations\ValueObject
             ) {
                 $check = true;
             }
@@ -132,7 +132,7 @@ class EntityValidator
     /**
      * Validate the number of primary keys.
      *
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
     public function validatePrimaryKey(EntityDefinition $entityMetadata)
@@ -156,7 +156,7 @@ class EntityValidator
     /**
      * Validate the timestamps columns.
      *
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
     public function validateTimestamps(EntityDefinition $entityMetadata)
@@ -183,7 +183,7 @@ class EntityValidator
     /**
      * Validate the softdeletes column.
      *
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
     public function validateSoftDeletes(EntityDefinition $entityMetadata)
@@ -210,7 +210,7 @@ class EntityValidator
     /**
      * Validate the version table.
      *
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
     public function validateVersionTable(EntityDefinition $entityMetadata)

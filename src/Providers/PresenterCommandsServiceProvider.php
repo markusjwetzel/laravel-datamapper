@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Providers;
+namespace ProAI\Datamapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Wetzel\Datamapper\Metadata\PresenterScanner;
-use Wetzel\Datamapper\Console\PresenterRegisterCommand;
-use Wetzel\Datamapper\Console\PresenterClearCommand;
+use ProAI\Datamapper\Metadata\PresenterScanner;
+use ProAI\Datamapper\Console\PresenterRegisterCommand;
+use ProAI\Datamapper\Console\PresenterClearCommand;
 
 class PresenterCommandsServiceProvider extends ServiceProvider
 {
@@ -23,7 +23,7 @@ class PresenterCommandsServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->register('Wetzel\Datamapper\Providers\MetadataServiceProvider');
+        $this->app->register('ProAI\Datamapper\Providers\MetadataServiceProvider');
 
         $this->registerScanner();
 

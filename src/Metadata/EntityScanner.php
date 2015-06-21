@@ -1,17 +1,17 @@
 <?php
 
-namespace Wetzel\Datamapper\Metadata;
+namespace ProAI\Datamapper\Metadata;
 
 use ReflectionClass;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Wetzel\Datamapper\Metadata\EntityValidator;
-use Wetzel\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\Attribute as AttributeDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass as EmbeddedClassDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
-use Wetzel\Datamapper\Metadata\Definitions\Table as TableDefinition;
-use Wetzel\Datamapper\Annotations\Annotation;
+use ProAI\Datamapper\Metadata\EntityValidator;
+use ProAI\Datamapper\Metadata\Definitions\Entity as EntityDefinition;
+use ProAI\Datamapper\Metadata\Definitions\Attribute as AttributeDefinition;
+use ProAI\Datamapper\Metadata\Definitions\Column as ColumnDefinition;
+use ProAI\Datamapper\Metadata\Definitions\EmbeddedClass as EmbeddedClassDefinition;
+use ProAI\Datamapper\Metadata\Definitions\Relation as RelationDefinition;
+use ProAI\Datamapper\Metadata\Definitions\Table as TableDefinition;
+use ProAI\Datamapper\Annotations\Annotation;
 
 class EntityScanner
 {
@@ -25,7 +25,7 @@ class EntityScanner
     /**
      * The metadata validator instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\Validator
+     * @var \ProAI\Datamapper\Metadata\Validator
      */
     protected $validator;
 
@@ -47,7 +47,7 @@ class EntityScanner
      * Create a new metadata builder instance.
      *
      * @param \Doctrine\Common\Annotations\AnnotationReader $reader
-     * @param \Wetzel\Datamapper\Metadata\EntityValidator $validator
+     * @param \ProAI\Datamapper\Metadata\EntityValidator $validator
      * @param array $config
      * @return void
      */
@@ -101,7 +101,7 @@ class EntityScanner
         $reflectionClass = new ReflectionClass($class);
 
         // check if class is entity
-        if ($this->reader->getClassAnnotation($reflectionClass, '\Wetzel\Datamapper\Annotations\Entity')) {
+        if ($this->reader->getClassAnnotation($reflectionClass, '\ProAI\Datamapper\Annotations\Entity')) {
             return $this->parseEntity($class);
         } else {
             return null;
@@ -145,7 +145,7 @@ class EntityScanner
 
         foreach ($classAnnotations as $annotation) {
             // entity
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Entity) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Entity) {
                 if (! empty($annotation->morphClass)) {
                     $entityMetadata['morphClass'] = $annotation->morphClass;
                 }
@@ -158,17 +158,17 @@ class EntityScanner
             }
 
             // softdeletes
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\SoftDeletes) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\SoftDeletes) {
                 $entityMetadata['softDeletes'] = true;
             }
 
             // table name
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Table) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Table) {
                 $entityMetadata['table']['name'] = $annotation->value;
             }
 
             // timestamps
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Timestamps) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Timestamps) {
                 $entityMetadata['timestamps'] = true;
             }
         }
@@ -176,7 +176,7 @@ class EntityScanner
         // make sure tablename is set, then loop annotations again for versioning
         foreach ($classAnnotations as $annotation) {
             // versioned
-            if ($annotation instanceof \Wetzel\Datamapper\Annotations\Versionable) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Versionable) {
                 $entityMetadata['versionTable'] = new TableDefinition([
                     'name' => $entityMetadata['table']['name'] . '_version',
                     'columns' => [],
@@ -191,19 +191,19 @@ class EntityScanner
 
             foreach ($propertyAnnotations as $annotation) {
                 // property is embedded class
-                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Embedded) {
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Embedded) {
                     $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
                 }
 
                 // property is column
-                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Column) {
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
                     $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations);
 
                     $entityMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata);
                 }
 
                 // property is relationship
-                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Relation) {
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Relation) {
                     $entityMetadata['relations'][] = $this->parseRelation($name, $annotation, $entityMetadata);
                 }
             }
@@ -234,9 +234,9 @@ class EntityScanner
      * Parse an embedded class.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Entity $entityMetadata
-     * @return \Wetzel\Datamapper\Metadata\Definitions\EmbeddedClass
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return \ProAI\Datamapper\Metadata\Definitions\EmbeddedClass
      */
     protected function parseEmbeddedClass($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
@@ -269,7 +269,7 @@ class EntityScanner
 
             foreach ($propertyAnnotations as $annotation) {
                 // property is column
-                if ($annotation instanceof \Wetzel\Datamapper\Annotations\Column) {
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
                     $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations, true, $embeddedColumnPrefix);
 
                     $embeddedClassMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata, true);
@@ -284,7 +284,7 @@ class EntityScanner
      * Set properties of column annotation related annotations.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
      * @param array $propertyAnnotations
      * @param boolean $embedded
      * @param mixed $columnPrefix
@@ -296,16 +296,16 @@ class EntityScanner
         foreach ($propertyAnnotations as $subAnnotation) {
             if (! $embedded) {
                 // set primary key
-                if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Id) {
+                if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\Id) {
                     $annotation->primary = true;
                 }
                 // set auto increment
-                if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\AutoIncrement) {
+                if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\AutoIncrement) {
                     $annotation->autoIncrement = true;
                 }
             }
             // set versioned
-            if ($subAnnotation instanceof \Wetzel\Datamapper\Annotations\Versioned) {
+            if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\Versioned) {
                 $annotation->versioned = true;
             }
         }
@@ -318,10 +318,10 @@ class EntityScanner
      * Parse a column.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @param boolean $embedded
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Attribute
+     * @return \ProAI\Datamapper\Metadata\Definitions\Attribute
      */
     protected function parseColumn($name, Annotation $annotation, EntityDefinition &$entityMetadata, $embedded=false)
     {
@@ -344,8 +344,8 @@ class EntityScanner
      * Generate a column.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Column
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @return \ProAI\Datamapper\Metadata\Definitions\Column
      */
     protected function generateColumn($name, $annotation)
     {
@@ -369,8 +369,8 @@ class EntityScanner
      * Generate versioning table.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return void
      */
     protected function generateVersionTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
@@ -385,8 +385,8 @@ class EntityScanner
      * Generate an attribute.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Attribute
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @return \ProAI\Datamapper\Metadata\Definitions\Attribute
      */
     protected function generateAttribute($name, $annotation)
     {
@@ -401,7 +401,7 @@ class EntityScanner
     /**
      * Generate an options array for an attribute.
      *
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
      * @return array
      */
     protected function generateAttributeOptionsArray(Annotation $annotation)
@@ -432,9 +432,9 @@ class EntityScanner
      * Parse a relationship.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Relation
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @return \ProAI\Datamapper\Metadata\Definitions\Relation
      */
     protected function parseRelation($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
@@ -491,8 +491,8 @@ class EntityScanner
      * Generate an options array for a relation.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return array
      */
     protected function generateRelationOptionsArray($name, Annotation $annotation, EntityDefinition &$entityMetadata)
@@ -577,8 +577,8 @@ class EntityScanner
      * Generate extra columns for a belongsTo relation.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return void
      */
     protected function generateBelongsToColumns($name, Annotation $annotation, EntityDefinition &$entityMetadata)
@@ -603,8 +603,8 @@ class EntityScanner
      * Generate extra columns for a morphTo relation.
      *
      * @param array $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
      * @return void
      */
     protected function generateMorphToColumns($name, Annotation $annotation, EntityDefinition &$entityMetadata)
@@ -650,9 +650,9 @@ class EntityScanner
      * Generate pivot table for a belongsToMany relation.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Table
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @return \ProAI\Datamapper\Metadata\Definitions\Table
      */
     protected function generateBelongsToManyPivotTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
@@ -699,9 +699,9 @@ class EntityScanner
      * Generate pivot table for a morphToMany relation.
      *
      * @param string $name
-     * @param \Wetzel\Datamapper\Annotations\Annotation $annotation
-     * @param \Wetzel\Datamapper\Metadata\Definitions\Class $entityMetadata
-     * @return \Wetzel\Datamapper\Metadata\Definitions\Table
+     * @param \ProAI\Datamapper\Annotations\Annotation $annotation
+     * @param \ProAI\Datamapper\Metadata\Definitions\Class $entityMetadata
+     * @return \ProAI\Datamapper\Metadata\Definitions\Table
      */
     protected function generateMorphToManyPivotTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {

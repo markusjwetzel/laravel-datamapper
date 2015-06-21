@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Console;
+namespace ProAI\Datamapper\Console;
 
 use Illuminate\Console\Command;
-use Wetzel\Datamapper\Metadata\ClassFinder;
-use Wetzel\Datamapper\Metadata\PresenterScanner;
-use Wetzel\Datamapper\Presenter\Repository;
+use ProAI\Datamapper\Metadata\ClassFinder;
+use ProAI\Datamapper\Metadata\PresenterScanner;
+use ProAI\Datamapper\Presenter\Repository;
 use UnexpectedValueException;
 
 abstract class PresenterCommand extends Command
@@ -13,21 +13,21 @@ abstract class PresenterCommand extends Command
     /**
      * The class finder instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\ClassFinder
+     * @var \ProAI\Datamapper\Metadata\ClassFinder
      */
     protected $finder;
 
     /**
      * The presenter scanner instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\PresenterScanner
+     * @var \ProAI\Datamapper\Metadata\PresenterScanner
      */
     protected $scanner;
 
     /**
      * The presenter repository instance.
      *
-     * @var \Wetzel\Datamapper\Presenter\Repository
+     * @var \ProAI\Datamapper\Presenter\Repository
      */
     protected $repository;
 
@@ -41,9 +41,9 @@ abstract class PresenterCommand extends Command
     /**
      * Create a new migration install command instance.
      *
-     * @param \Wetzel\Datamapper\Metadata\ClassFinder $finder
-     * @param \Wetzel\Datamapper\Metadata\PresenterScanner $scanner
-     * @param \Wetzel\Datamapper\Presenter\Repository $schema
+     * @param \ProAI\Datamapper\Metadata\ClassFinder $finder
+     * @param \ProAI\Datamapper\Metadata\PresenterScanner $scanner
+     * @param \ProAI\Datamapper\Presenter\Repository $schema
      * @param array $config
      * @return void
      */

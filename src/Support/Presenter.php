@@ -1,12 +1,12 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
 use Exception;
 use BadMethodCallException;
 use ArrayAccess;
-use Wetzel\Datamapper\Support\Model;
-use Wetzel\Datamapper\Presenter\Decorator;
+use ProAI\Datamapper\Support\Model;
+use ProAI\Datamapper\Presenter\Decorator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 
@@ -109,7 +109,7 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
     /**
      * Get the model instance.
      *
-     * @param \Wetzel\Datamapper\Support\Model $model
+     * @param \ProAI\Datamapper\Support\Model $model
      * @return void
      */
     public function setModel(Model $model)
@@ -120,7 +120,7 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
     /**
      * Get the model instance.
      *
-     * @return \Wetzel\Datamapper\Support\Model
+     * @return \ProAI\Datamapper\Support\Model
      */
     public function getModel()
     {

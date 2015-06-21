@@ -1,8 +1,8 @@
 <?php
 
-namespace Wetzel\Datamapper\Console;
+namespace ProAI\Datamapper\Console;
 
-use Wetzel\Datamapper\Console\PresenterCommand;
+use ProAI\Datamapper\Console\PresenterCommand;
 
 class PresenterRegisterCommand extends PresenterCommand
 {

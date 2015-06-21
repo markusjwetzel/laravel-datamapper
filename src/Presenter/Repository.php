@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Presenter;
+namespace ProAI\Datamapper\Presenter;
 
 use Illuminate\Filesystem\Filesystem;
 

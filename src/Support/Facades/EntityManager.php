@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Support\Facades;
+namespace ProAI\Datamapper\Support\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Wetzel\Datamapper\EntityManager
+ * @see \ProAI\Datamapper\EntityManager
  */
 class EntityManager extends Facade
 {

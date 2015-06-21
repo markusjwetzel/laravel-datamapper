@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
 use Illuminate\Support\Collection as BaseCollection;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Eloquent;
+namespace ProAI\Datamapper\Eloquent;
 
 use ProAI\Versioning\BuilderTrait as VersioningBuilderTrait;
 

@@ -2,7 +2,7 @@
 
 namespace {{namespace}};
 
-use Wetzel\Datamapper\Eloquent\Model;
+use ProAI\Datamapper\Eloquent\Model;
 
 class {{class}} extends Model
 {

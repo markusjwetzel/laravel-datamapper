@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Eloquent;
+namespace ProAI\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder as BaseBuilder;
 

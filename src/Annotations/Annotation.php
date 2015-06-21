@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Annotations;
+namespace ProAI\Datamapper\Annotations;
 
 interface Annotation
 {

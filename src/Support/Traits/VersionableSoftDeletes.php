@@ -1,8 +1,8 @@
 <?php
 
-namespace Wetzel\Datamapper\Support\Traits;
+namespace ProAI\Datamapper\Support\Traits;
 
-use Wetzel\Datamapper\Annotations as ORM;
+use ProAI\Datamapper\Annotations as ORM;
 
 trait VersionableSoftDeletes
 {

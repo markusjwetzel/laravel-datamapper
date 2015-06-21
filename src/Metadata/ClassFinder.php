@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Metadata;
+namespace ProAI\Datamapper\Metadata;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Filesystem\ClassFinder as FilesystemClassFinder;

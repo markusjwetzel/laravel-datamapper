@@ -1,13 +1,13 @@
 <?php
 
-namespace Wetzel\Datamapper\Contracts;
+namespace ProAI\Datamapper\Contracts;
 
 interface Model
 {
     /**
      * Get the presenter instance of this model.
      *
-     * @return \Wetzel\Datamapper\Support\Presenter
+     * @return \ProAI\Datamapper\Support\Presenter
      */
     public function getPresenter();
     

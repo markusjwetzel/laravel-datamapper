@@ -1,7 +1,7 @@
 <?php namespace Cribbb\Domain\Model\Identity;
 
 //use Cribbb\Domain\RecordsEvents;
-use Wetzel\Datamapper\Mapping as ORM;
+use ProAI\Datamapper\Mapping as ORM;
 //use Cribbb\Domain\AggregateRoot;
 //use Cribbb\Domain\Model\Groups\Group;
 //use Doctrine\Common\Collections\ArrayCollection;

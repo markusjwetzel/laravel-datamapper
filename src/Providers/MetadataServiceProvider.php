@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Providers;
+namespace ProAI\Datamapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Wetzel\Datamapper\Metadata\ClassFinder;
+use ProAI\Datamapper\Metadata\ClassFinder;
 use Illuminate\Filesystem\ClassFinder as FilesystemClassFinder;
-use Wetzel\Datamapper\Metadata\AnnotationLoader;
+use ProAI\Datamapper\Metadata\AnnotationLoader;
 use Doctrine\Common\Annotations\AnnotationReader;
 
 class MetadataServiceProvider extends ServiceProvider

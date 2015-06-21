@@ -1,12 +1,12 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
-use Wetzel\Datamapper\Presenter\Repository;
-use Wetzel\Datamapper\Presenter\Decorator;
-use Wetzel\Datamapper\Support\Presenter;
-use Wetzel\Datamapper\Contracts\Model as ModelContract;
-use Wetzel\Datamapper\Contracts\Presentable;
+use ProAI\Datamapper\Presenter\Repository;
+use ProAI\Datamapper\Presenter\Decorator;
+use ProAI\Datamapper\Support\Presenter;
+use ProAI\Datamapper\Contracts\Model as ModelContract;
+use ProAI\Datamapper\Contracts\Presentable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Facades\App;
@@ -32,7 +32,7 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
     /**
      * Get the presenter instance of this model.
      *
-     * @return \Wetzel\Datamapper\Support\Presenter
+     * @return \ProAI\Datamapper\Support\Presenter
      */
     public function getPresenter()
     {

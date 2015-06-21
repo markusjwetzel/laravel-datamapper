@@ -1,15 +1,15 @@
 <?php
 
-namespace Wetzel\Datamapper\Providers;
+namespace ProAI\Datamapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Wetzel\Datamapper\Metadata\EntityScanner;
-use Wetzel\Datamapper\Metadata\EntityValidator;
-use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
-use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
-use Wetzel\Datamapper\Console\SchemaCreateCommand;
-use Wetzel\Datamapper\Console\SchemaUpdateCommand;
-use Wetzel\Datamapper\Console\SchemaDropCommand;
+use ProAI\Datamapper\Metadata\EntityScanner;
+use ProAI\Datamapper\Metadata\EntityValidator;
+use ProAI\Datamapper\Schema\Builder as SchemaBuilder;
+use ProAI\Datamapper\Eloquent\Generator as ModelGenerator;
+use ProAI\Datamapper\Console\SchemaCreateCommand;
+use ProAI\Datamapper\Console\SchemaUpdateCommand;
+use ProAI\Datamapper\Console\SchemaDropCommand;
 
 class SchemaCommandsServiceProvider extends ServiceProvider
 {
@@ -27,7 +27,7 @@ class SchemaCommandsServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->register('Wetzel\Datamapper\Providers\MetadataServiceProvider');
+        $this->app->register('ProAI\Datamapper\Providers\MetadataServiceProvider');
 
         $this->registerEntityScanner();
 

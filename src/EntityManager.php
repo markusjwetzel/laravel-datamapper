@@ -1,8 +1,8 @@
 <?php
 
-namespace Wetzel\Datamapper;
+namespace ProAI\Datamapper;
 
-use Wetzel\Datamapper\Eloquent\Model;
+use ProAI\Datamapper\Eloquent\Model;
 use Exception;
 
 class EntityManager
@@ -88,7 +88,7 @@ class EntityManager
     /**
      * Update relations.
      *
-     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
      * @param string $action
      * @return void
      */
@@ -107,7 +107,7 @@ class EntityManager
     /**
      * Update a relation.
      *
-     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
      * @param string $name
      * @param array $relationMapping
      * @param string $action
@@ -129,7 +129,7 @@ class EntityManager
     /**
      * Update a belongsTo or morphTo relation.
      *
-     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
      * @param string $name
      * @param string $action
      * @return void
@@ -144,7 +144,7 @@ class EntityManager
     /**
      * Update a belongsToMany or morphToMany relation.
      *
-     * @param \Wetzel\Datamapper\Eloquent\Model $eloquentModel
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
      * @param string $name
      * @param string $action
      * @return void
@@ -180,7 +180,7 @@ class EntityManager
      * Delete an entity object.
      *
      * @param object $entity
-     * @return \Wetzel\Datamapper\Eloquent\Model
+     * @return \ProAI\Datamapper\Eloquent\Model
      */
     protected function getEloquentModel($entity, $exists=false)
     {

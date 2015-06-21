@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Eloquent;
+namespace ProAI\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
-use Wetzel\Datamapper\Eloquent\Collection;
-use Wetzel\Datamapper\Support\Proxy;
-use Wetzel\Datamapper\Contracts\Entity as EntityContract;
+use ProAI\Datamapper\Eloquent\Collection;
+use ProAI\Datamapper\Support\Proxy;
+use ProAI\Datamapper\Contracts\Entity as EntityContract;
 use ReflectionClass;
 use ReflectionObject;
 
@@ -43,7 +43,7 @@ class Model extends EloquentModel
      * Create a new Eloquent Collection instance.
      *
      * @param  array  $eloquentModels
-     * @return \Wetzel\Datamapper\Eloquent\Collection
+     * @return \ProAI\Datamapper\Eloquent\Collection
      */
     public function newCollection(array $eloquentModels = array())
     {
@@ -53,7 +53,7 @@ class Model extends EloquentModel
     /**
      * Get a new query builder for the model's table.
      *
-     * @return \Wetzel\Datamapper\Eloquent\Builder
+     * @return \ProAI\Datamapper\Eloquent\Builder
      */
     public function newDatamapperQuery()
     {
@@ -83,7 +83,7 @@ class Model extends EloquentModel
      * Create a new Eloquent query builder for the model.
      *
      * @param  \Illuminate\Database\Query\Builder $query
-     * @return \Wetzel\Datamapper\Eloquent\Builder|static
+     * @return \ProAI\Datamapper\Eloquent\Builder|static
      */
     public function newDatamapperEloquentBuilder($query)
     {
@@ -98,7 +98,7 @@ class Model extends EloquentModel
     public function toEntity()
     {
         // directly set private properties if entity extends the datamapper entity class (fast!)
-        if (is_subclass_of($this->class, '\Wetzel\Datamapper\Support\Entity')) {
+        if (is_subclass_of($this->class, '\ProAI\Datamapper\Support\Entity')) {
             $class = $this->class;
 
             return $class::newFromEloquentModel($this);
@@ -143,13 +143,13 @@ class Model extends EloquentModel
     /**
      * Convert model to plain old php object.
      *
-     * @param \Wetzel\Datamapper\Contracts\Entity $entity
-     * @return \Wetzel\Datamapper\Eloquent\Model
+     * @param \ProAI\Datamapper\Contracts\Entity $entity
+     * @return \ProAI\Datamapper\Eloquent\Model
      */
     public static function newFromEntity(EntityContract $entity)
     {
         // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ($entity instanceof \Wetzel\Datamapper\Support\Entity) {
+        if ($entity instanceof \ProAI\Datamapper\Support\Entity) {
             return $entity->toEloquentModel();
         }
 
@@ -184,8 +184,8 @@ class Model extends EloquentModel
         foreach ($mapping['relations'] as $name => $relation) {
             $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
-            if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
-                $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
+            if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
+                $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
                     ? Collection::newFromEntity($relationObject)
                     : self::newFromEntity($relationObject);
                 

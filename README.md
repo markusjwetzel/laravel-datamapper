@@ -1,6 +1,6 @@
 # Laravel Data Mapper
 
-[![Latest Stable Version](https://poser.pugx.org/markusjwetzel/laravel-datamapper/v/stable)](https://packagist.org/packages/markusjwetzel/laravel-datamapper) [![Total Downloads](https://poser.pugx.org/markusjwetzel/laravel-datamapper/downloads)](https://packagist.org/packages/markusjwetzel/laravel-datamapper) [![Latest Unstable Version](https://poser.pugx.org/markusjwetzel/laravel-datamapper/v/unstable)](https://packagist.org/packages/markusjwetzel/laravel-datamapper) [![License](https://poser.pugx.org/markusjwetzel/laravel-datamapper/license)](https://packagist.org/packages/markusjwetzel/laravel-datamapper)
+[![Latest Stable Version](https://poser.pugx.org/proai/laravel-datamapper/v/stable)](https://packagist.org/packages/proai/laravel-datamapper) [![Total Downloads](https://poser.pugx.org/proai/laravel-datamapper/downloads)](https://packagist.org/packages/proai/laravel-datamapper) [![Latest Unstable Version](https://poser.pugx.org/proai/laravel-datamapper/v/unstable)](https://packagist.org/packages/proai/laravel-datamapper) [![License](https://poser.pugx.org/proai/laravel-datamapper/license)](https://packagist.org/packages/proai/laravel-datamapper)
 
 **Important: This is an alpha version. So it might be that not everything works out of the box. You are welcome to report bugs.**
 
@@ -11,19 +11,19 @@ An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach
 Laravel Data Mapper is distributed as a composer package. So you first have to add the package to your `composer.json` file:
 
 ```
-"markusjwetzel/laravel-datamapper": "~1.0@dev"
+"proai/laravel-datamapper": "~1.0@dev"
 ```
 
 Then you have to run `composer update` to install the package. Once this is completed, you have to add the service provider to the providers array in `config/app.php`:
 
 ```
-'Wetzel\Datamapper\DatamapperServiceProvider'
+'ProAI\Datamapper\DatamapperServiceProvider'
 ```
 
 If you want to use a facade for the entity manager, you can create an alias in the aliases array of `config/app.php`:
 
 ```
-'EM' => 'Wetzel\Datamapper\Support\Facades\EntityManager'
+'EM' => 'ProAI\Datamapper\Support\Facades\EntityManager'
 ```
 
 Run php artisan vendor:publish to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
@@ -37,8 +37,8 @@ We will map all classes to a database table by using annotations. Annotations ar
 ```php
 <?php
 
-use Wetzel\Datamapper\Support\Entity;
-use Wetzel\Datamapper\Annotations as ORM;
+use ProAI\Datamapper\Support\Entity;
+use ProAI\Datamapper\Annotations as ORM;
 
 /**
  * @ORM\Entity
@@ -81,7 +81,7 @@ As already mentioned the Laravel Data Mapper is an extension of the Laravel Quer
 ```php
 <?php
 
-use Wetzel\Datamapper\EntityManager;
+use ProAI\Datamapper\EntityManager;
 
 class UserRepository {
 
@@ -136,7 +136,7 @@ Hint: `get()` returns always the latest version.
 
 ## Support
 
-Bugs and feature requests are tracked on [GitHub](https://github.com/markusjwetzel/laravel-datamapper/issues).
+Bugs and feature requests are tracked on [GitHub](https://github.com/proai/laravel-datamapper/issues).
 
 ## License
 

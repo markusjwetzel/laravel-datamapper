@@ -1,8 +1,8 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
-use Wetzel\Datamapper\Contracts\AggregateRoot as AggregateRootContract;
+use ProAI\Datamapper\Contracts\AggregateRoot as AggregateRootContract;
 
 abstract class AggregateRoot extends Entity implements AggregateRootContract
 {

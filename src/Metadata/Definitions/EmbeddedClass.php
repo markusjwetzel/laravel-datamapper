@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Metadata\Definitions;
+namespace ProAI\Datamapper\Metadata\Definitions;
 
 class EmbeddedClass extends Definition
 {

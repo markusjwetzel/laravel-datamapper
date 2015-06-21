@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Presenter;
+namespace ProAI\Datamapper\Presenter;
 
 use Exception;
 
@@ -16,9 +16,9 @@ class Decorator
     public static function decorate($item, $toArray=false)
     {
         // make item presentable
-        if ($item instanceof \Wetzel\Datamapper\Contracts\Presentable) {
+        if ($item instanceof \ProAI\Datamapper\Contracts\Presentable) {
             if ($toArray) {
-                if ($item instanceof \Wetzel\Datamapper\Contracts\Stringable) {
+                if ($item instanceof \ProAI\Datamapper\Contracts\Stringable) {
                     return $item->toString();
                 }
                 if ($item instanceof \Illuminate\Contracts\Support\Arrayable) {
@@ -46,7 +46,7 @@ class Decorator
         // throw exception if unknown item was not converted in case of array conversion
         if ($toArray && is_object($item) && ! self::isCollection($item)) {
             // item is proxy
-            if ($item instanceof \Wetzel\Datamapper\Contracts\Proxy) {
+            if ($item instanceof \ProAI\Datamapper\Contracts\Proxy) {
                 return $item->toArray();
             }
 

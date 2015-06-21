@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Eloquent;
+namespace ProAI\Datamapper\Eloquent;
 
 use Illuminate\Filesystem\Filesystem;
 
@@ -259,7 +259,7 @@ class Generator
     protected function replaceVersionable($versionTable, &$stub)
     {
         $option = (! empty($versionTable)) ? true : false;
-        $stub = str_replace('{{versionable}}', $option ? 'use \Wetzel\Datamapper\Eloquent\Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
+        $stub = str_replace('{{versionable}}', $option ? 'use \ProAI\Datamapper\Eloquent\Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**

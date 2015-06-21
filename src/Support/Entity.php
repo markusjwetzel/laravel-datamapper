@@ -1,10 +1,10 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
-use Wetzel\Datamapper\Eloquent\Model as EloquentModel;
-use Wetzel\Datamapper\Eloquent\Collection as EloquentCollection;
-use Wetzel\Datamapper\Contracts\Entity as EntityContract;
+use ProAI\Datamapper\Eloquent\Model as EloquentModel;
+use ProAI\Datamapper\Eloquent\Collection as EloquentCollection;
+use ProAI\Datamapper\Contracts\Entity as EntityContract;
 
 abstract class Entity extends Model implements EntityContract
 {
@@ -12,7 +12,7 @@ abstract class Entity extends Model implements EntityContract
      * Build new instance from an eloquent model object.
      *
      * @param \Illuminate\Database\Eloquent\Model $eloquentModel
-     * @return \Wetzel\Datamapper\Support\Entity
+     * @return \ProAI\Datamapper\Support\Entity
      */
     public static function newFromEloquentModel(EloquentModel $eloquentModel)
     {
@@ -52,7 +52,7 @@ abstract class Entity extends Model implements EntityContract
     /**
      * Convert an instance to an eloquent model object.
      *
-     * @return \Wetzel\Datamapper\\Eloquent\Model
+     * @return \ProAI\Datamapper\\Eloquent\Model
      */
     public function toEloquentModel()
     {
@@ -85,8 +85,8 @@ abstract class Entity extends Model implements EntityContract
         foreach ($dict['mapping']['relations'] as $name => $relation) {
             $relationObject = $this->{$name};
 
-            if (! empty($relationObject) && ! $relationObject instanceof \Wetzel\Datamapper\Contracts\Proxy) {
-                $value = ($relationObject instanceof \Wetzel\Datamapper\Support\Collection)
+            if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
+                $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
                     ? EloquentCollection::newFromEntity($relationObject)
                     : EloquentModel::newFromEntity($relationObject);
                 

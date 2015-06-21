@@ -6,8 +6,8 @@ include '../src/Mapping.php';
 
 include 'Model/User.php';
 
-use Wetzel\Datamapper\Mapping;
-use Wetzel\Datamapper\Model;
+use ProAI\Datamapper\Mapping;
+use ProAI\Datamapper\Model;
 
 $mapping = new Mapping('Cribbb\Domain\Model\Identity\User');
 

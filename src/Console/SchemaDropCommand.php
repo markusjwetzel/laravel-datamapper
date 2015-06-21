@@ -1,11 +1,11 @@
 <?php
 
-namespace Wetzel\Datamapper\Console;
+namespace ProAI\Datamapper\Console;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
-use Wetzel\Datamapper\Console\SchemaCommand;
+use ProAI\Datamapper\Console\SchemaCommand;
 
 class SchemaDropCommand extends SchemaCommand
 {

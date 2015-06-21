@@ -1,10 +1,10 @@
 <?php
 
-namespace Wetzel\Datamapper;
+namespace ProAI\Datamapper;
 
 use Illuminate\Support\ServiceProvider;
-use Wetzel\Datamapper\Presenter\Repository;
-use Wetzel\Datamapper\Presenter\Decorator;
+use ProAI\Datamapper\Presenter\Repository;
+use ProAI\Datamapper\Presenter\Decorator;
 
 class DatamapperServiceProvider extends ServiceProvider
 {
@@ -43,9 +43,9 @@ class DatamapperServiceProvider extends ServiceProvider
 
         $this->registerEloquentModels();
 
-        $this->app->register('Wetzel\Datamapper\Providers\SchemaCommandsServiceProvider');
+        $this->app->register('ProAI\Datamapper\Providers\SchemaCommandsServiceProvider');
 
-        $this->app->register('Wetzel\Datamapper\Providers\PresenterCommandsServiceProvider');
+        $this->app->register('ProAI\Datamapper\Providers\PresenterCommandsServiceProvider');
     }
 
     /**

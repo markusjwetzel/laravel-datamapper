@@ -1,12 +1,12 @@
 <?php
 
-namespace Wetzel\Datamapper\Console;
+namespace ProAI\Datamapper\Console;
 
 use Illuminate\Console\Command;
-use Wetzel\Datamapper\Metadata\ClassFinder;
-use Wetzel\Datamapper\Metadata\EntityScanner;
-use Wetzel\Datamapper\Schema\Builder as SchemaBuilder;
-use Wetzel\Datamapper\Eloquent\Generator as ModelGenerator;
+use ProAI\Datamapper\Metadata\ClassFinder;
+use ProAI\Datamapper\Metadata\EntityScanner;
+use ProAI\Datamapper\Schema\Builder as SchemaBuilder;
+use ProAI\Datamapper\Eloquent\Generator as ModelGenerator;
 use UnexpectedValueException;
 
 abstract class SchemaCommand extends Command
@@ -14,28 +14,28 @@ abstract class SchemaCommand extends Command
     /**
      * The class finder instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\ClassFinder
+     * @var \ProAI\Datamapper\Metadata\ClassFinder
      */
     protected $finder;
 
     /**
      * The entity scanner instance.
      *
-     * @var \Wetzel\Datamapper\Metadata\EntityScanner
+     * @var \ProAI\Datamapper\Metadata\EntityScanner
      */
     protected $scanner;
 
     /**
      * The schema builder instance.
      *
-     * @var \Wetzel\Datamapper\Schema\Builder
+     * @var \ProAI\Datamapper\Schema\Builder
      */
     protected $schema;
 
     /**
      * The schema builder instance.
      *
-     * @var \Wetzel\Datamapper\Eloquent\Generator
+     * @var \ProAI\Datamapper\Eloquent\Generator
      */
     protected $modelGenerator;
 
@@ -49,10 +49,10 @@ abstract class SchemaCommand extends Command
     /**
      * Create a new migration install command instance.
      *
-     * @param \Wetzel\Datamapper\Metadata\ClassFinder $finder
-     * @param \Wetzel\Datamapper\Metadata\EntityScanner $scanner
-     * @param \Wetzel\Datamapper\Schema\Builder $schema
-     * @param \Wetzel\Datamapper\Eloquent\Generator $models
+     * @param \ProAI\Datamapper\Metadata\ClassFinder $finder
+     * @param \ProAI\Datamapper\Metadata\EntityScanner $scanner
+     * @param \ProAI\Datamapper\Schema\Builder $schema
+     * @param \ProAI\Datamapper\Eloquent\Generator $models
      * @param array $config
      * @return void
      */

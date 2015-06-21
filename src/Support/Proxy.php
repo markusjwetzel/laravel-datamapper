@@ -1,8 +1,8 @@
 <?php
 
-namespace Wetzel\Datamapper\Support;
+namespace ProAI\Datamapper\Support;
 
-use Wetzel\Datamapper\Contracts\Proxy as ProxyContract;
+use ProAI\Datamapper\Contracts\Proxy as ProxyContract;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use ArrayAccess;

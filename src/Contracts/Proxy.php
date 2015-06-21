@@ -1,6 +1,6 @@
 <?php
 
-namespace Wetzel\Datamapper\Contracts;
+namespace ProAI\Datamapper\Contracts;
 
 interface Proxy
 {
