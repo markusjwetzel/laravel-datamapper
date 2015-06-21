@@ -1,4 +1,4 @@
-# Laravel Data Mapper
+# Laravel Datamapper
 
 [![Latest Stable Version](https://poser.pugx.org/proai/laravel-datamapper/v/stable)](https://packagist.org/packages/proai/laravel-datamapper) [![Total Downloads](https://poser.pugx.org/proai/laravel-datamapper/downloads)](https://packagist.org/packages/proai/laravel-datamapper) [![Latest Unstable Version](https://poser.pugx.org/proai/laravel-datamapper/v/unstable)](https://packagist.org/packages/proai/laravel-datamapper) [![License](https://poser.pugx.org/proai/laravel-datamapper/license)](https://packagist.org/packages/proai/laravel-datamapper)
 
