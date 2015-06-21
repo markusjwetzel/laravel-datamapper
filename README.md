@@ -136,7 +136,7 @@ Note: This plugin requires a `$deletedAt` property. You can use the `ProAI\Datam
 
 #### Versioning
 
-If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning) package:
+If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning) package. So make sure you have installed this package.
 
 By default the query builder returns always the latest version. If you want a specific version or all versions, you can use the following:
 
