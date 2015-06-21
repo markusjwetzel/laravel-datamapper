@@ -375,10 +375,13 @@ class EntityScanner
      */
     protected function generateVersionTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
+        $realName = $annotation->name;
         $annotation->name ='ref_' . $annotation->name;
 
         // copy primary key to version table
         $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
+
+        $annotation->name = $realName;
     }
 
     /**
