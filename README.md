@@ -120,7 +120,7 @@ You can use the `with()` method the same way as you use it with Eloquent objects
 
 #### Example #4: Timestamps Plugin
 
-If an entity has the `@ORM\Timestamps` annotation, the created at and updated at timestamp will be updated automatically.
+If an entity has the `@ORM\Timestamps` annotation, `$timestamps` will be set to true in the mapped Eloquent model, so the created at and updated at timestamp will be updated automatically on insert and update.
 
 Note: This plugin requires a `$createdAt` property and a `$updatedAt` property. You can use the `ProAI\Datamapper\Support\Traits\Timestamps` trait for this.
 
