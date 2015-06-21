@@ -26,7 +26,7 @@ If you want to use a facade for the entity manager, you can create an alias in t
 'EM' => 'ProAI\Datamapper\Support\Facades\EntityManager'
 ```
 
-Run php artisan vendor:publish to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
+Run `php artisan vendor:publish` to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
 
 ## Usage
 
