@@ -126,7 +126,7 @@ If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deletin
 
 #### Example #5: Versioning Plugin
 
-If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning] package:
+If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning) package:
 
 By default the query builder returns always the latest version. If you want a specific version or all versions, you can use the following:
 
