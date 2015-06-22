@@ -97,13 +97,13 @@ class UserRepository {
 
 The entity manager selects a table by passing the classname of an entity to the manager (e. g. `$em->entity('Acme\Models\User')`. The `entity` method then returns an object of the modified Laravel Query Builder, so you can chain all query builder methods after it (see examples).
 
-#### Example #1: Get one or many User objects
+##### Example #1: Get one or many User objects
 
 `$user = $em->entity('Acme\Models\User')->find($id);` (returns a User object)
 
 `$users = $em->entity('Acme\Models\User')->all();` (returns an ArrayCollection of User objects)
 
-#### Example #2: Insert, update and delete a record
+##### Example #2: Insert, update and delete a record
 
 `$em->insert($user);`
 
@@ -113,7 +113,7 @@ The entity manager selects a table by passing the classname of an entity to the 
 
 Hint: Relational objects are not inserted or updated.
 
-#### Example #3: Eager Loading
+##### Example #3: Eager Loading
 
 `$users = $em->class('Entity\User')->with('comments')->get();`
 
@@ -121,13 +121,13 @@ You can use the `with()` method the same way as you use it with Eloquent objects
 
 ### Entity Plugins
 
-#### Timestamps
+##### Timestamps
 
 If an entity has the `@ORM\Timestamps` annotation, `$timestamps` will be set to true in the mapped Eloquent model, so the created at and updated at timestamp will be updated automatically on insert and update.
 
 Note: This plugin requires a `$createdAt` property and a `$updatedAt` property. You can use the `ProAI\Datamapper\Support\Traits\Timestamps` trait for this.
 
-#### SoftDeletes
+##### SoftDeletes
 
 If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deleting methods from Eloquent, e. g.:
 
@@ -135,7 +135,7 @@ If an entity has the `@ORM\SoftDeletes` annotation, you can use the soft deletin
 
 Note: This plugin requires a `$deletedAt` property. You can use the `ProAI\Datamapper\Support\Traits\SoftDeletes` trait for this.
 
-#### Versioning
+##### Versioning
 
 If an entity has the `@ORM\Versionable` annotation and you have added the `@ORM\Versioned` annotation to all versioned properties, you can use the versioning methods of the [Eloquent Versioning](https://github.com/proai/eloquent-versioning) package. So make sure you have installed this package.
 
