@@ -28,6 +28,10 @@ If you want to use a facade for the entity manager, you can create an alias in t
 
 Run `php artisan vendor:publish` to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
 
+## Documentation
+
+See the [Wiki](https://github.com/ProAI/laravel-datamapper/wiki) for a full documentation.
+
 ## Usage
 
 ### Annotations
