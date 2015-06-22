@@ -119,7 +119,7 @@ Hint: Relational objects are not inserted or updated.
 
 You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('comments.likes')`).
 
-### Plugins
+### Entity Plugins
 
 #### Timestamps
 
@@ -144,6 +144,10 @@ By default the query builder returns always the latest version. If you want a sp
 `$user = $em->class('Entity\User')->version(2)->find($id);`
 
 `$users = $em->class('Entity\User')->where('id',$id)->allVersions()->get();`
+
+### Presenters
+
+This package has a built-in presenters package. Check out the [Presenters](https://github.com/ProAI/laravel-datamapper/wiki/Presenters) page in the wiki for more information.
 
 ## Support
 
