@@ -56,7 +56,7 @@ class User extends Entity
     /**
      * @ORM\Embedded(class="Acme\Models\Email")
      */
-    protected $id;
+    protected $email;
 
     /**
      * @ORM\Relation(type="hasMany", foreignEntity="Acme\Models\Comment")
