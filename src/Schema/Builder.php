@@ -20,8 +20,6 @@ class Builder
         // integers
         'bigInteger' => ['type' => 'bigint'],
         'smallInteger' => ['type' => 'smallint'],
-        'increments' => ['type' => 'integer', 'primary' => true, 'options' => ['unsigned' => true, 'autoIncrement' => true]],
-        'bigIncrements' => ['type' => 'bigint', 'primary' => true, 'options' => ['unsigned' => true, 'autoIncrement' => true]],
         // chars
         'char' => ['type' => 'string', 'options' => ['fixed' => true]],
         // texts
