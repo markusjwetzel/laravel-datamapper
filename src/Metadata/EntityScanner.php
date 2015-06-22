@@ -143,8 +143,9 @@ class EntityScanner
             'relations' => [],
         ]);
 
+        // find entity parameters and plugins
         foreach ($classAnnotations as $annotation) {
-            // entity
+            // entity parameters
             if ($annotation instanceof \ProAI\Datamapper\Annotations\Entity) {
                 if (! empty($annotation->morphClass)) {
                     $entityMetadata['morphClass'] = $annotation->morphClass;
@@ -173,9 +174,8 @@ class EntityScanner
             }
         }
 
-        // make sure tablename is set, then loop annotations again for versioning
+        // find versionable annotation (2nd loop, because table name is required)
         foreach ($classAnnotations as $annotation) {
-            // versioned
             if ($annotation instanceof \ProAI\Datamapper\Annotations\Versionable) {
                 $entityMetadata['versionTable'] = new TableDefinition([
                     'name' => $entityMetadata['table']['name'] . '_version',
@@ -184,33 +184,41 @@ class EntityScanner
             }
         }
 
-        // scan property annotations
+        // find columns and embedded classes
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             $name = $this->getSanitizedName($reflectionProperty->getName(), $entityMetadata['class']);
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
 
             foreach ($propertyAnnotations as $annotation) {
-                // property is embedded class
-                if ($annotation instanceof \ProAI\Datamapper\Annotations\Embedded) {
-                    $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
-                }
-
-                // property is column
+                // column
                 if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
                     $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations);
 
                     $entityMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata);
                 }
 
-                // property is relationship
-                if ($annotation instanceof \ProAI\Datamapper\Annotations\Relation) {
-                    $entityMetadata['relations'][] = $this->parseRelation($name, $annotation, $entityMetadata);
+                // embedded class
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Embedded) {
+                    $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
                 }
             }
         }
 
         // check primary key
         $this->validator->validatePrimaryKey($entityMetadata);
+
+        // find relationships (2nd loop, because primary key column is required for foreign keys)
+        foreach ($reflectionClass->getProperties() as $reflectionProperty) {
+            $name = $this->getSanitizedName($reflectionProperty->getName(), $entityMetadata['class']);
+            $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
+
+            foreach ($propertyAnnotations as $annotation) {
+                // relation
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Relation) {
+                    $entityMetadata['relations'][] = $this->parseRelation($name, $annotation, $entityMetadata);
+                }
+            }
+        }
 
         // check timestamps extension
         if (! empty($entityMetadata['timestamps'])) {
@@ -588,17 +596,9 @@ class EntityScanner
     {
         $relatedForeignKey = $annotation->relatedForeignKey ?: $this->generateKey($annotation->relatedEntity);
 
-        $entityMetadata['table']['columns'][] = new ColumnDefinition([
+        $entityMetadata['table']['columns'][] = $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
             'name' => $relatedForeignKey,
-            'type' => 'integer',
-            'nullable' => false,
-            'default' => false,
             'primary' => false,
-            'unique' => false,
-            'index' => false,
-            'options' => [
-                'unsigned' => true
-            ]
         ]);
     }
 
@@ -624,17 +624,9 @@ class EntityScanner
             ? $annotation->morphType
             : $morphName.'_type';
 
-        $entityMetadata['table']['columns'][] = new ColumnDefinition([
+        $entityMetadata['table']['columns'][] = $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
             'name' => $morphId,
-            'type' => 'integer',
-            'nullable' => false,
-            'default' => false,
             'primary' => false,
-            'unique' => false,
-            'index' => false,
-            'options' => [
-                'unsigned' => true
-            ]
         ]);
 
         $entityMetadata['table']['columns'][] = new ColumnDefinition([
@@ -670,29 +662,11 @@ class EntityScanner
         return new TableDefinition([
             'name' => $tableName,
             'columns' => [
-                new ColumnDefinition([
+                $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $localPivotKey,
-                    'type' => 'integer',
-                    'nullable' => false,
-                    'default' => false,
-                    'primary' => true,
-                    'unique' => false,
-                    'index' => false,
-                    'options' => [
-                        'unsigned' => true
-                    ]
                 ]),
-                new ColumnDefinition([
+                $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $relatedPivotKey,
-                    'type' => 'integer',
-                    'nullable' => false,
-                    'default' => false,
-                    'primary' => true,
-                    'unique' => false,
-                    'index' => false,
-                    'options' => [
-                        'unsigned' => true
-                    ]
                 ]),
             ]
         ]);
@@ -729,29 +703,11 @@ class EntityScanner
         return new TableDefinition([
             'name' => $tableName,
             'columns' => [
-                new ColumnDefinition([
+                $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $pivotKey,
-                    'type' => 'integer',
-                    'nullable' => false,
-                    'default' => false,
-                    'primary' => true,
-                    'unique' => false,
-                    'index' => false,
-                    'options' => [
-                        'unsigned' => true
-                    ]
                 ]),
-                new ColumnDefinition([
+                $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $morphId,
-                    'type' => 'integer',
-                    'nullable' => false,
-                    'default' => false,
-                    'primary' => true,
-                    'unique' => false,
-                    'index' => false,
-                    'options' => [
-                        'unsigned' => true
-                    ]
                 ]),
                 new ColumnDefinition([
                     'name' => $morphType,
@@ -765,6 +721,28 @@ class EntityScanner
                 ]),
             ]
         ]);
+    }
+
+    /**
+     * Get primary key column.
+     *
+     * @param \ProAI\Datamapper\Metadata\Definitions\Table $tableMetadata
+     * @param array $data
+     * @return \ProAI\Datamapper\Metadata\Definitions\Column
+     */
+    protected function getModifiedPrimaryKeyColumn(TableDefinition $tableMetadata, array $data)
+    {
+        foreach($tableMetadata['columns'] as $columnMetadata) {
+            print $columnMetadata['primary']['name'];
+            if ($columnMetadata['primary']) {
+                $modifiedColumnMetadata = clone $columnMetadata;
+                foreach($data as $key => $value) {
+                    $modifiedColumnMetadata[$key] = $value;
+                }
+                return $modifiedColumnMetadata;
+            }
+        }
+        return false;
     }
 
     /**
