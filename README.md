@@ -49,7 +49,7 @@ class User extends Entity
     /**
      * @ORM\Id
      * @ORM\AutoIncrement
-     * @ORM\Column(type="increments")
+     * @ORM\Column(type="integer")
      */
     protected $id;
     
