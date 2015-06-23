@@ -302,15 +302,17 @@ class EntityScanner
     {
         // scan for primary and versioned property
         foreach ($propertyAnnotations as $subAnnotation) {
-            if (! $embedded) {
-                // set primary key
-                if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\Id) {
-                    $annotation->primary = true;
-                }
-                // set auto increment
-                if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\AutoIncrement) {
-                    $annotation->autoIncrement = true;
-                }
+            // set primary key
+            if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\Id) {
+                $annotation->primary = true;
+            }
+            // set auto increment
+            if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\AutoIncrement) {
+                $annotation->autoIncrement = true;
+            }
+            // set auto increment
+            if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\AutoUuid) {
+                $annotation->autoUuid = true;
             }
             // set versioned
             if ($subAnnotation instanceof \ProAI\Datamapper\Annotations\Versioned) {
@@ -383,13 +385,12 @@ class EntityScanner
      */
     protected function generateVersionTable($name, Annotation $annotation, EntityDefinition &$entityMetadata)
     {
-        $realName = $annotation->name;
+        $annotation = clone $annotation;
         $annotation->name ='ref_' . $annotation->name;
+        $annotation->autoIncrement = false;
 
         // copy primary key to version table
         $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
-
-        $annotation->name = $realName;
     }
 
     /**
@@ -428,6 +429,7 @@ class EntityScanner
         if ($annotation->type == 'smallInteger' || $annotation->type == 'integer' || $annotation->type == 'bigInteger') {
             $options['unsigned'] = $annotation->unsigned;
             $options['autoIncrement'] = $annotation->autoIncrement;
+            $options['autoUuid'] = $annotation->autoUuid;
         }
 
         // scale and precision option

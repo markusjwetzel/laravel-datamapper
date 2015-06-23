@@ -91,7 +91,7 @@ class Generator
     /**
      * Generate model from metadata.
      *
-     * @param array $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return void
      */
     public function generateModel($entityMetadata)
@@ -103,17 +103,16 @@ class Generator
         $this->replaceClass(class_basename(get_mapped_model($entityMetadata['class'], false)), $stub);
         $this->replaceMappedClass($entityMetadata['class'], $stub);
 
-        // softDeletes trait
-        $this->replaceSoftDeletes($entityMetadata['softDeletes'], $stub);
-
-        // versionable trait
-        $this->replaceVersionable($entityMetadata['versionTable'], $stub);
+        // traits
+        $this->replaceTraits($entityMetadata, $stub);
 
         // table name
         $this->replaceTable($entityMetadata['table']['name'], $stub);
 
         // primary key
-        list($primaryKey, $incrementing) = $this->getPrimaryKey($entityMetadata);
+        $columnMetadata = $this->getPrimaryKeyColumn($entityMetadata);
+        $primaryKey = $columnMetadata['name'];
+        $incrementing = (! empty($columnMetadata['options']['autoIncrement']));
         $this->replacePrimaryKey($primaryKey, $stub);
         $this->replaceIncrementing($incrementing, $stub);
 
@@ -139,28 +138,25 @@ class Generator
     /**
      * Get primary key and auto increment value.
      *
-     * @param  array  $entityMetadata
-     * @return array
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return \ProAI\Datamapper\Metadata\Definitions\Column
      */
-    protected function getPrimaryKey($entityMetadata)
+    protected function getPrimaryKeyColumn($entityMetadata)
     {
         $primaryKey = 'id';
         $incrementing = true;
 
         foreach ($entityMetadata['table']['columns'] as $column) {
-            if (! empty($column['primary'])) {
-                $primaryKey = $column['name'];
-                $incrementing = (! empty($column['options']['autoIncrement']));
+            if ($column['primary']) {
+                return $column;
             }
         }
-
-        return [$primaryKey, $incrementing];
     }
 
     /**
      * Generate mapping array.
      *
-     * @param  array  $entityMetadata
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return array
      */
     protected function generateMappingData($entityMetadata)
@@ -238,6 +234,37 @@ class Generator
     }
     
     /**
+     * Replace traits.
+     *
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceTraits($entityMetadata, &$stub)
+    {
+        $traits = [];
+
+        // versionable
+        if (! empty($entityMetadata['versionTable'])) {
+            $traits['versionable'] = 'use \ProAI\Versioning\Versionable;';
+        }
+
+        // softDeletes
+        if ($entityMetadata['softDeletes']) {
+            $traits['softDeletes'] = 'use \ProAI\Versioning\SoftDeletes;';
+        }
+
+        // autoUuid
+        $columnMetadata = $this->getPrimaryKeyColumn($entityMetadata);
+        if (! empty($columnMetadata['options']['autoUuid'])) {
+            $traits['autoUuid'] = 'use \ProAI\Datamapper\Eloquent\AutoUuid;';
+        }
+
+        $separator = PHP_EOL . PHP_EOL . '    ';
+        $stub = str_replace('{{traits}}', implode($separator, $traits) . PHP_EOL . PHP_EOL . '    ', $stub);
+    }
+    
+    /**
      * Replace softDeletes.
      *
      * @param boolean $option
@@ -259,7 +286,7 @@ class Generator
     protected function replaceVersionable($versionTable, &$stub)
     {
         $option = (! empty($versionTable)) ? true : false;
-        $stub = str_replace('{{versionable}}', $option ? 'use \ProAI\Versioning\Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
+        $stub = str_replace('{{versionable}}', (! empty($versionTable)) ? 'use \ProAI\Versioning\Versionable;' . PHP_EOL . PHP_EOL . '    ' : '', $stub);
     }
     
     /**

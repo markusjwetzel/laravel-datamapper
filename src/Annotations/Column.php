@@ -71,5 +71,10 @@ final class Column implements Annotation
     /**
      * @var boolean
      */
+    public $autoUuid = false;
+
+    /**
+     * @var boolean
+     */
     public $versioned = false;
 }
