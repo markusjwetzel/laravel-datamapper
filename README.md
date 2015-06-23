@@ -63,7 +63,7 @@ class User extends Entity
     protected $email;
 
     /**
-     * @ORM\Relation(type="hasMany", foreignEntity="Acme\Models\Comment")
+     * @ORM\Relation(type="hasMany", relatedEntity="Acme\Models\Comment")
      */
     protected $comments;
 }
