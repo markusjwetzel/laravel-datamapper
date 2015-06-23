@@ -6,7 +6,7 @@ use ProAI\Datamapper\Eloquent\Model;
 
 class {{class}} extends Model
 {
-    {{versionable}}{{softDeletes}}protected $class = {{mappedClass}};
+    {{traits}}protected $class = {{mappedClass}};
 
     protected $mapping = {{mapping}};
 
