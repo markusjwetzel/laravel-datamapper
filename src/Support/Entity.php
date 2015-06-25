@@ -78,7 +78,9 @@ abstract class Entity extends Model implements EntityContract
         foreach ($dict['mapping']['embeddeds'] as $name => $embedded) {
             $embeddedObject = $this->{$name};
 
-            $embeddedObject->toEloquentModel($eloquentModel, $name);
+            if (! empty($embeddedObject)) {
+                $embeddedObject->toEloquentModel($eloquentModel, $name);
+            }
         }
 
         // relations

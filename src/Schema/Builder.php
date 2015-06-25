@@ -294,6 +294,11 @@ class Builder
             $options['autoincrement'] = $columnMetadata['options']['autoIncrement'];
         }
 
+        // alias for fixed option
+        if (! empty($columnMetadata['options']['fixed'])) {
+            $options['fixed'] = $columnMetadata['options']['fixed'];
+        }
+
         return $options;
     }
 }

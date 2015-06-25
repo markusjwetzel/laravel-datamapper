@@ -14,7 +14,9 @@ trait AutoUuid
     protected static function bootAutoUuid()
     {
         static::creating(function ($model) {
-            $model->{$model->getKeyName()} = $model->generateUuid();
+            foreach($model->getAutoUuids() as $autoUuid) {
+                $model->setAttribute($autoUuid, $model->generateUuid()->getBytes());
+            }
         });
     }
 
@@ -26,5 +28,15 @@ trait AutoUuid
     public function generateUuid()
     {
         return Uuid::uuid4();
+    }
+
+    /**
+     * Get the auto generated uuid columns array.
+     *
+     * @return array
+     */
+    public function getAutoUuids()
+    {
+        return $this->autoUuids;
     }
 }

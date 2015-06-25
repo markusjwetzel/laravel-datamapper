@@ -26,18 +26,32 @@ class Model extends EloquentModel
     protected $mapping;
 
     /**
+     * The auto generated uuid columns for this model.
+     *
+     * @var array
+     */
+    protected $autoUuids = [];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = array();
+    protected $fillable = [];
 
     /**
      * The attributes that aren't mass assignable.
      *
      * @var array
      */
-    protected $guarded = array();
+    protected $guarded = [];
+
+    /**
+     * The versioned columns for this model.
+     *
+     * @var array
+     */
+    protected $versioned;
 
     /**
      * Create a new Eloquent Collection instance.
@@ -118,7 +132,7 @@ class Model extends EloquentModel
         foreach ($this->mapping['embeddeds'] as $name => $embedded) {
             $embeddedReflectionClass = new ReflectionClass($embedded['class']);
 
-            $embeddedObject =  $embeddedReflectionClass->newInstanceWithoutConstructor();
+            $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
             foreach ($embedded['attributes'] as $attribute => $column) {
                 $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
             }
@@ -173,10 +187,13 @@ class Model extends EloquentModel
         foreach ($mapping['embeddeds'] as $name => $embedded) {
             $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
 
-            $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
-            foreach ($embedded['attributes'] as $attribute => $column) {
-                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+            if (! empty($embeddedObject)) {
+                $embeddedReflectionObject = new ReflectionObject($embeddedObject);
+
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                }
             }
         }
 

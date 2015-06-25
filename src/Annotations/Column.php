@@ -54,6 +54,11 @@ final class Column implements Annotation
     public $length = 255;
 
     /**
+     * @var boolean
+     */
+    public $fixed = false;
+
+    /**
      * @var integer
      */
     public $scale = 8;

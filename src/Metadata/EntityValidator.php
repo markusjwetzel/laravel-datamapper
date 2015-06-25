@@ -56,15 +56,13 @@ class EntityValidator
         $check = false;
 
         foreach ($classAnnotations as $annotation) {
-            if ($annotation instanceof \ProAI\Datamapper\Annotations\Embeddable ||
-                $annotation instanceof \ProAI\Datamapper\Annotations\ValueObject
-            ) {
+            if ($annotation instanceof \ProAI\Datamapper\Annotations\Embeddable) {
                 $check = true;
             }
         }
 
         if (! $check) {
-            throw new InvalidArgumentException('Embedded class '.$class.' has no @Embeddable or @ValueObject annotation.');
+            throw new InvalidArgumentException('Embedded class '.$class.' has no @Embeddable annotation.');
         }
     }
 

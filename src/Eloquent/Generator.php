@@ -111,10 +111,10 @@ class Generator
 
         // primary key
         $columnMetadata = $this->getPrimaryKeyColumn($entityMetadata);
-        $primaryKey = $columnMetadata['name'];
-        $incrementing = (! empty($columnMetadata['options']['autoIncrement']));
-        $this->replacePrimaryKey($primaryKey, $stub);
-        $this->replaceIncrementing($incrementing, $stub);
+        $this->replacePrimaryKey($columnMetadata['name'], $stub);
+        $this->replaceIncrementing((! empty($columnMetadata['options']['autoIncrement'])), $stub);
+
+        $this->replaceAutoUuids($entityMetadata, $stub);
 
         // timestamps
         $this->replaceTimestamps($entityMetadata['timestamps'], $stub);
@@ -126,8 +126,7 @@ class Generator
         $this->replaceMorphClass($entityMetadata['morphClass'], $stub);
 
         // mapping data
-        $mapping = $this->generateMappingData($entityMetadata);
-        $this->replaceMapping($mapping, $stub);
+        $this->replaceMapping($entityMetadata, $stub);
         
         // relations
         $this->replaceRelations($entityMetadata['relations'], $stub);
@@ -151,50 +150,6 @@ class Generator
                 return $column;
             }
         }
-    }
-
-    /**
-     * Generate mapping array.
-     *
-     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
-     * @return array
-     */
-    protected function generateMappingData($entityMetadata)
-    {
-        $attributes = [];
-        foreach ($entityMetadata['attributes'] as $attributeMetadata) {
-            $attributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
-        }
-
-        $embeddeds = [];
-        foreach ($entityMetadata['embeddeds'] as $embeddedMetadata) {
-            $embedded = [];
-            $embedded['class'] = $embeddedMetadata['class'];
-            $embeddedAttributes = [];
-            foreach ($embeddedMetadata['attributes'] as $attributeMetadata) {
-                $embeddedAttributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
-            }
-            $embedded['attributes'] = $embeddedAttributes;
-            $embeddeds[$embeddedMetadata['name']] = $embedded;
-        }
-
-        $relations = [];
-        foreach ($entityMetadata['relations'] as $relationMetadata) {
-            $relation = [];
-            
-            $relation['type'] = $relationMetadata['type'];
-            if ($relation['type'] == 'belongsToMany' || $relation['type'] == 'morphToMany') {
-                $relation['inverse'] = (! empty($relationMetadata['options']['inverse']));
-            }
-
-            $relations[$relationMetadata['name']] = $relation;
-        }
-
-        return [
-            'attributes' => $attributes,
-            'embeddeds' => $embeddeds,
-            'relations' => $relations,
-        ];
     }
 
     /**
@@ -255,13 +210,29 @@ class Generator
         }
 
         // autoUuid
-        $columnMetadata = $this->getPrimaryKeyColumn($entityMetadata);
-        if (! empty($columnMetadata['options']['autoUuid'])) {
+        if ($this->hasAutoUuidColumn($entityMetadata)) {
             $traits['autoUuid'] = 'use \ProAI\Datamapper\Eloquent\AutoUuid;';
         }
 
         $separator = PHP_EOL . PHP_EOL . '    ';
-        $stub = str_replace('{{traits}}', implode($separator, $traits) . PHP_EOL . PHP_EOL . '    ', $stub);
+        $stub = str_replace('{{traits}}', implode($separator, $traits) . $separator, $stub);
+    }
+
+    /**
+     * Does this model have an auto uuid column?
+     *
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @return boolean
+     */
+    protected function hasAutoUuidColumn($entityMetadata)
+    {
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            if (! empty($column['options']['autoUuid'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /**
@@ -323,6 +294,26 @@ class Generator
     protected function replaceIncrementing($option, &$stub)
     {
         $stub = str_replace('{{incrementing}}', $option ? 'true' : 'false', $stub);
+    }
+    
+    /**
+     * Replace autoUuids.
+     *
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
+     * @param string $stub
+     * @return void
+     */
+    protected function replaceAutoUuids($entityMetadata, &$stub)
+    {
+        $autoUuids = [];
+
+        foreach ($entityMetadata['table']['columns'] as $column) {
+            if (! empty($column['options']['autoUuid'])) {
+                $autoUuids[] = $column['name'];
+            }
+        }
+
+        $stub = str_replace('{{autoUuids}}', $this->getArrayAsText($autoUuids), $stub);
     }
     
     /**
@@ -399,12 +390,47 @@ class Generator
     /**
      * Replace mapping.
      *
-     * @param array $mapping
+     * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @param string $stub
      * @return void
      */
-    protected function replaceMapping($mapping, &$stub)
+    protected function replaceMapping($entityMetadata, &$stub)
     {
+        $attributes = [];
+        foreach ($entityMetadata['attributes'] as $attributeMetadata) {
+            $attributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
+        }
+
+        $embeddeds = [];
+        foreach ($entityMetadata['embeddeds'] as $embeddedMetadata) {
+            $embedded = [];
+            $embedded['class'] = $embeddedMetadata['class'];
+            $embeddedAttributes = [];
+            foreach ($embeddedMetadata['attributes'] as $attributeMetadata) {
+                $embeddedAttributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
+            }
+            $embedded['attributes'] = $embeddedAttributes;
+            $embeddeds[$embeddedMetadata['name']] = $embedded;
+        }
+
+        $relations = [];
+        foreach ($entityMetadata['relations'] as $relationMetadata) {
+            $relation = [];
+            
+            $relation['type'] = $relationMetadata['type'];
+            if ($relation['type'] == 'belongsToMany' || $relation['type'] == 'morphToMany') {
+                $relation['inverse'] = (! empty($relationMetadata['options']['inverse']));
+            }
+
+            $relations[$relationMetadata['name']] = $relation;
+        }
+
+        $mapping = [
+            'attributes' => $attributes,
+            'embeddeds' => $embeddeds,
+            'relations' => $relations,
+        ];
+
         $stub = str_replace('{{mapping}}', $this->getArrayAsText($mapping), $stub);
     }
     

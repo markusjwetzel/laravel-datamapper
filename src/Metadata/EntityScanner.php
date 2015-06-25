@@ -421,15 +421,20 @@ class EntityScanner
         $options = [];
 
         // length option
-        if ($annotation->type == 'string' || $annotation->type == 'char') {
+        if ($annotation->type == 'string' || $annotation->type == 'char' || $annotation->type == 'binary') {
             $options['length'] = $annotation->length;
+        }
+
+        // fixed option
+        if ($annotation->type == 'binary' && $annotation->length == 16) {
+            $options['fixed'] = $annotation->fixed;
+            $options['autoUuid'] = $annotation->autoUuid;
         }
 
         // unsigned and autoIncrement option
         if ($annotation->type == 'smallInteger' || $annotation->type == 'integer' || $annotation->type == 'bigInteger') {
             $options['unsigned'] = $annotation->unsigned;
             $options['autoIncrement'] = $annotation->autoIncrement;
-            $options['autoUuid'] = $annotation->autoUuid;
         }
 
         // scale and precision option

@@ -16,6 +16,8 @@ class {{class}} extends Model
 
     public $incrementing = {{incrementing}};
 
+    protected $autoUuids = {{autoUuids}};
+
     public $timestamps = {{timestamps}};
 
     //protected $hidden = {{hidden}};
