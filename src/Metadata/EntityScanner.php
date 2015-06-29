@@ -165,7 +165,7 @@ class EntityScanner
 
             // table name
             if ($annotation instanceof \ProAI\Datamapper\Annotations\Table) {
-                $entityMetadata['table']['name'] = $annotation->value;
+                $entityMetadata['table']['name'] = $annotation->name;
             }
 
             // timestamps
