@@ -16,11 +16,12 @@ class EntityValidator
      * @var array
      */
     public $columnTypes = [
-        'binary', 'boolean', 'char',
-        'date', 'dateTime', 'decimal',
-        'float', 'increments', 'integer',
-        'longText', 'mediumText', 'smallInteger',
-        'string', 'text', 'time'
+        'bigInteger', 'binary', 'boolean',
+        'char', 'date', 'dateTime',
+        'decimal', 'float', 'increments',
+        'integer', 'longText', 'mediumText',
+        'smallInteger', 'string', 'text',
+        'time'
     ];
 
     /**
