@@ -464,7 +464,7 @@ class Generator
                     $options[] = 'false';
                 } else {
                     if ($name == 'throughEntity') {
-                        $options[] = "'".get_mapped_model($option)."'";
+                        $options[] = "'".get_mapped_model($option, false)."'";
                     } elseif ($name != 'morphableClasses') {
                         $options[] = "'".$option."'";
                     }
