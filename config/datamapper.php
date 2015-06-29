@@ -40,7 +40,7 @@ return [
     |
     */
 
-    'models_namespace' => 'Examunity\Test',
+    'models_namespace' => '',
 
     /*
     |--------------------------------------------------------------------------
@@ -52,6 +52,6 @@ return [
     |
     */
 
-    'presenters_namespace' => 'Examunity\Test',
+    'presenters_namespace' => '',
 
 ];
