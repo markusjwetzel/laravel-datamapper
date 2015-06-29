@@ -12,8 +12,25 @@ trait Versionable
     protected $latestVersion;
 
     /**
+     * @ORM\Id
      * @ORM\Column(type="integer", unsigned=true, primary=true)
      * @ORM\Versioned
      */
     protected $version;
+
+    /**
+     * @return string
+     */
+    public function latestVersion()
+    {
+        return $this->latestVersion->version();
+    }
+
+    /**
+     * @return string
+     */
+    public function version()
+    {
+        return $this->version->version();
+    }
 }
