@@ -255,7 +255,9 @@ class Builder
             }
 
             // update options
-            $columnMetadata['options'] = array_merge($columnMetadata['options'], $this->aliases[$index]['options']);
+            if (! empty($this->aliases[$index]['options'])) {
+                $columnMetadata['options'] = array_merge($columnMetadata['options'], $this->aliases[$index]['options']);
+            }
 
             // update type
             $columnMetadata['type'] = $this->aliases[$index]['type'];
