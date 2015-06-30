@@ -606,6 +606,9 @@ class EntityScanner
         $entityMetadata['table']['columns'][] = $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
             'name' => $relatedForeignKey,
             'primary' => false,
+            'options' => [
+                'autoIncrement' => false
+            ]
         ]);
     }
 
@@ -634,6 +637,9 @@ class EntityScanner
         $entityMetadata['table']['columns'][] = $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
             'name' => $morphId,
             'primary' => false,
+            'options' => [
+                'autoIncrement' => false
+            ]
         ]);
 
         $entityMetadata['table']['columns'][] = new ColumnDefinition([
@@ -671,9 +677,15 @@ class EntityScanner
             'columns' => [
                 $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $localPivotKey,
+                    'options' => [
+                        'autoIncrement' => false
+                    ]
                 ]),
                 $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $relatedPivotKey,
+                    'options' => [
+                        'autoIncrement' => false
+                    ]
                 ]),
             ]
         ]);
@@ -712,9 +724,15 @@ class EntityScanner
             'columns' => [
                 $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $pivotKey,
+                    'options' => [
+                        'autoIncrement' => false
+                    ]
                 ]),
                 $this->getModifiedPrimaryKeyColumn($entityMetadata['table'], [
                     'name' => $morphId,
+                    'options' => [
+                        'autoIncrement' => false
+                    ]
                 ]),
                 new ColumnDefinition([
                     'name' => $morphType,
@@ -740,11 +758,14 @@ class EntityScanner
     protected function getModifiedPrimaryKeyColumn(TableDefinition $tableMetadata, array $data)
     {
         foreach($tableMetadata['columns'] as $columnMetadata) {
-            print $columnMetadata['primary']['name'];
             if ($columnMetadata['primary']) {
                 $modifiedColumnMetadata = clone $columnMetadata;
                 foreach($data as $key => $value) {
-                    $modifiedColumnMetadata[$key] = $value;
+                    if ($key == 'options') {
+                        $modifiedColumnMetadata[$key] = array_merge($modifiedColumnMetadata[$key], $value);
+                    } else {
+                        $modifiedColumnMetadata[$key] = $value;
+                    }
                 }
                 return $modifiedColumnMetadata;
             }
