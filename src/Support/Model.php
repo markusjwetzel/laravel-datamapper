@@ -37,12 +37,8 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
     public function getPresenter()
     {
         if (! $this->__presenter) {
-            $presenters = array_flip(Repository::$presenters);
-
-            $class = static::class;
-
-            if (isset($presenters[$class])) {
-                $presenter = App::make($presenters[$class]);
+            if ($class = $this->getPresenterClass()) {
+                $presenter = App::make($class);
             } else {
                 $presenter = new Presenter;
             }
@@ -53,6 +49,31 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
         }
 
         return $this->__presenter;
+    }
+
+    /**
+     * Get the presenter instance of this model.
+     *
+     * @return string|null
+     */
+    protected function getPresenterClass()
+    {
+        $presenters = array_flip(Repository::$presenters);
+
+        $class = static::class;
+
+        if (isset($presenters[$class])) {
+            return $presenters[$class];
+        }
+
+        foreach(class_parents($class) as $parentClass) {
+            dd(class_parents($class));
+            if (isset($presenters[$parentClass])) {
+                return $presenters[$parentClass];
+            }
+        }
+        
+        return null;
     }
     
     /**
