@@ -4,6 +4,7 @@ namespace ProAI\Datamapper;
 
 use ProAI\Datamapper\Eloquent\Model;
 use Exception;
+use ReflectionObject;
 
 class EntityManager
 {
@@ -53,6 +54,8 @@ class EntityManager
         $this->updateRelations($eloquentModel, 'insert');
 
         $eloquentModel->save();
+
+        $eloquentModel->updateEntityAfterSaving($entity, 'insert');
     }
 
     /**
@@ -68,6 +71,8 @@ class EntityManager
         $this->updateRelations($eloquentModel, 'update');
 
         $eloquentModel->save();
+
+        $eloquentModel->updateEntityAfterSaving($entity, 'update');
     }
 
     /**
@@ -174,6 +179,70 @@ class EntityManager
         if ($action == 'delete') {
             $eloquentModel->{$name}()->detach($keys);
         }
+    }
+
+    /**
+     * Update auto inserted/updated fields.
+     *
+     * @param object $entity
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $action
+     * @return void
+     */
+    protected function updateAutoFields($entity, $eloquentModel, $action = 'insert')
+    {
+        $autoFields = $this->getAutoFields($entity, $eloquentModel, $action);
+
+        // set auto updated fields via reflection class
+        if ($autoFields) {
+            $reflectionObject = new ReflectionObject($entity);
+
+            foreach($autoFields as $key => $value) {
+                $property = $reflectionObject->getProperty($key);
+                $property->setAccessible(true);
+                $property->setValue($entity, $value);
+            }
+        }
+    }
+
+    /**
+     * Get auto inserted/updated fields.
+     *
+     * @param object $entity
+     * @param \ProAI\Datamapper\Eloquent\Model $eloquentModel
+     * @param string $action
+     * @return void
+     */
+    protected function getAutoFields($entity, $eloquentModel, $action = 'insert')
+    {
+        $autoFields = [];
+
+        // auto increment
+        if ($action == 'insert' && $eloquentModel->incrementing) {
+            $autoFields[camel_case($eloquentModel->getKeyName())] = $eloquentModel->getKey();
+        }
+
+        // auto uuid
+        if ($action == 'insert' && method_exists($eloquentModel, 'bootAutoUuid')) {
+            foreach($eloquentModel->getAutoUuids() as $key => $value) {
+                $autoFields[camel_case($eloquentModel->getKeyName())] = $eloquentModel->getKey();
+            }
+        }
+
+        // timestamps
+        if ($eloquentModel->timestamps) {
+            if ($action == 'insert') {
+                $autoFields['createdAt'] = $eloquentModel->getAttribute('created_at');
+            }
+            $autoFields['updatedAt'] = $eloquentModel->getAttribute('updated_at');
+        }
+        
+        // soft deletes
+        if ($action == 'update' && method_exists($eloquentModel, 'bootSoftDeletes')) {
+            $autoFields['deletedAt'] = $eloquentModel->getAttribute('deleted_at');
+        }
+
+        return $autoFields;
     }
 
     /**

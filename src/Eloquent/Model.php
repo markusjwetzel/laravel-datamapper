@@ -155,6 +155,82 @@ class Model extends EloquentModel
     }
 
     /**
+     * Update auto inserted/updated fields.
+     *
+     * @param \ProAI\Datamapper\Contracts\Entity $entity
+     * @param string $action
+     * @return void
+     */
+    public function updateEntityAfterSaving($entity, $action = 'insert')
+    {
+        // set private properties via reflection (slow!)
+        $reflectionClass = new ReflectionClass($this->class);
+
+        $autoFields = $this->getAutoFields($entity, $action);
+
+        // attributes
+        foreach ($this->mapping['attributes'] as $attribute => $column) {
+            if (in_array($column, $autoFields)) {
+                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
+            }
+        }
+
+        // embeddeds
+        foreach ($this->mapping['embeddeds'] as $name => $embedded) {
+            $embeddedReflectionClass = new ReflectionClass($embedded['class']);
+
+            if (empty($embeddedObject = $this->getProperty($reflectionClass, $entity, $name))) {
+                $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
+            }
+
+            foreach ($embedded['attributes'] as $attribute => $column) {
+                if (in_array($column, $autoFields)) {
+                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
+                }
+            }
+
+            $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
+        }
+    }
+
+    /**
+     * Get auto inserted/updated fields.
+     *
+     * @param object $entity
+     * @param string $action
+     * @return void
+     */
+    protected function getAutoFields($entity, $action = 'insert')
+    {
+        $autoFields = [];
+
+        // auto increment
+        if ($action == 'insert' && $this->incrementing) {
+            $autoFields[] = $this->getKeyName();
+        }
+
+        // auto uuid
+        if ($action == 'insert' && method_exists($this, 'bootAutoUuid')) {
+            $autoFields = array_merge($this->autoUuids, $autoFields);
+        }
+
+        // timestamps
+        if ($this->timestamps) {
+            if ($action == 'insert') {
+                $autoFields[] = $this->getCreatedAtColumn();
+            }
+            $autoFields[] = $this->getUpdatedAtColumn();
+        }
+        
+        // soft deletes
+        if ($action == 'update' && method_exists($this, 'bootSoftDeletes')) {
+            $autoFields[] = $this->getDeletedAtColumn();
+        }
+
+        return $autoFields;
+    }
+
+    /**
      * Convert model to plain old php object.
      *
      * @param \ProAI\Datamapper\Contracts\Entity $entity
