@@ -67,7 +67,6 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
         }
 
         foreach(class_parents($class) as $parentClass) {
-            dd(class_parents($class));
             if (isset($presenters[$parentClass])) {
                 return $presenters[$parentClass];
             }
