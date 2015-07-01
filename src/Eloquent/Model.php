@@ -168,28 +168,32 @@ class Model extends EloquentModel
 
         $autoFields = $this->getAutoFields($entity, $action);
 
-        // attributes
-        foreach ($this->mapping['attributes'] as $attribute => $column) {
-            if (in_array($column, $autoFields)) {
-                $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
-            }
-        }
+        if ($autoFields) {
 
-        // embeddeds
-        foreach ($this->mapping['embeddeds'] as $name => $embedded) {
-            $embeddedReflectionClass = new ReflectionClass($embedded['class']);
-
-            if (empty($embeddedObject = $this->getProperty($reflectionClass, $entity, $name))) {
-                $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
-            }
-
-            foreach ($embedded['attributes'] as $attribute => $column) {
+            // attributes
+            foreach ($this->mapping['attributes'] as $attribute => $column) {
                 if (in_array($column, $autoFields)) {
-                    $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
+                    $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
                 }
             }
 
-            $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
+            // embeddeds
+            foreach ($this->mapping['embeddeds'] as $name => $embedded) {
+                $embeddedReflectionClass = new ReflectionClass($embedded['class']);
+
+                if (empty($embeddedObject = $this->getProperty($reflectionClass, $entity, $name))) {
+                    $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
+                }
+
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    if (in_array($column, $autoFields)) {
+                        $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
+                    }
+                }
+
+                $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
+            }
+
         }
     }
 
