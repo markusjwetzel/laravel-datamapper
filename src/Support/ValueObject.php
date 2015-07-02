@@ -24,32 +24,6 @@ abstract class ValueObject extends Model implements ValueObjectContract
 
         return true;
     }
-
-    /**
-     * Return the object as a string
-     *
-     * @return string
-     */
-    public function toString()
-    {
-        $vars = get_object_vars($this);
-        
-        if (count($vars) == 1) {
-            return $vars[0];
-        } else {
-            throw new Exception('Cannot convert value object to string, because there is more than one property');
-        }
-    }
-
-    /**
-     * Return the object as a string
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->toString();
-    }
     
     /**
      * Build new instance from an eloquent model object.

@@ -210,6 +210,31 @@ class Presenter implements ArrayAccess, Arrayable, Jsonable
     }
 
     /**
+     * Return the object as a string
+     *
+     * @return string
+     */
+    public function toString()
+    {
+        $vars = $this->toArray();
+
+        if (count($vars) == 1)
+            return implode(' ', $vars);
+        else
+            return $this->toJson();
+    }
+
+    /**
+     * Return the object as a string
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->toString();
+    }
+
+    /**
      * Handle dynamic method calls into the model.
      *
      * @param  string  $method
