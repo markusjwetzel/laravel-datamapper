@@ -72,9 +72,7 @@ class DatamapperServiceProvider extends ServiceProvider
         $app = $this->app;
 
         $app->singleton('datamapper.entitymanager', function ($app) {
-            $config = $app['config']['datamapper'];
-
-            return new EntityManager($config);
+            return new EntityManager;
         });
     }
 

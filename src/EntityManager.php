@@ -9,21 +9,12 @@ use ReflectionObject;
 class EntityManager
 {
     /**
-     * The config of the datamapper package.
-     *
-     * @var array
-     */
-    protected $config;
-
-    /**
      * Constructor.
      *
-     * @param array $config
      * @return void
      */
-    public function __construct($config)
+    public function __construct()
     {
-        $this->config = $config;
     }
 
     /**
