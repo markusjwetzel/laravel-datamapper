@@ -5,6 +5,7 @@ namespace ProAI\Datamapper\Eloquent;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use ProAI\Datamapper\Eloquent\Collection;
 use ProAI\Datamapper\Support\Proxy;
+use ProAI\Datamapper\Support\ProxyCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
 use ReflectionClass;
 use ReflectionObject;
@@ -145,13 +146,76 @@ class Model extends EloquentModel
             if (! empty($this->relations[$name])) {
                 $relationObject = $this->relations[$name]->toEntity();
             } else {
-                $relationObject = new Proxy;
+                if (in_array($relation['type'], ['belongsToMany', 'morphToMany', 'morphedByMany'])) {
+                    $relationObject = new ProxyCollection;
+                } else {
+                    $relationObject = new Proxy;
+                }
             }
             
             $this->setProperty($reflectionClass, $entity, $name, $relationObject);
         }
 
         return $entity;
+    }
+
+    /**
+     * Convert model to plain old php object.
+     *
+     * @param \ProAI\Datamapper\Contracts\Entity $entity
+     * @return \ProAI\Datamapper\Eloquent\Model
+     */
+    public static function newFromEntity(EntityContract $entity)
+    {
+        // directly get private properties if entity extends the datamapper entity class (fast!)
+        if ($entity instanceof \ProAI\Datamapper\Support\Entity) {
+            return $entity->toEloquentModel();
+        }
+
+        // get private properties via reflection (slow!)
+        $class = get_mapped_model(get_class($entity));
+
+        $eloquentModel = new $class;
+
+        $reflectionObject = new ReflectionObject($entity);
+
+        $mapping = $eloquentModel->getMapping();
+
+        // attributes
+        foreach ($mapping['attributes'] as $attribute => $column) {
+            if (! $eloquentModel->isGeneratedDate($column)) {
+                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+            }
+        }
+
+        // embeddeds
+        foreach ($mapping['embeddeds'] as $name => $embedded) {
+            $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
+
+
+            if (! empty($embeddedObject)) {
+                $embeddedReflectionObject = new ReflectionObject($embeddedObject);
+
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                }
+            }
+        }
+
+        // relations
+        foreach ($mapping['relations'] as $name => $relation) {
+            $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
+
+            if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
+                $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
+                    ? Collection::newFromEntity($relationObject)
+                    : self::newFromEntity($relationObject);
+                
+                $eloquentModel->setRelation($name, $value);
+            }
+        }
+
+        return $eloquentModel;
     }
 
     /**
@@ -232,65 +296,6 @@ class Model extends EloquentModel
         }
 
         return $autoFields;
-    }
-
-    /**
-     * Convert model to plain old php object.
-     *
-     * @param \ProAI\Datamapper\Contracts\Entity $entity
-     * @return \ProAI\Datamapper\Eloquent\Model
-     */
-    public static function newFromEntity(EntityContract $entity)
-    {
-        // directly get private properties if entity extends the datamapper entity class (fast!)
-        if ($entity instanceof \ProAI\Datamapper\Support\Entity) {
-            return $entity->toEloquentModel();
-        }
-
-        // get private properties via reflection (slow!)
-        $class = get_mapped_model(get_class($entity));
-
-        $eloquentModel = new $class;
-
-        $reflectionObject = new ReflectionObject($entity);
-
-        $mapping = $eloquentModel->getMapping();
-
-        // attributes
-        foreach ($mapping['attributes'] as $attribute => $column) {
-            if (! $eloquentModel->isGeneratedDate($column)) {
-                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
-            }
-        }
-
-        // embeddeds
-        foreach ($mapping['embeddeds'] as $name => $embedded) {
-            $embeddedObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
-
-
-            if (! empty($embeddedObject)) {
-                $embeddedReflectionObject = new ReflectionObject($embeddedObject);
-
-                foreach ($embedded['attributes'] as $attribute => $column) {
-                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
-                }
-            }
-        }
-
-        // relations
-        foreach ($mapping['relations'] as $name => $relation) {
-            $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
-
-            if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
-                $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
-                    ? Collection::newFromEntity($relationObject)
-                    : self::newFromEntity($relationObject);
-                
-                $eloquentModel->setRelation($name, $value);
-            }
-        }
-
-        return $eloquentModel;
     }
 
     /**

@@ -5,6 +5,8 @@ namespace ProAI\Datamapper\Support;
 use ProAI\Datamapper\Eloquent\Model as EloquentModel;
 use ProAI\Datamapper\Eloquent\Collection as EloquentCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
+use ProAI\Datamapper\Support\Proxy;
+use ProAI\Datamapper\Support\ProxyCollection;
 
 abstract class Entity extends Model implements EntityContract
 {
@@ -40,7 +42,11 @@ abstract class Entity extends Model implements EntityContract
             if (! empty($dict['relations'][$name])) {
                 $relationObject = $dict['relations'][$name]->toEntity();
             } else {
-                $relationObject = new Proxy;
+                if (in_array($relation['type'], ['belongsToMany', 'morphToMany', 'morphedByMany'])) {
+                    $relationObject = new ProxyCollection;
+                } else {
+                    $relationObject = new Proxy;
+                }
             }
             
             $entity->{$name} = $relationObject;
