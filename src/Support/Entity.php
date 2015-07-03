@@ -42,7 +42,7 @@ abstract class Entity extends Model implements EntityContract
             if (! empty($dict['relations'][$name])) {
                 $relationObject = $dict['relations'][$name]->toEntity();
             } else {
-                if (in_array($relation['type'], ['belongsToMany', 'morphToMany', 'morphedByMany'])) {
+                if (in_array($relation['type'], ['hasMany', 'morphMany', 'belongsToMany', 'morphToMany', 'morphedByMany'])) {
                     $relationObject = new ProxyCollection;
                 } else {
                     $relationObject = new Proxy;

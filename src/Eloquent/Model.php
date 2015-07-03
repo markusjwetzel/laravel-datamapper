@@ -146,7 +146,7 @@ class Model extends EloquentModel
             if (! empty($this->relations[$name])) {
                 $relationObject = $this->relations[$name]->toEntity();
             } else {
-                if (in_array($relation['type'], ['belongsToMany', 'morphToMany', 'morphedByMany'])) {
+                if (in_array($relation['type'], ['hasMany', 'morphMany', 'belongsToMany', 'morphToMany', 'morphedByMany'])) {
                     $relationObject = new ProxyCollection;
                 } else {
                     $relationObject = new Proxy;
