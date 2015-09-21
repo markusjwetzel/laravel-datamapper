@@ -11,7 +11,7 @@ use ProAI\Datamapper\Console\SchemaCreateCommand;
 use ProAI\Datamapper\Console\SchemaUpdateCommand;
 use ProAI\Datamapper\Console\SchemaDropCommand;
 
-class SchemaCommandsServiceProvider extends ServiceProvider
+class CommandsServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.

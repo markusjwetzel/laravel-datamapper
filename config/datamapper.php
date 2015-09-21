@@ -42,16 +42,4 @@ return [
 
     'models_namespace' => '',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Presenters Namespace
-    |--------------------------------------------------------------------------
-    |
-    | If a presenters namespace is defined, only the classes in the sub-namespace
-    | will be scanned by the schema commands.
-    |
-    */
-
-    'presenters_namespace' => '',
-
 ];
