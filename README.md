@@ -151,7 +151,7 @@ By default the query builder returns always the latest version. If you want a sp
 
 ### Presenters
 
-This package has a built-in presenters package. Check out the [Presenters](https://github.com/ProAI/laravel-datamapper/wiki/Presenters) page in the wiki for more information.
+This package can be extended by the Laravel Datamapper Presenter package. Check out the [Laravel Datamapper Presenter](https://github.com/ProAI/laravel-datamapper-presenter) readme for more information.
 
 ## Support
 
