@@ -18,12 +18,13 @@ class AnnotationLoader
      * Create a new annotation loader instance.
      *
      * @param  \Illuminate\Filesystem\Filesystem $files
+     * @param string $path
      * @return void
      */
-    public function __construct(Filesystem $files)
+    public function __construct(Filesystem $files, $path)
     {
         $this->files = $files;
-        $this->path = __DIR__ . '/../Annotations';
+        $this->path = $path;
     }
 
     

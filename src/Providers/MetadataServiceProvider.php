@@ -40,7 +40,7 @@ class MetadataServiceProvider extends ServiceProvider
     {
         $app = $this->app;
 
-        $loader = new AnnotationLoader($app['files']);
+        $loader = new AnnotationLoader($app['files'], __DIR__ . '/../Annotations');
 
         $loader->registerAll();
     }
