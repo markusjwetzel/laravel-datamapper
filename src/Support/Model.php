@@ -2,108 +2,17 @@
 
 namespace ProAI\Datamapper\Support;
 
-use ProAI\Datamapper\Presenter\Repository;
-use ProAI\Datamapper\Presenter\Decorator;
-use ProAI\Datamapper\Support\Presenter;
 use ProAI\Datamapper\Contracts\Model as ModelContract;
-use ProAI\Datamapper\Contracts\Presentable;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Support\Facades\App;
 
-abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
+abstract class Model implements ModelContract
 {
     /**
-     * The instance of the presenter.
-     *
-     * @var array
-     */
-    private $__presenter;
-
-    /**
-     * Private final constructor, because you should name your constructor's in domain driven design.
+     * Protected constructor, because you should name your constructor's in domain driven design.
      *
      * @return void
      */
-    final protected function __construct()
+    protected function __construct()
     {
-    }
-
-    /**
-     * Get the presenter instance of this model.
-     *
-     * @return \ProAI\Datamapper\Support\Presenter
-     */
-    public function getPresenter()
-    {
-        if (! $this->__presenter) {
-            if ($class = $this->getPresenterClass()) {
-                $presenter = App::make($class);
-            } else {
-                $presenter = new Presenter;
-            }
-
-            $presenter->setModel($this);
-
-            $this->__presenter = $presenter;
-        }
-
-        return $this->__presenter;
-    }
-
-    /**
-     * Get the presenter instance of this model.
-     *
-     * @return string|null
-     */
-    protected function getPresenterClass()
-    {
-        $presenters = array_flip(Repository::$presenters);
-
-        $class = static::class;
-
-        if (isset($presenters[$class])) {
-            return $presenters[$class];
-        }
-
-        foreach(class_parents($class) as $parentClass) {
-            if (isset($presenters[$parentClass])) {
-                return $presenters[$parentClass];
-            }
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Convert the entity instance to JSON.
-     *
-     * @param  int  $options
-     * @return string
-     */
-    public function toJson($options = 0)
-    {
-        return json_encode($this->toArray(), $options);
-    }
-    
-    /**
-     * Convert the entity instance to an array.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        $presenter = $this->getPresenter();
-
-        $items = $presenter->getPresentableItems(array_except(get_object_vars($this), '__presenter'));
-
-        $array = [];
-
-        foreach ($items as $name => $item) {
-            $array[snake_case($name)] = Decorator::decorate($item, true);
-        }
-
-        return $array;
     }
 
     /**
@@ -116,7 +25,7 @@ abstract class Model implements ModelContract, Presentable, Arrayable, Jsonable
     public function __call($method, $parameters)
     {
         // magical getter
-        if ($method != '__presenter' && (isset($this->{$method}) || property_exists($this, $method))) {
+        if (isset($this->{$method}) || property_exists($this, $method)) {
             return $this->{$method};
         }
 
