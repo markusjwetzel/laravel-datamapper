@@ -7,6 +7,7 @@ use ProAI\Datamapper\Eloquent\Collection as EloquentCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
 use ProAI\Datamapper\Support\Proxy;
 use ProAI\Datamapper\Support\ProxyCollection;
+use ReflectionClass;
 
 abstract class Entity extends Model implements EntityContract
 {
@@ -18,7 +19,8 @@ abstract class Entity extends Model implements EntityContract
      */
     public static function newFromEloquentModel(EloquentModel $eloquentModel)
     {
-        $entity = new static;
+        $rc = new ReflectionClass(static::class);
+        $entity = $rc->newInstanceWithoutConstructor();
 
         // get model data
         $dict = [

@@ -4,6 +4,7 @@ namespace ProAI\Datamapper\Support;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use ProAI\Datamapper\Contracts\ValueObject as ValueObjectContract;
+use ReflectionClass;
 use Exception;
 
 abstract class ValueObject extends Model implements ValueObjectContract
@@ -34,7 +35,8 @@ abstract class ValueObject extends Model implements ValueObjectContract
      */
     public static function newFromEloquentModel(EloquentModel $eloquentModel, $name)
     {
-        $valueObject = new static;
+        $rc = new ReflectionClass(static::class);
+        $valueObject = $rc->newInstanceWithoutConstructor();
 
         // get model data
         $dict = [
