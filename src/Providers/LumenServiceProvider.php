@@ -1,10 +1,10 @@
 <?php
 
-namespace ProAI\Datamapper;
+namespace ProAI\Datamapper\Providers;
 
 use ProAI\Datamapper\Providers\BaseServiceProvider;
 
-class DatamapperServiceProvider extends BaseServiceProvider
+class LumenServiceProvider extends BaseServiceProvider
 {
     /**
      * Register the application services.
@@ -25,10 +25,6 @@ class DatamapperServiceProvider extends BaseServiceProvider
      */
     protected function registerConfig()
     {
-        $configPath = __DIR__ . '/../config/datamapper.php';
-
-        $this->mergeConfigFrom($configPath, 'datamapper');
-
-        $this->publishes([$configPath => config_path('datamapper.php')], 'config');
+        $this->app->configure('datamapper');
     }
 }

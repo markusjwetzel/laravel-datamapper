@@ -82,7 +82,7 @@ class CommandsServiceProvider extends ServiceProvider
         $app = $this->app;
 
         $app->singleton('datamapper.eloquent.generator', function ($app) {
-            $path = $app['path.storage'] . '/framework/entities';
+            $path = storage_path('framework/entities');
 
             return new ModelGenerator($app['files'], $path);
         });

@@ -1,0 +1,64 @@
+<?php
+
+namespace ProAI\Datamapper\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class BaseServiceProvider extends ServiceProvider
+{
+    /**
+     * Register the application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->registerEntityManager();
+
+        $this->registerHelpers();
+
+        $this->registerEloquentModels();
+
+        $this->app->register('ProAI\Datamapper\Providers\CommandsServiceProvider');
+    }
+
+    /**
+     * Register the entity manager implementation.
+     *
+     * @return void
+     */
+    protected function registerEntityManager()
+    {
+        $app = $this->app;
+
+        $app->singleton('datamapper.entitymanager', function ($app) {
+            return new EntityManager;
+        });
+    }
+
+    /**
+     * Register helpers.
+     *
+     * @return void
+     */
+    protected function registerHelpers()
+    {
+        require_once __DIR__ . '/../Support/helpers.php';
+    }
+
+    /**
+     * Load the compiled eloquent entity models.
+     *
+     * @return void
+     */
+    protected function registerEloquentModels()
+    {
+        $files = $this->app['files']->files(storage_path('framework/entities'));
+        
+        foreach ($files as $file) {
+            if ($this->app['files']->extension($file) == '') {
+                require_once $file;
+            }
+        }
+    }
+}
