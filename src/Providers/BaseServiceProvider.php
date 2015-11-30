@@ -13,13 +13,18 @@ class BaseServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $app = $this->app;
+
         $this->registerEntityManager();
 
         $this->registerHelpers();
 
-        $this->registerEloquentModels();
-
         $this->app->register('ProAI\Datamapper\Providers\CommandsServiceProvider');
+
+        if ($app['config']['datamapper.auto_scan'])
+            $this->autoUpdateDatabase();
+
+        $this->registerEloquentModels();
     }
 
     /**
@@ -44,6 +49,28 @@ class BaseServiceProvider extends ServiceProvider
     protected function registerHelpers()
     {
         require_once __DIR__ . '/../Support/helpers.php';
+    }
+
+    /**
+     * Scan entity annotations and update database.
+     *
+     * @return void
+     */
+    public function autoUpdateDatabase()
+    {
+        $app = $this->app;
+
+        // get classes
+        $classes = $app['datamapper.classfinder']->getClassesFromNamespace($app['config']['datamapper.models_namespace']);
+
+        // build metadata
+        $metadata = $app['datamapper.entity.scanner']->scan($classes, $app['config']['datamapper.namespace_tablenames'], $app['config']['datamapper.morphclass_abbreviations']);
+
+        // generate eloquent models
+        $app['datamapper.eloquent.generator']->generate($metadata, false);
+
+        // build schema
+        $app['datamapper.schema.builder']->update($metadata, false);
     }
 
     /**
