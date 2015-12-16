@@ -22,7 +22,7 @@ class BaseServiceProvider extends ServiceProvider
         $this->app->register('ProAI\Datamapper\Providers\CommandsServiceProvider');
 
         if ($app['config']['datamapper.auto_scan'])
-            $this->autoUpdateDatabase();
+            $this->registerAutoUpdateDatabase();
 
         $this->registerEloquentModels();
     }
@@ -56,7 +56,7 @@ class BaseServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function autoUpdateDatabase()
+    public function registerAutoUpdateDatabase()
     {
         $app = $this->app;
 

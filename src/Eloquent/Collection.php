@@ -9,7 +9,7 @@ use ProAI\Datamapper\Eloquent\Model;
 class Collection extends EloquentCollection
 {
     /**
-     * Convert models to plain old php objects.
+     * Convert models to entity objects.
      *
      * @return \ProAI\Datamapper\Support\Collection
      */
@@ -19,6 +19,23 @@ class Collection extends EloquentCollection
 
         foreach ($this->items as $name => $item) {
             $entities->put($name, $item->toEntity());
+        }
+
+        return $entities;
+    }
+
+    /**
+     * Convert models to data transfer objects.
+     *
+     * @param array $schema
+     * @return \ProAI\Datamapper\Support\Collection
+     */
+    public function toDataTransferObject(array $schema)
+    {
+        $entities = new DatamapperCollection;
+
+        foreach ($this->items as $name => $item) {
+            $entities->put($name, $item->toDataTransferObject($schema));
         }
 
         return $entities;

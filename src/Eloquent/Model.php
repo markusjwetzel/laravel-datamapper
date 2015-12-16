@@ -4,6 +4,7 @@ namespace ProAI\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use ProAI\Datamapper\Eloquent\Collection;
+use ProAI\Datamapper\Support\DataTransferObject;
 use ProAI\Datamapper\Support\Proxy;
 use ProAI\Datamapper\Support\ProxyCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
@@ -68,11 +69,12 @@ class Model extends EloquentModel
     /**
      * Get a new query builder for the model's table.
      *
+     * @param string $returnType
      * @return \ProAI\Datamapper\Eloquent\Builder
      */
-    public function newDatamapperQuery()
+    public function newQuery($returnType = Builder::RETURN_TYPE_ELOQUENT)
     {
-        $builder = $this->newDatamapperQueryWithoutScopes();
+        $builder = $this->newQueryWithoutScopes($returnType);
 
         return $this->applyGlobalScopes($builder);
     }
@@ -80,12 +82,14 @@ class Model extends EloquentModel
     /**
      * Get a new query builder that doesn't have any global scopes.
      *
+     * @param string $returnType
      * @return \Illuminate\Database\Eloquent\Builder|static
      */
-    public function newDatamapperQueryWithoutScopes()
+    public function newQueryWithoutScopes($returnType = Builder::RETURN_TYPE_ELOQUENT)
     {
-        $builder = $this->newDatamapperEloquentBuilder(
-            $this->newBaseQueryBuilder()
+        $builder = $this->newEloquentBuilder(
+            $this->newBaseQueryBuilder(),
+            $returnType
         );
 
         // Once we have the query builders, we will set the model instances so the
@@ -100,13 +104,13 @@ class Model extends EloquentModel
      * @param  \Illuminate\Database\Query\Builder $query
      * @return \ProAI\Datamapper\Eloquent\Builder|static
      */
-    public function newDatamapperEloquentBuilder($query)
+    public function newEloquentBuilder($query, $returnType = Builder::RETURN_TYPE_ELOQUENT)
     {
-        return new Builder($query);
+        return new Builder($query, $returnType);
     }
 
     /**
-     * Convert model to plain old php object.
+     * Convert model to entity object.
      *
      * @return object
      */
@@ -157,6 +161,51 @@ class Model extends EloquentModel
         }
 
         return $entity;
+    }
+
+    /**
+     * Convert model to data transfer object.
+     *
+     * @param array $schema
+     * @param array $transformations
+     * @return object
+     */
+    public function toDataTransferObject($schema, $transformations, $path='')
+    {
+        $dto = new DataTransferObject();
+
+        // get morph schema
+        if(! empty($this->morphClass)) {
+            $schema = $schema['...'.$this->morphClass]; // todo: get right morphClass format
+        }
+
+        $mapping = $this->mapping;
+
+        foreach ($schema as $key => $value) {
+            // entry is attribute
+            if (is_numeric($key) && isset($this->attributes[$key])) {
+                // apply transformations
+                if (isset($transformations[$path.'.'.$key]) {
+                    $closure = $transformations[$path.'.'.$key];
+                    $this->attributes[$key] = $closure($this->attributes);
+                }
+                if (isset($transformations['*.'.$key]) {
+                    $closure = $transformations['*.'.$key];
+                    $this->attributes[$key] = $closure($this->attributes);
+                }
+
+                // set key
+                $dto->{$key} = $this->attributes[$key];
+            }
+
+            // entry is relation
+            if (! is_numeric($key) && isset($this->relations[$key])) {
+                $path .= '.'.$key;
+                $dto->{$key} = $this->relations[$key]->toDataTransferObject($value, $transformations, $path);
+            }
+        }
+
+        return $dto;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace ProAI\Datamapper;
 
 use ProAI\Datamapper\Eloquent\Model;
+use ProAI\Datamapper\Eloquent\Builder;
 use Exception;
 use ReflectionObject;
 
@@ -21,15 +22,18 @@ class EntityManager
      * Set an entity class.
      *
      * @param string $class
+     * @param array $options
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function entity($class)
+    public function entity($class, array $options)
     {
         $class = get_real_entity($class);
 
         $eloquentModel = get_mapped_model($class);
 
-        return (new $eloquentModel)->newDatamapperQuery();
+        $returnType = (! empty($options['returnDtos'])) ? Builder::RETURN_TYPE_DTOS : Builder::RETURN_TYPE_ENTITIES;
+
+        return (new $eloquentModel)->newQuery($returnType);
     }
 
     /**
