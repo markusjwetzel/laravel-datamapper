@@ -28,14 +28,16 @@ class Collection extends EloquentCollection
      * Convert models to data transfer objects.
      *
      * @param array $schema
+     * @param array $transformations
+     * @param string $path
      * @return \ProAI\Datamapper\Support\Collection
      */
-    public function toDataTransferObject(array $schema)
+    public function toDataTransferObject(array $schema, array $transformations, $path='')
     {
         $entities = new DatamapperCollection;
 
         foreach ($this->items as $name => $item) {
-            $entities->put($name, $item->toDataTransferObject($schema));
+            $entities->put($name, $item->toDataTransferObject($schema, $transformations, $path));
         }
 
         return $entities;

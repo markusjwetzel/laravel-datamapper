@@ -3,6 +3,7 @@
 namespace ProAI\Datamapper\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use ProAI\Datamapper\EntityManager;
 
 class BaseServiceProvider extends ServiceProvider
 {

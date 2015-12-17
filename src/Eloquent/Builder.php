@@ -18,11 +18,25 @@ class Builder extends BaseBuilder
     protected $returnType;
 
     /**
+     * Root of schema.
+     *
+     * @var array
+     */
+    protected $schemaRoot;
+
+    /**
      * Query schema.
      *
-     * @var string
+     * @var array
      */
     protected $schema;
+
+    /**
+     * Constraints for schema.
+     *
+     * @var array
+     */
+    protected $schemaConstraints = [];
 
     /**
      * Result transformations.
@@ -89,6 +103,15 @@ class Builder extends BaseBuilder
      */
     public function get($columns = array('*'))
     {
+        // prepare schema relations for DTOs
+        if ($this->returnType == Builder::RETURN_TYPE_DTOS) {
+            // load relations from schema
+            if (! isset($this->schema)) {
+                throw new Exception('No schema defined.');
+            }
+            $this->eagerLoad = $this->parseRelationsFromSchema($this->schema);
+        }
+
         $results = parent::get($columns);
 
         switch($this->returnType) {
@@ -96,15 +119,8 @@ class Builder extends BaseBuilder
                 return $results->toEntity();
 
             case Builder::RETURN_TYPE_DTOS:
-                // load relations from schema
-                if (! isset($this->schema)) {
-                    throw new Exception('No schema defined.');
-                }
-                $schema = current($this->schema);
-                $this->withRelationsFromSchema($schema);
-
                 // get dtos
-                return [key($this->schema) => $results->toDataTransferObject($schema, $this->transformations)];
+                return [$this->schemaRoot => $results->toDataTransferObject($this->schema, $this->transformations)];
 
             case Builder::RETURN_TYPE_ELOQUENT:
                 return $results;
@@ -112,25 +128,50 @@ class Builder extends BaseBuilder
     }
 
     /**
-     * Load relations from schema.
+     * Execute the query and get the first result.
+     *
+     * @param  array  $columns
+     * @return \Illuminate\Database\Eloquent\Model|static|null
+     */
+    public function first($columns = ['*'])
+    {
+        $results = $this->take(1)->get($columns);
+
+        return ($this->returnType == Builder::RETURN_TYPE_DTOS)
+            ? [$this->schemaRoot => $results[$this->schemaRoot]->first()]
+            : $results->first();
+    }
+
+    /**
+     * Parse relations from schema.
      *
      * @param string $path
      * @return void
      */
-    protected function withRelationsFromSchema($schema, $path='')
+    protected function parseRelationsFromSchema($schema, $path='')
     {
+        $results = [];
+
         foreach ($schema as $key => $value) {
             if (! is_numeric($key)) {
                 // join relation
                 if (substr($key, 0, 3) != '...') {
-                    $path .= '.'.$key;
-                    $this->with($path);
+                    $childPath = ($path)
+                        ? $path.'.'.$key
+                        : $key;
+                    $results[$childPath] = (isset($this->schemaConstraints[$this->schemaRoot.'.'.$childPath]))
+                        ? $this->schemaConstraints[$this->schemaRoot.'.'.$childPath]
+                        : function () {};
+                } else {
+                    $childPath = $path;
                 }
 
                 // recursive call
-                $this->withRelationsFromSchema($value, $path);
+                $results = array_merge($results, $this->parseRelationsFromSchema($value, $childPath));
             }
         }
+
+        return $results;
     }
 
     /**
@@ -141,7 +182,22 @@ class Builder extends BaseBuilder
      */
     public function schema(array $schema)
     {
-        $this->schema = $schema;
+        $this->schemaRoot = key($schema);
+
+        $this->schema = current($schema);
+
+        return $this;
+    }
+
+    /**
+     * Constraints for query relations.
+     *
+     * @param  array  $constraints
+     * @return $this
+     */
+    public function constraints($constraints)
+    {
+        $this->schemaContraints = array_merge($this->schemaConstraints, $constraints);
 
         return $this;
     }
@@ -154,7 +210,17 @@ class Builder extends BaseBuilder
      */
     public function transform($transformations)
     {
-        $this->transformations = array_merge($this->transformations, $transformations);
+        foreach($transformations as $key => $transformation) {
+            $parts = explode(".", $key);
+
+            if ($parts[0] == $this->schemaRoot) {
+                unset($parts[0]);
+            }
+
+            $key = implode(".", $parts);
+
+            $this->transformations[$key] = $transformation;
+        }
 
         return $this;
     }

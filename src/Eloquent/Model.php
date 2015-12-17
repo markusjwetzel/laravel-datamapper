@@ -168,40 +168,59 @@ class Model extends EloquentModel
      *
      * @param array $schema
      * @param array $transformations
+     * @param string $path
      * @return object
      */
     public function toDataTransferObject($schema, $transformations, $path='')
     {
         $dto = new DataTransferObject();
 
-        // get morph schema
-        if(! empty($this->morphClass)) {
-            $schema = $schema['...'.$this->morphClass]; // todo: get right morphClass format
+        // get morphed schema
+        if($this->morphClass && isset($schema['...'.studly_case($this->morphClass)])) {
+            $schema = $schema['...'.studly_case($this->morphClass)];
         }
 
-        $mapping = $this->mapping;
+        // convert attributes to camelCase
+        /*$attributes = [];
+        foreach($this->attributes as $key => $attribute) {
+            $attributes[camel_case($key)] = $attribute;
+        }
+        $this->attributes = $attributes;
+
+        // convert relations to camelCase
+        $relations = [];
+        foreach($this->relations as $key => $relation) {
+            $relations[camel_case($key)] = $relation;
+        }
+        $this->relations = $relations;*/
 
         foreach ($schema as $key => $value) {
             // entry is attribute
-            if (is_numeric($key) && isset($this->attributes[$key])) {
-                // apply transformations
-                if (isset($transformations[$path.'.'.$key]) {
-                    $closure = $transformations[$path.'.'.$key];
-                    $this->attributes[$key] = $closure($this->attributes);
+            if (is_numeric($key)) {
+                $transformationKey = ($path)
+                    ? $path.'.'.$value
+                    : $value;
+                if ($value == '__type') {
+                    $dto->{$value} = class_basename($this->class);
                 }
-                if (isset($transformations['*.'.$key]) {
-                    $closure = $transformations['*.'.$key];
-                    $this->attributes[$key] = $closure($this->attributes);
+                elseif (isset($transformations[$transformationKey])) {
+                    $dto->{$value} = $transformations[$transformationKey]($this->attributes);
                 }
-
-                // set key
-                $dto->{$key} = $this->attributes[$key];
+                elseif (isset($transformations['*.'.$value])) {
+                    $dto->{$value} = $transformations['*.'.$value]($this->attributes);
+                }
+                elseif (isset($this->attributes[$value])) {
+                    $dto->{$value} = $this->attributes[$value];
+                }
             }
 
             // entry is relation
             if (! is_numeric($key) && isset($this->relations[$key])) {
-                $path .= '.'.$key;
-                $dto->{$key} = $this->relations[$key]->toDataTransferObject($value, $transformations, $path);
+                $dto->{$key} = $this->relations[$key]->toDataTransferObject(
+                    $value,
+                    $transformations,
+                    $path.'.'.$key
+                );
             }
         }
 
