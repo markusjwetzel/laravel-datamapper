@@ -25,13 +25,15 @@ class EntityManager
      * @param array $options
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function entity($class, array $options)
+    public function entity($class, array $options=[])
     {
         $class = get_real_entity($class);
 
         $eloquentModel = get_mapped_model($class);
 
-        $returnType = (! empty($options['returnDtos'])) ? Builder::RETURN_TYPE_DTOS : Builder::RETURN_TYPE_ENTITIES;
+        $returnType = (! empty($options['returnDtos']))
+            ? Builder::RETURN_TYPE_DTOS
+            : Builder::RETURN_TYPE_ENTITIES;
 
         return (new $eloquentModel)->newQuery($returnType);
     }
@@ -50,7 +52,7 @@ class EntityManager
 
         $eloquentModel->save();
 
-        $eloquentModel->updateEntityAfterSaving($entity, 'insert');
+        $eloquentModel->afterSaving($entity, 'insert');
     }
 
     /**
@@ -67,7 +69,7 @@ class EntityManager
 
         $eloquentModel->save();
 
-        $eloquentModel->updateEntityAfterSaving($entity, 'update');
+        $eloquentModel->afterSaving($entity, 'update');
     }
 
     /**

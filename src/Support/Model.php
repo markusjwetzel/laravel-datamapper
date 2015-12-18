@@ -13,6 +13,7 @@ abstract class Model implements ModelContract
      */
     protected function __construct()
     {
+        //
     }
 
     /**

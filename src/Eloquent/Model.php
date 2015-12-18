@@ -56,6 +56,13 @@ class Model extends EloquentModel
     protected $versioned;
 
     /**
+     * The many to many relationship methods.
+     *
+     * @var array
+     */
+    public $manyRelations = ['hasMany', 'morphMany', 'belongsToMany', 'morphToMany', 'morphedByMany'];
+
+    /**
      * Create a new Eloquent Collection instance.
      *
      * @param  array  $eloquentModels
@@ -130,7 +137,12 @@ class Model extends EloquentModel
 
         // attributes
         foreach ($this->mapping['attributes'] as $attribute => $column) {
-            $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
+            $this->setProperty(
+                $reflectionClass,
+                $entity,
+                $attribute,
+                $this->attributes[$column]
+            );
         }
 
         // embeddeds
@@ -139,28 +151,60 @@ class Model extends EloquentModel
 
             $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
             foreach ($embedded['attributes'] as $attribute => $column) {
-                $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
+                // set property
+                $this->setProperty(
+                    $embeddedReflectionClass,
+                    $embeddedObject,
+                    $attribute,
+                    $this->attributes[$column]
+                );
             }
 
-            $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
+            $this->setProperty(
+                $reflectionClass,
+                $entity,
+                $name,
+                $embeddedObject
+            );
         }
 
         // relations
         foreach ($this->mapping['relations'] as $name => $relation) {
+            // set relation object
             if (! empty($this->relations[$name])) {
                 $relationObject = $this->relations[$name]->toEntity();
+            } elseif (in_array($relation['type'], $this->manyRelations)) {
+                $relationObject = new ProxyCollection;
             } else {
-                if (in_array($relation['type'], ['hasMany', 'morphMany', 'belongsToMany', 'morphToMany', 'morphedByMany'])) {
-                    $relationObject = new ProxyCollection;
-                } else {
-                    $relationObject = new Proxy;
-                }
+                $relationObject = new Proxy;
             }
             
-            $this->setProperty($reflectionClass, $entity, $name, $relationObject);
+            // set property
+            $this->setProperty(
+                $reflectionClass,
+                $entity,
+                $name,
+                $relationObject
+            );
         }
 
         return $entity;
+    }
+
+    /**
+     * Set a private property of an entity.
+     *
+     * @param \ReflectionClass $reflectionClass
+     * @param object $entity
+     * @param string $name
+     * @param mixed $value
+     * @return void
+     */
+    protected function setProperty(&$reflectionClass, $entity, $name, $value)
+    {
+        $property = $reflectionClass->getProperty($name);
+        $property->setAccessible(true);
+        $property->setValue($entity, $value);
     }
 
     /**
@@ -180,42 +224,29 @@ class Model extends EloquentModel
             $schema = $schema['...'.studly_case($this->morphClass)];
         }
 
-        // convert attributes to camelCase
-        /*$attributes = [];
-        foreach($this->attributes as $key => $attribute) {
-            $attributes[camel_case($key)] = $attribute;
-        }
-        $this->attributes = $attributes;
-
-        // convert relations to camelCase
-        $relations = [];
-        foreach($this->relations as $key => $relation) {
-            $relations[camel_case($key)] = $relation;
-        }
-        $this->relations = $relations;*/
-
         foreach ($schema as $key => $value) {
             // entry is attribute
             if (is_numeric($key)) {
+                // transformation key
                 $transformationKey = ($path)
                     ? $path.'.'.$value
                     : $value;
+
+                // set value
                 if ($value == '__type') {
                     $dto->{$value} = class_basename($this->class);
-                }
-                elseif (isset($transformations[$transformationKey])) {
+                } elseif (isset($transformations[$transformationKey])) {
                     $dto->{$value} = $transformations[$transformationKey]($this->attributes);
-                }
-                elseif (isset($transformations['*.'.$value])) {
+                } elseif (isset($transformations['*.'.$value])) {
                     $dto->{$value} = $transformations['*.'.$value]($this->attributes);
-                }
-                elseif (isset($this->attributes[$value])) {
+                } elseif (isset($this->attributes[$value])) {
                     $dto->{$value} = $this->attributes[$value];
                 }
             }
 
             // entry is relation
             if (! is_numeric($key) && isset($this->relations[$key])) {
+                // set value and transform childs to dtos
                 $dto->{$key} = $this->relations[$key]->toDataTransferObject(
                     $value,
                     $transformations,
@@ -251,8 +282,19 @@ class Model extends EloquentModel
 
         // attributes
         foreach ($mapping['attributes'] as $attribute => $column) {
-            if (! $eloquentModel->isGeneratedDate($column)) {
-                $eloquentModel->setAttribute($column, $eloquentModel->getProperty($reflectionObject, $entity, $attribute));
+            if (! $eloquentModel->isAutomaticallyUpdatedDate($column)) {
+                // get property
+                $property = $eloquentModel->getProperty(
+                    $reflectionObject,
+                    $entity,
+                    $attribute
+                );
+
+                // set attribute
+                $eloquentModel->setAttribute(
+                    $column,
+                    $property
+                );
             }
         }
 
@@ -265,21 +307,40 @@ class Model extends EloquentModel
                 $embeddedReflectionObject = new ReflectionObject($embeddedObject);
 
                 foreach ($embedded['attributes'] as $attribute => $column) {
-                    $eloquentModel->setAttribute($column, $eloquentModel->getProperty($embeddedReflectionObject, $embeddedObject, $attribute));
+                    // get property
+                    $property = $eloquentModel->getProperty(
+                        $embeddedReflectionObject,
+                        $embeddedObject,
+                        $attribute
+                    );
+
+                    // set attribute
+                    $eloquentModel->setAttribute(
+                        $column,
+                        $property
+                    );
                 }
             }
         }
 
         // relations
         foreach ($mapping['relations'] as $name => $relation) {
-            $relationObject = $eloquentModel->getProperty($reflectionObject, $entity, $name);
+            $relationObject = $eloquentModel->getProperty(
+                $reflectionObject,
+                $entity,
+                $name
+            );
 
             if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
+                // set relation
                 $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
                     ? Collection::newFromEntity($relationObject)
                     : self::newFromEntity($relationObject);
                 
-                $eloquentModel->setRelation($name, $value);
+                $eloquentModel->setRelation(
+                    $name,
+                    $value
+                );
             }
         }
 
@@ -287,99 +348,24 @@ class Model extends EloquentModel
     }
 
     /**
-     * Update auto inserted/updated fields.
+     * Check if attribute is auto generated and updated date.
      *
-     * @param \ProAI\Datamapper\Contracts\Entity $entity
-     * @param string $action
-     * @return void
+     * @param string $attribute
+     * @return boolean
      */
-    public function updateEntityAfterSaving($entity, $action = 'insert')
+    public function isAutomaticallyUpdatedDate($attribute)
     {
-        // set private properties via reflection (slow!)
-        $reflectionClass = new ReflectionClass($this->class);
-
-        $autoFields = $this->getAutoFields($entity, $action);
-
-        if ($autoFields) {
-
-            // attributes
-            foreach ($this->mapping['attributes'] as $attribute => $column) {
-                if (in_array($column, $autoFields)) {
-                    $this->setProperty($reflectionClass, $entity, $attribute, $this->attributes[$column]);
-                }
-            }
-
-            // embeddeds
-            foreach ($this->mapping['embeddeds'] as $name => $embedded) {
-                $embeddedReflectionClass = new ReflectionClass($embedded['class']);
-
-                if (empty($embeddedObject = $this->getProperty($reflectionClass, $entity, $name))) {
-                    $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
-                }
-
-                foreach ($embedded['attributes'] as $attribute => $column) {
-                    if (in_array($column, $autoFields)) {
-                        $this->setProperty($embeddedReflectionClass, $embeddedObject, $attribute, $this->attributes[$column]);
-                    }
-                }
-
-                $this->setProperty($reflectionClass, $entity, $name, $embeddedObject);
-            }
-
-        }
-    }
-
-    /**
-     * Get auto inserted/updated fields.
-     *
-     * @param object $entity
-     * @param string $action
-     * @return void
-     */
-    protected function getAutoFields($entity, $action = 'insert')
-    {
-        $autoFields = [];
-
-        // auto increment
-        if ($action == 'insert' && $this->incrementing) {
-            $autoFields[] = $this->getKeyName();
-        }
-
-        // auto uuid
-        if ($action == 'insert' && method_exists($this, 'bootAutoUuid')) {
-            $autoFields = array_merge($this->autoUuids, $autoFields);
+        // soft deletes
+        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses(static::class)) && $attribute == $this->getDeletedAtColumn()) {
+            return true;
         }
 
         // timestamps
-        if ($this->timestamps) {
-            if ($action == 'insert') {
-                $autoFields[] = $this->getCreatedAtColumn();
-            }
-            $autoFields[] = $this->getUpdatedAtColumn();
+        if ($this->timestamps && ($attribute == $this->getCreatedAtColumn() || $attribute == $this->getUpdatedAtColumn())) {
+            return true;
         }
         
-        // soft deletes
-        if ($action == 'update' && method_exists($this, 'bootSoftDeletes')) {
-            $autoFields[] = $this->getDeletedAtColumn();
-        }
-
-        return $autoFields;
-    }
-
-    /**
-     * Set a private property of an entity.
-     *
-     * @param \ReflectionClass $reflectionClass
-     * @param object $entity
-     * @param string $name
-     * @param mixed $value
-     * @return void
-     */
-    protected function setProperty(&$reflectionClass, $entity, $name, $value)
-    {
-        $property = $reflectionClass->getProperty($name);
-        $property->setAccessible(true);
-        $property->setValue($entity, $value);
+        return false;
     }
 
     /**
@@ -399,24 +385,102 @@ class Model extends EloquentModel
     }
 
     /**
-     * Check if attribute is auto generated and updated date.
+     * Update auto inserted/updated fields.
      *
-     * @param string $attribute
-     * @return boolean
+     * @param \ProAI\Datamapper\Contracts\Entity $entity
+     * @param string $action
+     * @return void
      */
-    public function isGeneratedDate($attribute)
+    public function afterSaving($entity, $action)
     {
-        // soft deletes
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses(static::class)) && $attribute == $this->getDeletedAtColumn()) {
-            return true;
+        // set private properties via reflection (slow!)
+        $reflectionClass = new ReflectionClass($this->class);
+
+        if ($updateFields = $this->getAutomaticallyUpdatedFields($entity, $action)) {
+
+            // attributes
+            foreach ($this->mapping['attributes'] as $attribute => $column) {
+                if (in_array($column, $updateFields)) {
+                    $this->setProperty(
+                        $reflectionClass,
+                        $entity,
+                        $attribute,
+                        $this->attributes[$column]
+                    );
+                }
+            }
+
+            // embeddeds
+            foreach ($this->mapping['embeddeds'] as $name => $embedded) {
+                $embeddedReflectionClass = new ReflectionClass($embedded['class']);
+
+                $embeddedObject = $this->getProperty(
+                    $reflectionClass,
+                    $entity,
+                    $name
+                );
+                
+                if (empty($embeddedObject)) {
+                    $embeddedObject = $embeddedReflectionClass->newInstanceWithoutConstructor();
+                }
+
+                foreach ($embedded['attributes'] as $attribute => $column) {
+                    if (in_array($column, $updateFields)) {
+                        $this->setProperty(
+                            $embeddedReflectionClass,
+                            $embeddedObject,
+                            $attribute,
+                            $this->attributes[$column]
+                        );
+                    }
+                }
+
+                $this->setProperty(
+                    $reflectionClass,
+                    $entity,
+                    $name,
+                    $embeddedObject
+                );
+            }
+
+        }
+    }
+
+    /**
+     * Get auto inserted/updated fields.
+     *
+     * @param object $entity
+     * @param string $action
+     * @return void
+     */
+    protected function getAutomaticallyUpdatedFields($entity, $action)
+    {
+        $updateFields = [];
+
+        // auto increment
+        if ($action == 'insert' && $this->incrementing) {
+            $updateFields[] = $this->getKeyName();
+        }
+
+        // auto uuid
+        if ($action == 'insert' && method_exists($this, 'bootAutoUuid')) {
+            $updateFields = array_merge($this->autoUuids, $updateFields);
         }
 
         // timestamps
-        if ($this->timestamps && ($attribute == $this->getCreatedAtColumn() || $attribute == $this->getUpdatedAtColumn())) {
-            return true;
+        if ($this->timestamps) {
+            if ($action == 'insert') {
+                $updateFields[] = $this->getCreatedAtColumn();
+            }
+            $updateFields[] = $this->getUpdatedAtColumn();
         }
         
-        return false;
+        // soft deletes
+        if ($action == 'update' && method_exists($this, 'bootSoftDeletes')) {
+            $updateFields[] = $this->getDeletedAtColumn();
+        }
+
+        return $updateFields;
     }
 
     /**

@@ -41,14 +41,13 @@ abstract class Entity extends Model implements EntityContract
 
         // relations
         foreach ($dict['mapping']['relations'] as $name => $relation) {
+            // set relation object
             if (! empty($dict['relations'][$name])) {
                 $relationObject = $dict['relations'][$name]->toEntity();
+            } elseif (in_array($relation['type'], $eloquentModel->manyRelations)) {
+                $relationObject = new ProxyCollection;
             } else {
-                if (in_array($relation['type'], ['hasMany', 'morphMany', 'belongsToMany', 'morphToMany', 'morphedByMany'])) {
-                    $relationObject = new ProxyCollection;
-                } else {
-                    $relationObject = new Proxy;
-                }
+                $relationObject = new Proxy;
             }
             
             $entity->{$name} = $relationObject;
@@ -77,7 +76,7 @@ abstract class Entity extends Model implements EntityContract
 
         // attributes
         foreach ($dict['mapping']['attributes'] as $attribute => $column) {
-            if (! $eloquentModel->isGeneratedDate($column)) {
+            if (! $eloquentModel->isAutomaticallyUpdatedDate($column)) {
                 $eloquentModel->setAttribute($column, $this->{$attribute});
             }
         }
@@ -96,6 +95,7 @@ abstract class Entity extends Model implements EntityContract
             $relationObject = $this->{$name};
 
             if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
+                // set relation
                 $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
                     ? EloquentCollection::newFromEntity($relationObject)
                     : EloquentModel::newFromEntity($relationObject);
