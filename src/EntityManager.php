@@ -19,23 +19,33 @@ class EntityManager
     }
 
     /**
-     * Set an entity class.
+     * Get a new datamapper query instance.
      *
      * @param string $class
-     * @param array $options
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function entity($class, array $options=[])
+    public function entity($class)
     {
         $class = get_real_entity($class);
 
         $eloquentModel = get_mapped_model($class);
 
-        $returnType = (! empty($options['returnDtos']))
-            ? Builder::RETURN_TYPE_DTOS
-            : Builder::RETURN_TYPE_ENTITIES;
+        return (new $eloquentModel)->newQuery(Builder::RETURN_TYPE_DATAMAPPER);
+    }
 
-        return (new $eloquentModel)->newQuery($returnType);
+    /**
+     * Get a new schema query instance.
+     *
+     * @param string $class
+     * @return \ProAI\Datamapper\Eloquent\SchemaQueryBuilder
+     */
+    public function newSchemaQuery($class)
+    {
+        $class = get_real_entity($class);
+
+        $eloquentModel = get_mapped_model($class);
+
+        return (new $eloquentModel)->newSchemaQuery();
     }
 
     /**
@@ -94,7 +104,7 @@ class EntityManager
      * @param string $action
      * @return void
      */
-    protected function updateRelations($eloquentModel, $action='insert')
+    protected function updateRelations($eloquentModel, $action)
     {
         $mapping = $eloquentModel->getMapping();
         $eloquentRelations = $eloquentModel->getRelations();
@@ -115,7 +125,7 @@ class EntityManager
      * @param string $action
      * @return void
      */
-    protected function updateRelation($eloquentModel, $name, $relationMapping, $action='insert')
+    protected function updateRelation($eloquentModel, $name, $relationMapping, $action)
     {
         // set foreign key for belongsTo/morphTo relation
         if ($relationMapping['type'] == 'belongsTo' || $relationMapping['type'] == 'morphTo') {
@@ -136,7 +146,7 @@ class EntityManager
      * @param string $action
      * @return void
      */
-    protected function updateBelongsToRelation($eloquentModel, $name, $action='insert')
+    protected function updateBelongsToRelation($eloquentModel, $name, $action)
     {
         if ($action == 'insert' || $action == 'update') {
             $eloquentModel->{$name}()->associate($eloquentModel->getRelation($name));
@@ -151,7 +161,7 @@ class EntityManager
      * @param string $action
      * @return void
      */
-    protected function updateBelongsToManyRelation($eloquentModel, $name, $action='insert')
+    protected function updateBelongsToManyRelation($eloquentModel, $name, $action)
     {
         $eloquentCollection = $eloquentModel->getRelation($name);
 
@@ -194,7 +204,7 @@ class EntityManager
             throw new Exception('Object transfered to EntityManager is not an object');
         }
 
-        $eloquentModel = Model::newFromEntity($entity);
+        $eloquentModel = Model::newFromDatamapperObject($entity);
 
         $eloquentModel->exists = $exists;
 

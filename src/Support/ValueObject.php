@@ -33,7 +33,7 @@ abstract class ValueObject extends Model implements ValueObjectContract
      * @param array $name
      * @return \ProAI\Datamapper\Support\ValueObject
      */
-    public static function newFromEloquentModel(EloquentModel $eloquentModel, $name)
+    public static function newFromEloquentObject(EloquentModel $eloquentModel, $name)
     {
         $rc = new ReflectionClass(static::class);
         $valueObject = $rc->newInstanceWithoutConstructor();
@@ -58,7 +58,7 @@ abstract class ValueObject extends Model implements ValueObjectContract
      * @param array $name
      * @return void
      */
-    public function toEloquentModel(EloquentModel &$eloquentModel, $name)
+    public function toEloquentObject(EloquentModel &$eloquentModel, $name)
     {
         // get model data
         $dict = [

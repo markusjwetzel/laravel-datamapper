@@ -17,7 +17,7 @@ abstract class Entity extends Model implements EntityContract
      * @param \Illuminate\Database\Eloquent\Model $eloquentModel
      * @return \ProAI\Datamapper\Support\Entity
      */
-    public static function newFromEloquentModel(EloquentModel $eloquentModel)
+    public static function newFromEloquentObject(EloquentModel $eloquentModel)
     {
         $rc = new ReflectionClass(static::class);
         $entity = $rc->newInstanceWithoutConstructor();
@@ -36,14 +36,14 @@ abstract class Entity extends Model implements EntityContract
 
         // embeddeds
         foreach ($dict['mapping']['embeddeds'] as $name => $embedded) {
-            $entity->{$name} = $embedded['class']::newFromEloquentModel($eloquentModel, $name);
+            $entity->{$name} = $embedded['class']::newFromEloquentObject($eloquentModel, $name);
         }
 
         // relations
         foreach ($dict['mapping']['relations'] as $name => $relation) {
             // set relation object
             if (! empty($dict['relations'][$name])) {
-                $relationObject = $dict['relations'][$name]->toEntity();
+                $relationObject = $dict['relations'][$name]->toDatamapperObject();
             } elseif (in_array($relation['type'], $eloquentModel->manyRelations)) {
                 $relationObject = new ProxyCollection;
             } else {
@@ -59,9 +59,9 @@ abstract class Entity extends Model implements EntityContract
     /**
      * Convert an instance to an eloquent model object.
      *
-     * @return \ProAI\Datamapper\\Eloquent\Model
+     * @return \ProAI\Datamapper\Eloquent\Model
      */
-    public function toEloquentModel()
+    public function toEloquentObject()
     {
         $class = get_mapped_model(static::class);
 
@@ -86,7 +86,7 @@ abstract class Entity extends Model implements EntityContract
             $embeddedObject = $this->{$name};
 
             if (! empty($embeddedObject)) {
-                $embeddedObject->toEloquentModel($eloquentModel, $name);
+                $embeddedObject->toEloquentObject($eloquentModel, $name);
             }
         }
 
@@ -97,8 +97,8 @@ abstract class Entity extends Model implements EntityContract
             if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
                 // set relation
                 $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
-                    ? EloquentCollection::newFromEntity($relationObject)
-                    : EloquentModel::newFromEntity($relationObject);
+                    ? EloquentCollection::newFromDatamapperObject($relationObject)
+                    : EloquentModel::newFromDatamapperObject($relationObject);
                 
                 $eloquentModel->setRelation($name, $value);
             }

@@ -13,12 +13,12 @@ class Collection extends EloquentCollection
      *
      * @return \ProAI\Datamapper\Support\Collection
      */
-    public function toEntity()
+    public function toDatamapperObject()
     {
         $entities = new DatamapperCollection;
 
         foreach ($this->items as $name => $item) {
-            $entities->put($name, $item->toEntity());
+            $entities->put($name, $item->toDatamapperObject());
         }
 
         return $entities;
@@ -27,17 +27,18 @@ class Collection extends EloquentCollection
     /**
      * Convert models to data transfer objects.
      *
+     * @param string $root
      * @param array $schema
      * @param array $transformations
      * @param string $path
      * @return \ProAI\Datamapper\Support\Collection
      */
-    public function toDataTransferObject(array $schema, array $transformations, $path='')
+    public function toDataTransferObject(string $root, array $schema, array $transformations, $path='')
     {
         $entities = new DatamapperCollection;
 
         foreach ($this->items as $name => $item) {
-            $entities->put($name, $item->toDataTransferObject($schema, $transformations, $path));
+            $entities->put($name, $item->toDataTransferObject($root, $schema, $transformations, $path));
         }
 
         return $entities;
@@ -49,12 +50,12 @@ class Collection extends EloquentCollection
      * @param \ProAI\Datamapper\Support\Collection $object
      * @return \ProAI\Datamapper\Eloquent\Collection
      */
-    public static function newFromEntity($entities)
+    public static function newFromDatamapperObject($entities)
     {
         $eloquentModels = new static;
 
         foreach ($entities as $name => $item) {
-            $eloquentModels->put($name, Model::newFromEntity($item));
+            $eloquentModels->put($name, Model::newFromDatamapperObject($item));
         }
 
         return $eloquentModels;

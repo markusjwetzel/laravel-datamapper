@@ -8,6 +8,8 @@ use ProAI\Datamapper\Support\DataTransferObject;
 use ProAI\Datamapper\Support\Proxy;
 use ProAI\Datamapper\Support\ProxyCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
+use ProAI\Datamapper\Eloquent\Builder;
+use ProAI\Datamapper\Eloquent\SchemaQuery;
 use ReflectionClass;
 use ReflectionObject;
 
@@ -79,7 +81,7 @@ class Model extends EloquentModel
      * @param string $returnType
      * @return \ProAI\Datamapper\Eloquent\Builder
      */
-    public function newQuery($returnType = Builder::RETURN_TYPE_ELOQUENT)
+    public function newQuery($returnType=Builder::RETURN_TYPE_ELOQUENT)
     {
         $builder = $this->newQueryWithoutScopes($returnType);
 
@@ -92,7 +94,7 @@ class Model extends EloquentModel
      * @param string $returnType
      * @return \Illuminate\Database\Eloquent\Builder|static
      */
-    public function newQueryWithoutScopes($returnType = Builder::RETURN_TYPE_ELOQUENT)
+    public function newQueryWithoutScopes($returnType=Builder::RETURN_TYPE_ELOQUENT)
     {
         $builder = $this->newEloquentBuilder(
             $this->newBaseQueryBuilder(),
@@ -111,9 +113,20 @@ class Model extends EloquentModel
      * @param  \Illuminate\Database\Query\Builder $query
      * @return \ProAI\Datamapper\Eloquent\Builder|static
      */
-    public function newEloquentBuilder($query, $returnType = Builder::RETURN_TYPE_ELOQUENT)
+    public function newEloquentBuilder($query, $returnType=Builder::RETURN_TYPE_ELOQUENT)
     {
         return new Builder($query, $returnType);
+    }
+
+    /**
+     * Create a new Eloquent query builder for the model.
+     *
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return \ProAI\Datamapper\Eloquent\SchemaQueryBuilder|static
+     */
+    public function newSchemaQuery()
+    {
+        return new SchemaQuery($this->newQuery());
     }
 
     /**
@@ -121,13 +134,13 @@ class Model extends EloquentModel
      *
      * @return object
      */
-    public function toEntity()
+    public function toDatamapperObject()
     {
         // directly set private properties if entity extends the datamapper entity class (fast!)
         if (is_subclass_of($this->class, '\ProAI\Datamapper\Support\Entity')) {
             $class = $this->class;
 
-            return $class::newFromEloquentModel($this);
+            return $class::newFromEloquentObject($this);
         }
 
         // set private properties via reflection (slow!)
@@ -172,7 +185,7 @@ class Model extends EloquentModel
         foreach ($this->mapping['relations'] as $name => $relation) {
             // set relation object
             if (! empty($this->relations[$name])) {
-                $relationObject = $this->relations[$name]->toEntity();
+                $relationObject = $this->relations[$name]->toDatamapperObject();
             } elseif (in_array($relation['type'], $this->manyRelations)) {
                 $relationObject = new ProxyCollection;
             } else {
@@ -210,12 +223,13 @@ class Model extends EloquentModel
     /**
      * Convert model to data transfer object.
      *
+     * @param array $root
      * @param array $schema
      * @param array $transformations
      * @param string $path
      * @return object
      */
-    public function toDataTransferObject($schema, $transformations, $path='')
+    public function toDataTransferObject($root, $schema, $transformations, $path='')
     {
         $dto = new DataTransferObject();
 
@@ -229,8 +243,8 @@ class Model extends EloquentModel
             if (is_numeric($key)) {
                 // transformation key
                 $transformationKey = ($path)
-                    ? $path.'.'.$value
-                    : $value;
+                    ? $root.'.'.$path.'.'.$value
+                    : $root.'.'.$value;
 
                 // set value
                 if ($value == '__type') {
@@ -264,11 +278,11 @@ class Model extends EloquentModel
      * @param \ProAI\Datamapper\Contracts\Entity $entity
      * @return \ProAI\Datamapper\Eloquent\Model
      */
-    public static function newFromEntity(EntityContract $entity)
+    public static function newFromDatamapperObject(EntityContract $entity)
     {
         // directly get private properties if entity extends the datamapper entity class (fast!)
         if ($entity instanceof \ProAI\Datamapper\Support\Entity) {
-            return $entity->toEloquentModel();
+            return $entity->toEloquentObject();
         }
 
         // get private properties via reflection (slow!)
@@ -334,8 +348,8 @@ class Model extends EloquentModel
             if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
                 // set relation
                 $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
-                    ? Collection::newFromEntity($relationObject)
-                    : self::newFromEntity($relationObject);
+                    ? Collection::newFromDatamapperObject($relationObject)
+                    : self::newFromDatamapperObject($relationObject);
                 
                 $eloquentModel->setRelation(
                     $name,
