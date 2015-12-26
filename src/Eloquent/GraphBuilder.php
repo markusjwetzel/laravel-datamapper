@@ -4,7 +4,7 @@ namespace ProAI\Datamapper\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder as EloquentQueryBuilder;
 
-class SchemaQuery
+class GraphBuilder
 {
     /**
      * Root of schema.

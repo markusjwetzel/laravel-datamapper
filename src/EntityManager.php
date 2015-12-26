@@ -37,15 +37,15 @@ class EntityManager
      * Get a new schema query instance.
      *
      * @param string $class
-     * @return \ProAI\Datamapper\Eloquent\SchemaQueryBuilder
+     * @return \ProAI\Datamapper\Eloquent\GraphBuilder
      */
-    public function newSchemaQuery($class)
+    public function newGraphQuery($class)
     {
         $class = get_real_entity($class);
 
         $eloquentModel = get_mapped_model($class);
 
-        return (new $eloquentModel)->newSchemaQuery();
+        return (new $eloquentModel)->newGraphQuery();
     }
 
     /**
@@ -166,7 +166,7 @@ class EntityManager
         $eloquentCollection = $eloquentModel->getRelation($name);
 
         if (! $eloquentCollection instanceof \Illuminate\Database\Eloquent\Collection) {
-            throw new Exception("Many-to-many relation '".$name."' is not an array collection");
+            throw new Exception("Many-to-many relation '".$name."' is not a valid collection");
         }
 
         // get related keys

@@ -122,11 +122,11 @@ class Model extends EloquentModel
      * Create a new Eloquent query builder for the model.
      *
      * @param  \Illuminate\Database\Query\Builder $query
-     * @return \ProAI\Datamapper\Eloquent\SchemaQueryBuilder|static
+     * @return \ProAI\Datamapper\Eloquent\GraphBuilder|static
      */
-    public function newSchemaQuery()
+    public function newGraphQuery()
     {
-        return new SchemaQuery($this->newQuery());
+        return new GraphBuilder($this->newQuery());
     }
 
     /**
@@ -250,9 +250,13 @@ class Model extends EloquentModel
                 if ($value == '__type') {
                     $dto->{$value} = class_basename($this->class);
                 } elseif (isset($transformations[$transformationKey])) {
-                    $dto->{$value} = $transformations[$transformationKey]($this->attributes);
+                    $field = new GraphField;
+                    $transformations[$transformationKey]($field, $this->attributes);
+                    $dto->{$value} = $field->getValue();
                 } elseif (isset($transformations['*.'.$value])) {
-                    $dto->{$value} = $transformations['*.'.$value]($this->attributes);
+                    $field = new GraphField;
+                    $transformations['*.'.$value]($field, $this->attributes);
+                    $dto->{$value} = $field->getValue();
                 } elseif (isset($this->attributes[$value])) {
                     $dto->{$value} = $this->attributes[$value];
                 }
@@ -261,10 +265,12 @@ class Model extends EloquentModel
             // entry is relation
             if (! is_numeric($key) && isset($this->relations[$key])) {
                 // set value and transform childs to dtos
+                $newPath = ($path) ? $path.'.'.$key : $key;
                 $dto->{$key} = $this->relations[$key]->toDataTransferObject(
+                    $root,
                     $value,
                     $transformations,
-                    $path.'.'.$key
+                    $newPath
                 );
             }
         }
