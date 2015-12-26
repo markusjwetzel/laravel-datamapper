@@ -2,7 +2,7 @@
 
 namespace ProAI\Datamapper\Eloquent;
 
-class GraphField
+class GraphNode
 {
     /**
      * Value of the field.

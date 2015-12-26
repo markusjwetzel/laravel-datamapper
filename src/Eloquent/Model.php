@@ -250,13 +250,13 @@ class Model extends EloquentModel
                 if ($value == '__type') {
                     $dto->{$value} = class_basename($this->class);
                 } elseif (isset($transformations[$transformationKey])) {
-                    $field = new GraphField;
-                    $transformations[$transformationKey]($field, $this->attributes);
-                    $dto->{$value} = $field->getValue();
+                    $node = new GraphNode;
+                    $transformations[$transformationKey]($node, $this->attributes);
+                    $dto->{$value} = $node->getValue();
                 } elseif (isset($transformations['*.'.$value])) {
-                    $field = new GraphField;
-                    $transformations['*.'.$value]($field, $this->attributes);
-                    $dto->{$value} = $field->getValue();
+                    $node = new GraphNode;
+                    $transformations['*.'.$value]($node, $this->attributes);
+                    $dto->{$value} = $node->getValue();
                 } elseif (isset($this->attributes[$value])) {
                     $dto->{$value} = $this->attributes[$value];
                 }
