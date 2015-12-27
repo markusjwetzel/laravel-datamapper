@@ -47,15 +47,23 @@ class Collection extends EloquentCollection
     /**
      * Convert models to eloquent models.
      *
-     * @param \ProAI\Datamapper\Support\Collection $object
+     * @param \ProAI\Datamapper\Support\Collection $entities
+     * @param string $lastObjectId
+     * @param \ProAI\Datamapper\Eloquent\Model $lastEloquentModel
      * @return \ProAI\Datamapper\Eloquent\Collection
      */
-    public static function newFromDatamapperObject($entities)
+    public static function newFromDatamapperObject($entities, $lastObjectId, $lastEloquentModel)
     {
         $eloquentModels = new static;
 
         foreach ($entities as $name => $item) {
-            $eloquentModels->put($name, Model::newFromDatamapperObject($item));
+            if (spl_object_hash($item) == $lastObjectId) {
+                $model = $lastEloquentModel;
+            } else {
+                $model = Model::newFromDatamapperObject($item, $lastObjectId, $lastEloquentModel);
+            }
+
+            $eloquentModels->put($name, $model);
         }
 
         return $eloquentModels;

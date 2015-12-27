@@ -282,13 +282,15 @@ class Model extends EloquentModel
      * Convert model to plain old php object.
      *
      * @param \ProAI\Datamapper\Contracts\Entity $entity
+     * @param string $lastObjectId
+     * @param \ProAI\Datamapper\Eloquent\Model $lastEloquentModel
      * @return \ProAI\Datamapper\Eloquent\Model
      */
-    public static function newFromDatamapperObject(EntityContract $entity)
+    public static function newFromDatamapperObject(EntityContract $entity, $lastObjectId = null, $lastEloquentModel = null)
     {
         // directly get private properties if entity extends the datamapper entity class (fast!)
         if ($entity instanceof \ProAI\Datamapper\Support\Entity) {
-            return $entity->toEloquentObject();
+            return $entity->toEloquentObject($lastObjectId, $lastEloquentModel);
         }
 
         // get private properties via reflection (slow!)
@@ -311,10 +313,7 @@ class Model extends EloquentModel
                 );
 
                 // set attribute
-                $eloquentModel->setAttribute(
-                    $column,
-                    $property
-                );
+                $eloquentModel->setAttribute($column, $property);
             }
         }
 
@@ -335,10 +334,7 @@ class Model extends EloquentModel
                     );
 
                     // set attribute
-                    $eloquentModel->setAttribute(
-                        $column,
-                        $property
-                    );
+                    $eloquentModel->setAttribute($column, $property);
                 }
             }
         }
@@ -353,14 +349,15 @@ class Model extends EloquentModel
 
             if (! empty($relationObject) && ! $relationObject instanceof \ProAI\Datamapper\Contracts\Proxy) {
                 // set relation
-                $value = ($relationObject instanceof \ProAI\Datamapper\Support\Collection)
-                    ? Collection::newFromDatamapperObject($relationObject)
-                    : self::newFromDatamapperObject($relationObject);
+                if ($relationObject instanceof \ProAI\Datamapper\Support\Collection) {
+                    $value = EloquentCollection::newFromDatamapperObject($relationObject, $this, $eloquentModel);
+                } elseif (spl_object_hash($relationObject) == $lastObjectId) {
+                    $value = $lastEloquentModel;
+                } else {
+                    $value = EloquentModel::newFromDatamapperObject($relationObject, spl_object_hash($this), $eloquentModel);
+                }
                 
-                $eloquentModel->setRelation(
-                    $name,
-                    $value
-                );
+                $eloquentModel->setRelation($name, $value);
             }
         }
 
