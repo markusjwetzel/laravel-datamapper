@@ -27,8 +27,8 @@ class Builder
         'mediumText' => ['type' => 'text', 'options' => ['length' => 16777215]],
         'longText' => ['type' => 'text', 'options' => ['length' => 4294967295]],
         // timestamps
-        'dateTime' => ['type' => 'datetime', 'options' => ['default' => '0']],
-        //'timestamp' => ['type' => 'datetime', 'options' => ['default' => '0', 'platformOptions' => ['version' => true]]],
+        'dateTime' => ['type' => 'datetime', 'options' => ['default' => '0000-00-00 00:00:00']],
+        //'timestamp' => ['type' => 'datetime', 'options' => ['default' => '0000-00-00 00:00:00', 'platformOptions' => ['version' => true]]],
     ];
 
     /**
