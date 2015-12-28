@@ -26,8 +26,7 @@ abstract class Model implements ModelContract
     public function __call($method, $parameters)
     {
         // magical getter for objects
-        if ((isset($this->{$method}) || property_exists($this, $method))&&
-            (is_object($this->{$method}) || is_array($this->{$method})))
+        if ((isset($this->{$method}) || property_exists($this, $method)) && ! is_scalar($this->{$method}))
         {
             return $this->{$method};
         }
@@ -36,7 +35,7 @@ abstract class Model implements ModelContract
         $scalarProperty = (substr($method, 0, 3) == 'get')
             ? lcfirst(substr($method, 3))
             : null;
-        
+
         if ($scalarProperty && (isset($this->{$scalarProperty}) || property_exists($this, $scalarProperty)))
         {
             if (is_scalar($this->{$scalarProperty})) {
