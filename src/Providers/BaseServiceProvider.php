@@ -8,24 +8,32 @@ use ProAI\Datamapper\EntityManager;
 class BaseServiceProvider extends ServiceProvider
 {
     /**
+     * Perform post-registration booting of services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        if ($this->app['config']['annotations.auto_scan']) {
+            $this->scanEntities();
+        }
+
+        $this->registerEloquentModels();
+    }
+
+    /**
      * Register the application services.
      *
      * @return void
      */
     public function register()
     {
-        $app = $this->app;
-
         $this->registerEntityManager();
 
         $this->registerHelpers();
 
         $this->app->register('ProAI\Datamapper\Providers\CommandsServiceProvider');
 
-        if ($app['config']['datamapper.auto_scan'])
-            $this->registerAutoUpdateDatabase();
-
-        $this->registerEloquentModels();
     }
 
     /**
@@ -57,7 +65,7 @@ class BaseServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function registerAutoUpdateDatabase()
+    protected function scanEntities()
     {
         $app = $this->app;
 
