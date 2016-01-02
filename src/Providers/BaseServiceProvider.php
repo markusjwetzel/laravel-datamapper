@@ -14,7 +14,7 @@ class BaseServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if ($this->app['config']['annotations.auto_scan']) {
+        if ($this->app['config']['datamapper.auto_scan']) {
             $this->scanEntities();
         }
 
