@@ -194,12 +194,12 @@ class EntityScanner
                 if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
                     $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations);
 
-                    $entityMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata);
+                    $this->parseColumn($name, $annotation, $entityMetadata, false, true);
                 }
 
                 // embedded class
                 if ($annotation instanceof \ProAI\Datamapper\Annotations\Embedded) {
-                    $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
+                    $this->parseEmbeddedClass($name, $annotation, $entityMetadata, true);
                 }
             }
         }
@@ -213,6 +213,18 @@ class EntityScanner
             $propertyAnnotations = $this->reader->getPropertyAnnotations($reflectionProperty);
 
             foreach ($propertyAnnotations as $annotation) {
+                // column
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
+                    $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations);
+
+                    $entityMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata);
+                }
+
+                // embedded class
+                if ($annotation instanceof \ProAI\Datamapper\Annotations\Embedded) {
+                    $entityMetadata['embeddeds'][] = $this->parseEmbeddedClass($name, $annotation, $entityMetadata);
+                }
+
                 // relation
                 if ($annotation instanceof \ProAI\Datamapper\Annotations\Relation) {
                     $entityMetadata['relations'][] = $this->parseRelation($name, $annotation, $entityMetadata);
@@ -246,7 +258,7 @@ class EntityScanner
      * @param \ProAI\Datamapper\Metadata\Definitions\Entity $entityMetadata
      * @return \ProAI\Datamapper\Metadata\Definitions\EmbeddedClass
      */
-    protected function parseEmbeddedClass($name, Annotation $annotation, EntityDefinition &$entityMetadata)
+    protected function parseEmbeddedClass($name, Annotation $annotation, EntityDefinition &$entityMetadata, $primaryKeyOnly = false)
     {
         // check if related class is valid
         $annotation->class = $this->getRealEntity($annotation->class, $entityMetadata['class']);
@@ -280,7 +292,7 @@ class EntityScanner
                 if ($annotation instanceof \ProAI\Datamapper\Annotations\Column) {
                     $this->setAdditionalColumnProperties($name, $annotation, $propertyAnnotations, true, $embeddedColumnPrefix);
 
-                    $embeddedClassMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata, true);
+                    $embeddedClassMetadata['attributes'][] = $this->parseColumn($name, $annotation, $entityMetadata, true, $primaryKeyOnly);
                 }
             }
         }
@@ -333,18 +345,20 @@ class EntityScanner
      * @param boolean $embedded
      * @return \ProAI\Datamapper\Metadata\Definitions\Attribute
      */
-    protected function parseColumn($name, Annotation $annotation, EntityDefinition &$entityMetadata, $embedded=false)
+    protected function parseColumn($name, Annotation $annotation, EntityDefinition &$entityMetadata, $embedded=false, $primaryKeyOnly = false)
     {
-        // set column data
-        if (! empty($entityMetadata['versionTable']) && $annotation->versioned) {
-            $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
-        } else {
-            $entityMetadata['table']['columns'][] = $this->generateColumn($name, $annotation);
-        }
+        if ($annotation->primary == $primaryKeyOnly) {
+            // set column data
+            if (! empty($entityMetadata['versionTable']) && $annotation->versioned) {
+                $entityMetadata['versionTable']['columns'][] = $this->generateColumn($name, $annotation);
+            } else {
+                $entityMetadata['table']['columns'][] = $this->generateColumn($name, $annotation);
+            }
 
-        // set up version feature
-        if (! empty($entityMetadata['versionTable']) && ! $annotation->versioned && $annotation->primary) {
-            $this->generateVersionTable($name, $annotation, $entityMetadata);
+            // set up version feature
+            if (! empty($entityMetadata['versionTable']) && ! $annotation->versioned && $annotation->primary) {
+                $this->generateVersionTable($name, $annotation, $entityMetadata);
+            }
         }
 
         return $this->generateAttribute($name, $annotation);
