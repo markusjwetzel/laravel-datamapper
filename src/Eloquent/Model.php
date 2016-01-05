@@ -85,7 +85,17 @@ class Model extends EloquentModel
     {
         $builder = $this->newQueryWithoutScopes($returnType);
 
-        return $this->applyGlobalScopes($builder);
+        // laravel 5.1
+        if (method_exists($this, 'applyGlobalScopes')) {
+            return $this->applyGlobalScopes($builder);
+        }
+
+        // laravel 5.2
+        foreach ($this->getGlobalScopes() as $identifier => $scope) {
+            $builder->withGlobalScope($identifier, $scope);
+        }
+
+        return $builder;
     }
 
     /**
