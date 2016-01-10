@@ -15,7 +15,9 @@ trait AutoUuid
     {
         static::creating(function ($model) {
             foreach($model->getAutoUuids() as $autoUuid) {
-                $model->setAttribute($autoUuid, $model->generateUuid()->getBytes());
+                if (empty($model->{$autoUuid})) {
+                    $model->setAttribute($autoUuid, $model->generateUuid()->getBytes());
+                }
             }
         });
     }
