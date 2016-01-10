@@ -10,6 +10,7 @@ use ProAI\Datamapper\Support\ProxyCollection;
 use ProAI\Datamapper\Contracts\Entity as EntityContract;
 use ProAI\Datamapper\Eloquent\Builder;
 use ProAI\Datamapper\Eloquent\SchemaQuery;
+use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionObject;
 
@@ -244,8 +245,11 @@ class Model extends EloquentModel
         $dto = new DataTransferObject();
 
         // get morphed schema
-        if($this->morphClass && isset($schema['...'.studly_case($this->morphClass)])) {
-            $schema = $schema['...'.studly_case($this->morphClass)];
+        if($this->morphClass) {
+            $morphKey = '...'.Str::studly($this->morphClass);
+            if (isset($schema[$morphKey])) {
+                $schema = $schema[$morphKey];
+            }
         }
 
         foreach ($schema as $key => $value) {
@@ -267,8 +271,11 @@ class Model extends EloquentModel
                     $node = new GraphNode;
                     $transformations['*.'.$value]($node, $this->attributes);
                     $dto->{$value} = $node->getValue();
-                } elseif (isset($this->attributes[$value])) {
-                    $dto->{$value} = $this->attributes[$value];
+                } else {
+                    $columnName = $this->getColumnName($value);
+                    if (isset($this->attributes[$columnName])) {
+                        $dto->{$value} = $this->attributes[$columnName];
+                    }
                 }
             }
 
@@ -518,5 +525,36 @@ class Model extends EloquentModel
     public function getMapping()
     {
         return $this->mapping;
+    }
+
+    /**
+     * Get column name of a schema name.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function getColumnName($name)
+    {
+        // check attributes for given name
+        if (isset($this->mapping['attributes'][$name])) {
+            return $this->mapping['attributes'][$name];
+        }
+
+        // check embeddeds for given name
+        foreach($this->mapping['embeddeds'] as $embedded) {
+            // check for embedded attributes
+            if (isset($embedded['attributes'][$name])) {
+                return $embedded['attributes'][$name];
+            }
+
+            // check for embedded attributes using embedded column prefix
+            if ($embedded['columnPrefix'] && strpos($name, $embedded['columnPrefix']) === 0) {
+                $embeddedName = substr($name, strlen($embedded['columnPrefix']));
+
+                if (isset($embedded['attributes'][$embeddedName])) {
+                    return $embedded['attributes'][$embeddedName];
+                }
+            }
+        }
     }
 }

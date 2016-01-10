@@ -405,6 +405,7 @@ class Generator
         foreach ($entityMetadata['embeddeds'] as $embeddedMetadata) {
             $embedded = [];
             $embedded['class'] = $embeddedMetadata['class'];
+            $embedded['columnPrefix'] = $embeddedMetadata['columnPrefix'];
             $embeddedAttributes = [];
             foreach ($embeddedMetadata['attributes'] as $attributeMetadata) {
                 $embeddedAttributes[$attributeMetadata['name']] = $attributeMetadata['columnName'];
