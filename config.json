@@ -1,0 +1,29 @@
+{
+    "title": "Laravel Datamapper Docs",
+    "tagline": "An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD).",
+    "author": "Markus J. Wetzel",
+    "image": "app.png",
+    "ignore": {
+            "files": ["Work_In_Progress.md"],
+            "folders": ["99_Not_Ready"]
+    },
+    "live": {
+        "inherit_index": true,
+        "clean_urls": true
+    },
+    "html": {
+        "theme": "lean-laravel",
+        "breadcrumbs": false,
+        "toggle_code": false,
+        "date_modified": true,
+        "float": false,
+        "auto_toc": false,
+        "search": false,
+
+        "links": {
+            "Download": "https://github.com/ProAI/laravel-datamapper/archive/master.zip",
+            "GitHub Repo": "https://github.com/ProAI/laravel-datamapper",
+            "Help/Support/Bugs": "https://github.com/ProAI/laravel-datamapper/issues"
+        }
+    }
+}
