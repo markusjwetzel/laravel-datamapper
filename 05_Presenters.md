@@ -1,1 +1,0 @@
-This package can be extended by the Laravel Datamapper Presenter package. Check out the [Laravel Datamapper Presenter](https://github.com/ProAI/laravel-datamapper-presenter) readme for more information.

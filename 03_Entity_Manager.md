@@ -1,1 +1,1 @@
-See [Readme](https://github.com/ProAI/laravel-datamapper) for now.
+See [Getting Started](Getting_Started.html) for now.
