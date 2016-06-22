@@ -30,7 +30,7 @@ Run `php artisan vendor:publish` to publish this package configuration. Afterwar
 
 ## Documentation
 
-See the [Wiki](https://github.com/ProAI/laravel-datamapper/wiki) for a full documentation.
+See the [Wiki](https://proai.github.io/laravel-datamapper) for a full documentation.
 
 ## Usage
 
@@ -119,7 +119,7 @@ Hint: Relational objects are not inserted or updated.
 
 ##### Example #3: Eager Loading
 
-`$users = $em->class('Entity\User')->with('comments')->get();`
+`$users = $em->class('Acme\Models\User')->with('comments')->get();`
 
 You can use the `with()` method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. `->with('comments.likes')`).
 
