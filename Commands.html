@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Commands - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class=''><a href="Getting_Started.html">Getting Started</a></li><li class=' has-children'><a href="Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class=''><a href="Annotations/Columns.html">Columns</a></li><li class=''><a href="Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="Entity_Manager.html">Entity Manager</a></li><li class='active'><a href="Commands.html">Commands</a></li><li class=''><a href="Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Commands</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Monday, May 16, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                10:38 AM            </span>
+        </div>
+    
+    <p>Basically there are three commands (<code>schema:create</code>, <code>schema:update</code> and <code>schema:drop</code>) for create, update and drop a database schema and cached entity models. All three commands are described in detail below:</p>
+<h3 id="page_Command">Command <code>schema:create</code></h3>
+<p>This command will create the database schema (i. e. all database tables) and all cached entity models. So this is the only command you have to run before you can use the advantages of Laravel Datamapper.</p>
+<p>Options:</p>
+<ul>
+<li>
+<code>--class={classname}</code>: Only will create the database schema and model for the given entity class.</li>
+<li>
+<code>--dump-sql</code>: This option outputs the SQL queries.</li>
+</ul>
+<h3 id="page_Command">Command <code>schema:update</code></h3>
+<p>This command will update the existing database schema (i. e. all existing database tables) and all cached entity models. Already existing tables that are no longer part of any entity will be deleted (see <code>--save-mode</code> option to prevent this).</p>
+<p>Options:</p>
+<ul>
+<li>
+<code>--class={classname}</code>: Only will update the database schema and model for the given entity class.</li>
+<li>
+<code>--dump-sql</code>: This option outputs the SQL queries.</li>
+<li>
+<code>--save-mode</code>: When this option is enabled already existing tables and models will not deleted.</li>
+</ul>
+<h3 id="page_Command">Command <code>schema:drop</code></h3>
+<p>This command will delete the existing database schema (i. e. all existing database tables that belong to an entity) and all cached entity models.</p>
+<p>Options:</p>
+<ul>
+<li>
+<code>--dump-sql</code>: This option outputs the SQL queries.</li>
+</ul>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="Entity_Manager.html">Previous</a></li>            <li><a href="Additional_Features.html">Next</a></li>        </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>

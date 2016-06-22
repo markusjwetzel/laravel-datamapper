@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Columns - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="../themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='../themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='../themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="../index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class=''><a href="../Getting_Started.html">Getting Started</a></li><li class='open has-children'><a href="../Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class='active'><a href="../Annotations/Columns.html">Columns</a></li><li class=''><a href="../Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="../Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="../Entity_Manager.html">Entity Manager</a></li><li class=''><a href="../Commands.html">Commands</a></li><li class=''><a href="../Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Columns</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Saturday, June 11, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                3:19 PM            </span>
+        </div>
+    
+    <p>This page documents the <code>@Column</code> annotation. An attribute defined with this annotation belongs to a column in the local table. You can use nearly all column types documented by the <a href="http://laravel.com/docs/master/migrations#creating-columns">Laravel documentation</a>.</p>
+<h3 id="page_Types">Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bigIncrements</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bigInteger</code></td>
+<td>Optional parameters <code>unsigned</code> and <code>autoIncrement</code>.</td>
+</tr>
+<tr>
+<td><code>binary</code></td>
+<td>Optional parameters <code>length</code> and <code>fixed</code>.</td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>char</code></td>
+<td>Optional parameter <code>length</code>.</td>
+</tr>
+<tr>
+<td><code>date</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>dateTime</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>decimal</code></td>
+<td>Parameters <code>scale</code> and <code>precision</code>.</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>increments</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>integer</code></td>
+<td>Optional parameters <code>unsigned</code> and <code>autoIncrement</code>.</td>
+</tr>
+<tr>
+<td><code>longText</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>mediumText</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>smallInteger</code></td>
+<td>Optional parameters <code>unsigned</code> and <code>autoIncrement</code>.</td>
+</tr>
+<tr>
+<td><code>string</code></td>
+<td>Optional parameter <code>length</code>.</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="page_Examples">Examples</h3>
+<p>Example for a string column:</p>
+<pre><code>@Column(type=&quot;string&quot;)
+</code></pre>
+<p>Example for an integer auto-increment primary key (use this instead of the not supported <code>increments</code> and <code>bigIncrements</code> types):</p>
+<pre><code>@Id
+@AutoIncrement
+@Column(type=&quot;integer&quot;)
+</code></pre>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="../Annotations/index.html">Previous</a></li>            <li><a href="../Annotations/Relationships.html">Next</a></li>        </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="../themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="../themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="../themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Annotations - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="../themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='../themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='../themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="../index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class=''><a href="../Getting_Started.html">Getting Started</a></li><li class='open has-children'><a href="../Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class=''><a href="../Annotations/Columns.html">Columns</a></li><li class=''><a href="../Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="../Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="../Entity_Manager.html">Entity Manager</a></li><li class=''><a href="../Commands.html">Commands</a></li><li class=''><a href="../Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Annotations</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Monday, May 16, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                10:38 AM            </span>
+        </div>
+    
+    <p>We tried to create annotations that are as close as possible to the Laravel Schema Builder and Eloquent syntax.</p>
+<h3 id="page_Class_Annotations">Class Annotations</h3>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Description</th>
+<th>Require</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Embeddable</code></td>
+<td>Used to define embedded classes (i. e. value objects)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>@Entity</code></td>
+<td>Used to define entities, optional parameters <code>morphClass</code>, <code>touches</code> and <code>with</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>@SoftDeletes</code></td>
+<td></td>
+<td><code>@Entity</code></td>
+</tr>
+<tr>
+<td><code>@Table</code></td>
+<td>Optional parameter <code>name</code></td>
+<td><code>@Entity</code></td>
+</tr>
+<tr>
+<td><code>@Timestamps</code></td>
+<td></td>
+<td><code>@Entity</code></td>
+</tr>
+<tr>
+<td><code>@Versionable</code></td>
+<td></td>
+<td><code>@Entity</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="page_Property_Annotations">Property Annotations</h3>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Description</th>
+<th>Require</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@AutoIncrement</code></td>
+<td>The value of a column that has this annotation will be generated by the database automatically.</td>
+<td><code>@Column</code></td>
+</tr>
+<tr>
+<td><code>@AutoUuid</code></td>
+<td>The value of a column that has this annotation will be generated by Laravel Datamapper automatically as a UUID4. You have to install <a href="https://github.com/ramsey/uuid">ramsey/uuid</a> to use this annotation.</td>
+<td><code>@Column</code></td>
+</tr>
+<tr>
+<td><code>@Column</code></td>
+<td>See <a href="https://github.com/markusjwetzel/laravel-datamapper/wiki/Columns">Columns</a> for more information.</td>
+<td><code>@Entity</code> or<br><code>@Embeddable</code></td>
+</tr>
+<tr>
+<td><code>@Embedded</code></td>
+<td>Used to include an embedded class, required parameter <code>class</code></td>
+<td><code>@Entity</code></td>
+</tr>
+<tr>
+<td><code>@Id</code></td>
+<td></td>
+<td><code>@Column</code></td>
+</tr>
+<tr>
+<td><code>@Relation</code></td>
+<td>See <a href="https://github.com/markusjwetzel/laravel-datamapper/wiki/Relationships">Relationships</a> for more information.</td>
+<td><code>@Entity</code></td>
+</tr>
+<tr>
+<td><code>@Versioned</code></td>
+<td></td>
+<td><code>@Column</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="page_Example">Example</h3>
+<pre><code class="language-php">&lt;?php
+
+use ProAI\Datamapper\Support\Entity;
+use ProAI\Datamapper\Annotations as ORM;
+
+/**
+ * These are class annotations.
+ *
+ * @ORM\Entity
+ * @ORM\Table(name=&quot;users&quot;)
+ */
+class User extends Entity
+{
+    /**
+     * These are property annotations.
+     *
+     * @ORM\Id
+     * @ORM\AutoIncrement
+     * @ORM\Column(type=&quot;integer&quot;)
+     */
+    protected $id;
+    
+    /**
+     * Some more property annotations.
+     *
+     * @ORM\Embedded(class=&quot;Acme\Models\Email&quot;)
+     */
+    protected $email;
+
+    /**
+     * Some more property annotations.
+     *
+     * @ORM\Relation(type=&quot;hasMany&quot;, relatedEntity=&quot;Acme\Models\Comment&quot;)
+     */
+    protected $comments;
+}
+</code></pre>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="../Getting_Started.html">Previous</a></li>            <li><a href="../Annotations/Columns.html">Next</a></li>        </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="../themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="../themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="../themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>

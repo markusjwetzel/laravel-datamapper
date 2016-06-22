@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Additional Features - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class=''><a href="Getting_Started.html">Getting Started</a></li><li class=' has-children'><a href="Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class=''><a href="Annotations/Columns.html">Columns</a></li><li class=''><a href="Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="Entity_Manager.html">Entity Manager</a></li><li class=''><a href="Commands.html">Commands</a></li><li class='active'><a href="Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Additional Features</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Wednesday, June 22, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                8:00 AM            </span>
+        </div>
+    
+    <h3 id="page_Timestamps">Timestamps</h3>
+<p>If an entity has the <code>@ORM\Timestamps</code> annotation, <code>$timestamps</code> will be set to true in the mapped Eloquent model, so the created at and updated at timestamp will be updated automatically on insert and update.</p>
+<p>Note: This plugin requires a <code>$createdAt</code> property and a <code>$updatedAt</code> property. You can use the <code>ProAI\Datamapper\Support\Traits\Timestamps</code> trait for this.</p>
+<h3 id="page_SoftDeletes">SoftDeletes</h3>
+<p>If an entity has the <code>@ORM\SoftDeletes</code> annotation, you can use the soft deleting methods from Eloquent, e. g.:</p>
+<p><code>$users = $em-&gt;class('Entity\User')-&gt;withTrashed()-&gt;all();</code></p>
+<p>Note: This plugin requires a <code>$deletedAt</code> property. You can use the <code>ProAI\Datamapper\Support\Traits\SoftDeletes</code> trait for this.</p>
+<h3 id="page_Versioning">Versioning</h3>
+<p>If an entity has the <code>@ORM\Versionable</code> annotation and you have added the <code>@ORM\Versioned</code> annotation to all versioned properties, you can use the versioning methods of the <a href="https://github.com/proai/eloquent-versioning">Eloquent Versioning</a> package. So make sure you have installed this package.</p>
+<p>By default the query builder returns always the latest version. If you want a specific version or all versions, you can use the following:</p>
+<p><code>$user = $em-&gt;class('Entity\User')-&gt;version(2)-&gt;find($id);</code></p>
+<p><code>$users = $em-&gt;class('Entity\User')-&gt;where('id',$id)-&gt;allVersions()-&gt;get();</code></p>
+<h3 id="page_Presenters">Presenters</h3>
+<p>This package can be extended by the Laravel Datamapper Presenter package. Check out the <a href="https://github.com/ProAI/laravel-datamapper-presenter">Laravel Datamapper Presenter</a> readme for more information.</p>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="Commands.html">Previous</a></li>                    </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>

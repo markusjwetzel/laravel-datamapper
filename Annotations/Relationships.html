@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Relationships - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="../themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='../themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='../themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="../index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class=''><a href="../Getting_Started.html">Getting Started</a></li><li class='open has-children'><a href="../Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class=''><a href="../Annotations/Columns.html">Columns</a></li><li class='active'><a href="../Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="../Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="../Entity_Manager.html">Entity Manager</a></li><li class=''><a href="../Commands.html">Commands</a></li><li class=''><a href="../Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Relationships</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Saturday, June 11, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                12:43 AM            </span>
+        </div>
+    
+    <p>This page documents the <code>@Relation</code> annotation. You can use all relationship types and all parameters of these types that are documented by the <a href="http://laravel.com/docs/master/eloquent-relationships">Laravel documentation</a>.</p>
+<ul>
+<li>
+<a href="#general-terms">General Terms</a>
+</li>
+<li>
+<a href="#types">Types</a>
+<ul>
+<li>
+<a href="#hasone">hasOne</a>
+</li>
+<li>
+<a href="#hasmany">hasMany</a>
+</li>
+<li>
+<a href="#hasmanythrough">hasManyThrough</a>
+</li>
+<li>
+<a href="#belongsto">belongsTo</a>
+</li>
+<li>
+<a href="#belongstomany">belongsToMany</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#polymorphic-types">Polymorphic Types</a>
+<ul>
+<li>
+<a href="#morphone">morphOne</a>
+</li>
+<li>
+<a href="#morphmany">morphMany</a>
+</li>
+<li>
+<a href="#morphto">morphTo</a>
+</li>
+<li>
+<a href="#morphtomany">morphToMany</a>
+</li>
+<li>
+<a href="#morphedbymany">morphedByMany</a>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="page_General_Terms">General Terms</h3>
+<p>Terms used for relation sides:</p>
+<ul>
+<li>
+<code>owning side</code>: The side of the relation that contains the relation information (e. g. in a 1-to-1 relation the owning side is the side that contains the foreign key).</li>
+<li>
+<code>inversed side</code>: The other side of the relation.</li>
+</ul>
+<p>Terms used for entities and keys:</p>
+<ul>
+<li>
+<code>related</code> Something named 'related' belongs to the related entity.</li>
+<li>
+<code>local</code> Everything (entity, column key etc.) that refers to the entity, which is defined by this class, is named local (i. e. local entity or local key).</li>
+<li>
+<code>foreign</code> The term related is used for columns in a table that do not refer to the table's model.</li>
+</ul>
+<p>Example: <code>localForeignKey</code> refers to a key that is not in the local table (thus it is foreign in another table), but refers to the local entity.</p>
+<h3 id="page_Types">Types</h3>
+<p>In comparison to the Eloquent relationship methods every parameter of the <code>@Relation</code> annotation is named. This section shows you which parameter is mapped to which name. The first column No. in each table shows you the position of the parameter in the related Eloquent relationship method. All default values for keys or table names are the same as in Eloquent.</p>
+<h5 id="page_hasOne">hasOne</h5>
+<p><em>used for 1-to-1 relations (inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>localForeignKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>localKey</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>Example for a <code>User</code> entity:</p>
+<pre><code>@Relation(type=&quot;hasOne&quot;, relatedEntity=&quot;Acme\Models\Phone&quot;)
+</code></pre>
+<h5 id="page_hasMany">hasMany</h5>
+<p><em>used for 1-to-n relations (inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>localForeignKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>localKey</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>Example for a <code>User</code> entity:</p>
+<pre><code>@Relation(type=&quot;hasMany&quot;, relatedEntity=&quot;Acme\Models\Comment&quot;)
+</code></pre>
+<h5 id="page_hasManyThrough">hasManyThrough</h5>
+<p><em>used for 1-to-n relations (inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>throughEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>localForeignKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>throughForeignKey</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>Example for a <code>Country</code> entity:</p>
+<pre><code>@Relation(type=&quot;hasManyThrough&quot;, relatedEntity=&quot;Acme\Models\Post&quot;, throughEntity=&quot;Acme\Models\User&quot;)
+</code></pre>
+<h5 id="page_belongsTo">belongsTo</h5>
+<p><em>used for 1-to-1 and 1-to-n relations (owning side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>relatedForeignKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>localKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>relation</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>This relation type auto-creates a column <code>{relatedName}_id</code> in the local table.</p>
+<p>Example for a <code>Phone</code> entity (1-to-1):</p>
+<pre><code>@Relation(type=&quot;belongsTo&quot;, relatedEntity=&quot;Acme\Models\User&quot;)
+</code></pre>
+<p>Example for a <code>Comment</code> entity (1-to-n):</p>
+<pre><code>@Relation(type=&quot;belongsTo&quot;, relatedEntity=&quot;Acme\Models\User&quot;)
+</code></pre>
+<h5 id="page_belongsToMany">belongsToMany</h5>
+<p><em>used for n-to-n relations (owning and inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>pivotTable</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>relatedPivotKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>localPivotKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>relation</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>inverse</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>This relation type auto-creates a pivot table with columns <code>{relatedName}_id</code> and <code>{localName}_id</code>.</p>
+<p>Example for a <code>Role</code> entity (owning side):</p>
+<pre><code>@Relation(type=&quot;belongsToMany&quot;, relatedEntity=&quot;Acme\Models\User&quot;)
+</code></pre>
+<p>Example for a <code>User</code> entity (inversed side):</p>
+<pre><code>@Relation(type=&quot;belongsToMany&quot;, relatedEntity=&quot;Acme\Models\Role&quot;, inverse=true)
+</code></pre>
+<h3 id="page_Polymorphic_Types">Polymorphic Types</h3>
+<h5 id="page_morphOne">morphOne</h5>
+<p><em>used for 1-to-1 relations (inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>morphName</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>morphType</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>morphId</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>localKey</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<h5 id="page_morphMany">morphMany</h5>
+<p><em>used for 1-to-n relations (inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>morphName</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>morphType</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>morphId</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>localKey</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<h5 id="page_morphTo">morphTo</h5>
+<p><em>used for 1-to-1 and 1-to-n relations (owning side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>morphName</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>morphType</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>morphId</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>This relation type auto-creates the columns <code>{morphName}_id</code> and <code>{morphName}_type</code> in the local table.</p>
+<h5 id="page_morphToMany">morphToMany</h5>
+<p><em>used for n-to-n relations (owning side and inversed side)</em></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>relatedEntity</code></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>morphName</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>pivotTable</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>relatedPivotKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>localPivotKey</code></td>
+<td>optional</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>inverse</code></td>
+<td>optional</td>
+</tr>
+</tbody>
+</table>
+<p>This relation type auto-creates a pivot table with columns <code>{morphName}_id</code>, <code>{morphName}_type</code> and <code>{localName}_id</code>.</p>
+<h5 id="page_morphedByMany">morphedByMany</h5>
+<p><em>used for n-to-n relations (inversed side)</em></p>
+<p>morphedByMany is just an alias of morphToMany. It has the same parameters except inverse, which is set to true.</p>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="../Annotations/Columns.html">Previous</a></li>            <li><a href="../Entities_and_Value_Objects.html">Next</a></li>        </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="../themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="../themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="../themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>

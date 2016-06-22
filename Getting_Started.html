@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>       <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>          <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>          <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <title>Getting Started - Laravel Datamapper Docs</title>
+    <meta name="description" content="An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD)." />
+    <meta name="author" content="Markus J. Wetzel">
+    <meta charset="UTF-8">
+    <link rel="icon" href="themes/lean/img/favicon.png" type="image/x-icon">
+    <!-- Mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href='//fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700&subset=latin,cyrillic-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- CSS -->
+    <link href='themes/lean/css/theme.min.css' rel='stylesheet' type='text/css'><link href='themes/lean/css/theme-laravel.min.css' rel='stylesheet' type='text/css'>
+    
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body class="">
+    
+<div class="container-fluid fluid-height wrapper">
+    <div class="navbar navbar-static-top hidden-print">
+        <div class="container-fluid">
+            <a class="brand navbar-brand pull-left" href="index.html">Laravel Datamapper Docs</a>
+
+        </div>
+    </div>
+    <div class="row columns content">
+        <div class="left-column article-tree col-sm-3 hidden-print">
+            <!-- For Mobile -->
+            <div class="responsive-collapse">
+                <button type="button" class="btn btn-sidebar" id="menu-spinner-button">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div id="sub-nav-collapse" class="sub-nav-collapse">
+                <!-- Navigation -->
+                <ul class='nav nav-list'><li class='active'><a href="Getting_Started.html">Getting Started</a></li><li class=' has-children'><a href="Annotations/index.html" class="folder"><i class="arrow">&nbsp;</i>Annotations</a><ul class='nav nav-list'><li class=''><a href="Annotations/Columns.html">Columns</a></li><li class=''><a href="Annotations/Relationships.html">Relationships</a></li></ul></li><li class=''><a href="Entities_and_Value_Objects.html">Entities and Value Objects</a></li><li class=''><a href="Entity_Manager.html">Entity Manager</a></li><li class=''><a href="Commands.html">Commands</a></li><li class=''><a href="Additional_Features.html">Additional Features</a></li></ul>
+
+                <div class="sidebar-links">
+                    
+                        <!-- Links -->
+                        <a href="https://github.com/ProAI/laravel-datamapper/archive/master.zip" target="_blank">Download</a><br><a href="https://github.com/ProAI/laravel-datamapper" target="_blank">GitHub Repo</a><br><a href="https://github.com/ProAI/laravel-datamapper/issues" target="_blank">Help/Support/Bugs</a><br>
+                        <div id="toggleCodeBlock">
+                                                </div>
+
+                        <!-- Twitter -->
+                        
+                        <hr/>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="right-column  content-area col-sm-9">
+
+            <div class="content-page">
+                
+                <div class="doc_content">
+                    <article>
+            <div class="page-header sub-header clearfix">
+            <h1>Getting Started</h1>
+            <span style="float: left; font-size: 10px; color: gray;">
+                Wednesday, June 22, 2016            </span>
+            <span style="float: right; font-size: 10px; color: gray;">
+                7:59 AM            </span>
+        </div>
+    
+    <p>An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD). In general the Laravel Data Mapper is an extension to the Laravel Query Builder. You can build queries by using all of the query builder methods and in addition you can pass Plain Old PHP Objects (POPO's) to the builder and also return POPO's from the builder.</p>
+<h3 id="page_Installation">Installation</h3>
+<p>Laravel Data Mapper is distributed as a composer package. So you first have to add the package to your <code>composer.json</code> file:</p>
+<pre><code>&quot;proai/laravel-datamapper&quot;: &quot;~1.0@dev&quot;
+</code></pre>
+<p>Then you have to run <code>composer update</code> to install the package. Once this is completed, you have to add the service provider to the providers array in <code>config/app.php</code>:</p>
+<pre><code>'ProAI\Datamapper\DatamapperServiceProvider'
+</code></pre>
+<p>If you want to use a facade for the entity manager, you can create an alias in the aliases array of <code>config/app.php</code>:</p>
+<pre><code>'EM' =&gt; 'ProAI\Datamapper\Support\Facades\EntityManager'
+</code></pre>
+<p>Run <code>php artisan vendor:publish</code> to publish this package configuration. Afterwards you can edit the file <code>config/datamapper.php</code>.</p>
+<h3 id="page_Usage">Usage</h3>
+<h5 id="page_Annotations">Annotations</h5>
+<p>We will map all classes to a database table by using annotations. Annotations are doc-comments that you add to a class. The annotations are quite similar to the Doctrine2 annotations. Here is a simple example of a <code>User</code> class:</p>
+<pre><code class="language-php">&lt;?php
+
+use ProAI\Datamapper\Support\Entity;
+use ProAI\Datamapper\Annotations as ORM;
+
+/**
+ * @ORM\Entity
+ * @ORM\Table(name=&quot;users&quot;)
+ */
+class User extends Entity
+{
+    /**
+     * @ORM\Id
+     * @ORM\AutoIncrement
+     * @ORM\Column(type=&quot;integer&quot;)
+     */
+    protected $id;
+    
+    /**
+     * @ORM\Embedded(class=&quot;Acme\Models\Email&quot;)
+     */
+    protected $email;
+
+    /**
+     * @ORM\Relation(type=&quot;hasMany&quot;, relatedEntity=&quot;Acme\Models\Comment&quot;)
+     */
+    protected $comments;
+}
+</code></pre>
+<p>For a full documentation on all annotations see the wiki.</p>
+<h5 id="page_Database_Schema">Database Schema</h5>
+<p>Once you have defined the annotations, you can run <code>php artisan schema:create</code>. This command will scan all registered classes and will create database tables and will generate a mapped Eloquent model for each entity based on the defined annotations.</p>
+<p>You can also update an already existing schema with <code>php artisan schema:update</code>. Use the <code>--save-mode</code> flag to ensure that old tables will not be deleted.</p>
+<p>Furthermore you can drop a schema with <code>php artisan schema:drop</code>.</p>
+<h5 id="page_Entity_Manager">Entity Manager</h5>
+<p>As already mentioned the Laravel Data Mapper is an extension of the Laravel Query Builder, so you can use all methods of the query builder. You can get an instance of the entity manager by using the <code>Entity</code> facade or by using method injection:</p>
+<pre><code class="language-php">&lt;?php
+
+use ProAI\Datamapper\EntityManager;
+
+class UserRepository {
+
+    public function __construct(EntityManager $em) {
+        $this-&gt;em = $em;
+    }
+    
+    ...
+    
+}
+</code></pre>
+<p>The entity manager selects a table by passing the classname of an entity to the manager (e. g. <code>$em-&gt;entity('Acme\Models\User')</code>. The <code>entity</code> method then returns an object of the modified Laravel Query Builder, so you can chain all query builder methods after it (see examples).</p>
+<h6 id="page_Example_1_Get_one_or_many_User_objects">Example #1: Get one or many User objects</h6>
+<p><code>$user = $em-&gt;entity('Acme\Models\User')-&gt;find($id);</code> (returns a User object)</p>
+<p><code>$users = $em-&gt;entity('Acme\Models\User')-&gt;all();</code> (returns an ArrayCollection of User objects)</p>
+<h6 id="page_Example_2_Insert_update_and_delete_a_record">Example #2: Insert, update and delete a record</h6>
+<p><code>$em-&gt;insert($user);</code></p>
+<p><code>$em-&gt;update($user);</code></p>
+<p><code>$em-&gt;delete($user);</code></p>
+<p>Hint: Relational objects are not inserted or updated.</p>
+<h6 id="page_Example_3_Eager_Loading">Example #3: Eager Loading</h6>
+<p><code>$users = $em-&gt;class('Acme\Models\User')-&gt;with('comments')-&gt;get();</code></p>
+<p>You can use the <code>with()</code> method the same way as you use it with Eloquent objects. Chained dot notations can be used (e. g. <code>-&gt;with('comments.likes')</code>).</p>
+
+        <nav>
+        <ul class="pager">
+            <li><a href="index.html">Previous</a></li>            <li><a href="Annotations/index.html">Next</a></li>        </ul>
+    </nav>
+    </article>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <!-- jQuery -->
+    <script src="themes/daux/js/jquery-1.11.3.min.js"></script>
+
+    <!-- hightlight.js -->
+    <script src="themes/daux/js/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- JS -->
+    
+    <script src="themes/daux/js/daux.js"></script>
+
+    
+</body>
+</html>
