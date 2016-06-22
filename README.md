@@ -8,7 +8,7 @@ An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach
 
 ## Documentation
 
-See the [GitHub Page](https://proai.github.io/laravel-datamapper) for a full documentation.
+See the full [Documentation](https://proai.github.io/laravel-datamapper) for more information.
 
 ## Installation
 
