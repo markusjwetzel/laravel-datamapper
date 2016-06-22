@@ -1,5 +1,5 @@
 {
-    "title": "Laravel Datamapper Docs",
+    "title": "Laravel Datamapper",
     "tagline": "An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD).",
     "author": "Markus J. Wetzel",
     "ignore": {
