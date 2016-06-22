@@ -6,6 +6,10 @@
 
 An easy to use data mapper ORM for Laravel 5 that fits perfectly to the approach of Domain Driven Design (DDD). In general the Laravel Data Mapper is an extension to the Laravel Query Builder. You can build queries by using all of the query builder methods and in addition you can pass Plain Old PHP Objects (POPO's) to the builder and also return POPO's from the builder.
 
+## Documentation
+
+See the [GitHub Page](https://proai.github.io/laravel-datamapper) for a full documentation.
+
 ## Installation
 
 Laravel Data Mapper is distributed as a composer package. So you first have to add the package to your `composer.json` file:
@@ -27,10 +31,6 @@ If you want to use a facade for the entity manager, you can create an alias in t
 ```
 
 Run `php artisan vendor:publish` to publish this package configuration. Afterwards you can edit the file `config/datamapper.php`.
-
-## Documentation
-
-See the [Wiki](https://proai.github.io/laravel-datamapper) for a full documentation.
 
 ## Usage
 
